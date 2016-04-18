@@ -60,21 +60,6 @@ public final class BitVector {
         data = new byte[size];
     }
 
-    private static int doTranslateIndex(int idx) {
-
-        int mod4 = idx % 4;
-        int div4 = idx / 4;
-
-        if ((div4 % 2) != 0) {
-            //odd
-            return (idx + ODD_OFFSETS[mod4]);
-        }
-        else {
-            //straight
-            return (idx + STRAIGHT_OFFSETS[mod4]);
-        }
-    }
-
     /**
      * Factory method for creating a <tt>BitVector</tt> instance
      * wrapping the given byte data.
@@ -292,15 +277,16 @@ public final class BitVector {
      */
     public String toString() {
         StringBuilder sbuf = new StringBuilder();
-        for (int i = 0; i < size(); i++) {
-            int idx = doTranslateIndex(i);
-            sbuf.append(((((data[byteIndex(idx)]
-                            & (0x01 << bitIndex(idx))) != 0
-                    ) ? true : false) ? '1' : '0')
-            );
-            if (((i + 1) % 8) == 0) {
-                sbuf.append(" ");
-            }
+        for (int i = 0; i < data.length; i++) {
+        	
+        	int numberOfBitsToPrint = Byte.SIZE;
+        	int remainingBits = size - (i * Byte.SIZE);
+        	if(remainingBits < Byte.SIZE) {
+        		numberOfBitsToPrint = remainingBits;
+        	}
+        	
+            sbuf.append(String.format("%" + numberOfBitsToPrint + "s", Integer.toBinaryString(data[i] & 0xFF)).replace(' ', '0'));
+            sbuf.append(" ");
         }
         return sbuf.toString();
     }

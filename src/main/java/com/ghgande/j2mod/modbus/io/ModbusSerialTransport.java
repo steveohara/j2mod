@@ -384,6 +384,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         if (commPort != null && commPort.isOpen()) {
             byte[] buffer = new byte[1];
             int cnt = commPort.readBytes(buffer, 1);
+
             if (cnt != 1) {
                 throw new IOException("Cannot read from serial port");
             }
@@ -394,13 +395,20 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
                 return ModbusASCIITransport.FRAME_END;
             }
             else {
-                String value = ((int)buffer[0]) + "";
+            	logger.info("Read From buffer: " + buffer[0] + " (" + String.format("%02X", buffer[0]) + ")");
+                byte firstValue = buffer[0];
                 cnt = commPort.readBytes(buffer, 1);
                 if (cnt != 1) {
                     throw new IOException("Cannot read from serial port");
                 }
                 else {
-                    return Integer.parseInt(value + ((int)buffer[0]) + "", 16);
+                	logger.info("Read From buffer: " + buffer[0] + " (" + String.format("%02X", buffer[0]) + ")");
+
+                	int combinedValue = (Character.digit(firstValue, 16) << 4) + Character.digit(buffer[0], 16);
+                	
+                	logger.info("Returning combined value of: " + String.format("%02X", combinedValue));
+                	
+                    return combinedValue;
                 }
             }
         }
@@ -457,7 +465,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         if (commPort != null && commPort.isOpen()) {
             int cnt = 0;
             for (int i = 0; i < bytesToWrite; i++) {
-                if (writeAsciiByte(buffer[i]) != 1) {
+                if (writeAsciiByte(buffer[i]) != 2) {
                     return cnt;
                 }
                 cnt++;
