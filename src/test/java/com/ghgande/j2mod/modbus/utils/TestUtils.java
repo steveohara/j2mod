@@ -27,6 +27,8 @@ import java.io.*;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -46,9 +48,10 @@ public class TestUtils {
      * This method will extract the appropriate Modbus master tool into the
      * temp folder so that it can be used later
      *
+     * @return The temporary location of the Modbus master tool.
      * @throws Exception
      */
-    public static void loadModPollTool() throws Exception {
+    public static File loadModPollTool() throws Exception {
 
         // Load the resource from the library
 
@@ -66,125 +69,53 @@ public class TestUtils {
             exeName = "modpoll";
         }
 
-        // Check to see if we already have the library available
+        // Copy the native modpoll library to a temporary directory in the build workspace to facilitate
+        // execution on some platforms.
+        File tmpDir = Files.createTempDirectory(Paths.get("."), "modpoll-").toFile();
+        tmpDir.deleteOnExit();
 
-        File nativeFile = new File(getTemporaryDirectory(), exeName);
-        if (!nativeFile.exists()) {
+        File nativeFile = new File(tmpDir, exeName);
 
-            // Copy the library to the temporary folder
+        // Copy the library to the temporary folder
 
-            InputStream in = null;
-            String resourceName = String.format("/com/ghgande/j2mod/modbus/native/%s/%s", osName, exeName);
+        InputStream in = null;
+        String resourceName = String.format("/com/ghgande/j2mod/modbus/native/%s/%s", osName, exeName);
 
-            try {
-                in = SerialPort.class.getResourceAsStream(resourceName);
-                if (in == null) {
-                    throw new Exception(String.format("Cannot find resource [%s]", resourceName));
-                }
-                pipeInputToOutputStream(in, nativeFile, false);
+        try {
+        	in = SerialPort.class.getResourceAsStream(resourceName);
+        	if (in == null) {
+        		throw new Exception(String.format("Cannot find resource [%s]", resourceName));
+        	}
+        	pipeInputToOutputStream(in, nativeFile, false);
+        	nativeFile.deleteOnExit();
+        	
+        	// Set the correct privileges
 
-                // Set the correct privileges
-
-                if (!nativeFile.setWritable(true, true)) {
-                    logger.warn("Cannot set jSerialComm native library to be writable");
-                }
-                if (!nativeFile.setReadable(true, false)) {
-                    logger.warn("Cannot set jSerialComm native library to be readable");
-                }
-            }
-            catch (Exception e) {
-                throw new Exception(String.format("Cannot locate jSerialComm native library [%s] - %s", exeName, e.getMessage()));
-            }
-            finally {
-                if (in != null) {
-                    try {
-                        in.close();
-                    }
-                    catch (IOException e) {
-                        logger.error("Cannot close stream - {}", e.getMessage());
-                    }
-                }
-            }
+        	if (!nativeFile.setWritable(true, true)) {
+        		logger.warn("Cannot set modpoll native library to be writable");
+        	}
+        	if (!nativeFile.setReadable(true, false)) {
+        		logger.warn("Cannot set modpoll native library to be readable");
+        	}
+        	if (!nativeFile.setExecutable(true, false)) {
+        		logger.warn("Cannot set modpoll native library to be executable");
+        	}
         }
-    }
-
-    /**
-     * Returns a full path name of a suitable temporary filename
-     *
-     * @return String
-     */
-    public static String getTemporaryDirectory() {
-        return System.getProperty("java.io.tmpdir");
-    }
-
-    /**
-     * Returns a full path name of a suitable temporary filename
-     *
-     * @return File
-     */
-    public static File getTemporaryFile() {
-        return new File(getTemporaryFilename(null));
-    }
-
-    /**
-     * Returns a full path name of a suitable temporary filename using the
-     * extension provided.  If sExtension is null then .tmp is used
-     *
-     * @param extension Extension to give the file
-     *
-     * @return File
-     */
-    public static File getTemporaryFile(String extension) {
-        return new File(getTemporaryFilename(extension));
-    }
-
-    /**
-     * Returns a full path name of a suitable temporary filename
-     *
-     * @return String
-     */
-    public static String getTemporaryFilename() {
-        return getTemporaryFilename(null);
-    }
-
-    /**
-     * Returns a full path name of a suitable temporary filename using the
-     * extension provided.  If sExtension is null then .tmp is used
-     *
-     * @param extension Extension to give the file
-     *
-     * @return String
-     */
-    public static String getTemporaryFilename(String extension) {
-        return getTemporaryDirectory() + File.separator + getTemporaryFilenameOnly(extension);
-    }
-
-    /**
-     * Returns a temporary filename only using the extension if provided. if the provided value is null then .tmp is used
-     *
-     * @param extension Extension to give the file
-     *
-     * @return a {@link java.lang.String} object
-     */
-    public static String getTemporaryFilenameOnly(String extension) {
-        String returnValue;
-        if (extension != null) {
-            returnValue = getTemporaryName() + '.' + extension.trim();
+        catch (Exception e) {
+        	throw new Exception(String.format("Cannot locate modpoll native library [%s] - %s", exeName, e.getMessage()));
         }
-        else {
-            returnValue = getTemporaryName() + ".tmp";
+        finally {
+        	if (in != null) {
+        		try {
+        			in.close();
+        		}
+        		catch (IOException e) {
+        			logger.error("Cannot close stream - {}", e.getMessage());
+        		}
+        	}
         }
-
-        return returnValue;
-    }
-
-    /**
-     * Returns a temporary name which should be unique to this thread
-     *
-     * @return a {@link java.lang.String} object
-     */
-    public static String getTemporaryName() {
-        return "j2mode-" + Thread.currentThread().getId() + '-' + System.nanoTime();
+        
+        return nativeFile;
     }
 
     /**
