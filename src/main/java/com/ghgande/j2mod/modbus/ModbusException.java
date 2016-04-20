@@ -48,14 +48,26 @@ public class ModbusException extends Exception {
     }
 
     /**
-     * Constructs a new <tt>ModbusIOException</tt> instance with the given
+     * Constructs a new <tt>ModbusException</tt> instance with the given
      * message.
      * <p>
      *
-     * @param message the message describing this <tt>ModbusIOException</tt>.
+     * @param message the message describing this <tt>ModbusException</tt>.
      */
     public ModbusException(String message, Object... values) {
         super(String.format(message, values));
     }
 
+    /**
+     * Constructs a new <tt>ModbusException</tt> instance with the given
+     * message and underlying cause.
+     * <p>
+     *
+     * @param message the message describing this <tt>ModbusException</tt>.
+     * @param cause the cause (which is saved for later retrieval by the {@code getCause()} method).
+     * (A {@code null} value is permitted, and indicates that the cause is nonexistent or unknown.)
+     */
+    public ModbusException(String message, Throwable cause) {
+    	super(message, cause);
+    }
 }
