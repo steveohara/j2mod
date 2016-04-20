@@ -85,7 +85,7 @@ public class TCPConnectionHandler implements Runnable {
 
                 // Write the response message.
                 transport.writeMessage(response);
-            } while (true);
+            } while (!Thread.currentThread().isInterrupted());
         }
         catch (ModbusIOException ex) {
             if (!ex.isEOF()) {
@@ -93,12 +93,7 @@ public class TCPConnectionHandler implements Runnable {
             }
         }
         finally {
-            try {
-                connection.close();
-            }
-            catch (Exception ex) {
-                // ignore
-            }
+        	connection.close();
         }
     }
 }
