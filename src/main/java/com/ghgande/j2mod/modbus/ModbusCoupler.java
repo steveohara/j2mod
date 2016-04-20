@@ -15,11 +15,15 @@
  */
 package com.ghgande.j2mod.modbus;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ghgande.j2mod.modbus.procimg.DefaultProcessImageFactory;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
 import com.ghgande.j2mod.modbus.procimg.ProcessImageFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Class implemented following a Singleton pattern, to couple the slave side
@@ -41,8 +45,7 @@ public class ModbusCoupler {
     private static ModbusCoupler modbusCoupler; // Singleton reference
 
     // instance attributes
-    private ProcessImage processImage;
-    private int unitID = Modbus.DEFAULT_UNIT_ID;
+    private Map<Integer, ProcessImage> processImages = new HashMap<Integer, ProcessImage>();
     private boolean master = true;
     private ProcessImageFactory processImageFactory;
 
@@ -91,20 +94,21 @@ public class ModbusCoupler {
      * Returns a reference to the <tt>ProcessImage</tt> of this
      * <tt>ModbusCoupler</tt>.
      *
+     * @param unitID the unitID of the process image to fetch.
      * @return the <tt>ProcessImage</tt>.
      */
-    public synchronized ProcessImage getProcessImage() {
-        return processImage;
+    public synchronized ProcessImage getProcessImage(Integer unitID) {
+        return processImages.get(unitID);
     }
 
     /**
      * Sets the reference to the <tt>ProcessImage</tt> of this
-     * <tt>ModbusCoupler</tt>.
+     * <tt>ModbusCoupler</tt> by its <tt>unitID</tt>.
      *
      * @param procimg the <tt>ProcessImage</tt> to be set.
      */
     public synchronized void setProcessImage(ProcessImage procimg) {
-        processImage = procimg;
+        processImages.put(procimg.getUnitID(), procimg);
     }
 
     /**

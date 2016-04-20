@@ -109,19 +109,19 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
                         continue;
                     }
                     byteInputStream.reset(inBuffer, byteInputOutputStream.size());
-                    in = byteInputStream.readUnsignedByte();
+                    int unitID = byteInputStream.readUnsignedByte();
 
                     //check message with this slave unit identifier
-                    ProcessImage spi = ModbusCoupler.getReference().getProcessImage();
+                    ProcessImage spi = ModbusCoupler.getReference().getProcessImage(unitID);
                     if (spi == null) {
                         continue;
                     }
-                    if (in != spi.getUnitID()) {
+                    if (unitID != spi.getUnitID()) {
                         continue;
                     }
-                    in = byteInputStream.readUnsignedByte();
+                    int functionCode = byteInputStream.readUnsignedByte();
                     //create request
-                    request = ModbusRequest.createModbusRequest(in);
+                    request = ModbusRequest.createModbusRequest(functionCode);
                     request.setHeadless();
                     //read message
                     byteInputStream.reset(inBuffer, byteInputOutputStream.size());
