@@ -82,6 +82,20 @@ public class ModbusIOException extends ModbusException {
     }
 
     /**
+     * Constructs a new <tt>ModbusIOException</tt> instance with the given
+     * message.
+     * <p>
+     *
+     * @param message the message describing this <tt>ModbusIOException</tt>.
+     * @param cause the cause (which is saved for later retrieval by the
+     * {@link Throwable#getCause() getCause()} method). (A {@code null} value
+     * is permitted, and indicates that the cause is nonexistent or unknown.)
+     */
+    public ModbusIOException(String message, Throwable cause) {
+    	super(message, cause);
+    }
+
+    /**
      * Tests if this <tt>ModbusIOException</tt> is caused by an end of the
      * stream.
      * <p>

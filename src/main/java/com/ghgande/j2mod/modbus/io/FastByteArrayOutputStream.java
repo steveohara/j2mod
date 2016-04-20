@@ -181,7 +181,7 @@ public class FastByteArrayOutputStream extends OutputStream {
             return new String(buf, 0, count, "US-ASCII");
         }
         catch (Exception e) {
-            logger.debug("Problem converting bytes to string - {}", e.getMessage());
+            logger.debug("Problem converting bytes to string", e);
         }
         return "";
     }

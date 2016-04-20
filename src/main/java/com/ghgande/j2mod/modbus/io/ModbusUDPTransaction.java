@@ -110,9 +110,7 @@ public class ModbusUDPTransaction extends ModbusTransaction {
                 transport = terminal.getTransport();
             }
             catch (Exception ex) {
-                ex.printStackTrace();
-                throw new ModbusIOException("Activation failed");
-
+                throw new ModbusIOException("Activation failed", ex);
             }
         }
 
@@ -134,7 +132,7 @@ public class ModbusUDPTransaction extends ModbusTransaction {
             catch (ModbusIOException ex) {
                 retryCount++;
                 if (retryCount > retries) {
-                    logger.error("Cannot send UDP message {}", ex.getMessage());
+                    logger.error("Cannot send UDP message", ex);
                 }
             }
         }

@@ -77,7 +77,7 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
             }
         }
         catch (IOException ex) {
-            throw new ModbusIOException("I/O failed to write");
+            throw new ModbusIOException("I/O failed to write", ex);
         }
     }
 
@@ -133,7 +133,7 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
         }
         catch (Exception ex) {
             logger.debug(ex.getMessage());
-            throw new ModbusIOException("I/O exception - failed to read");
+            throw new ModbusIOException("I/O exception - failed to read", ex);
         }
 
     }
@@ -189,7 +189,7 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
         }
         catch (Exception ex) {
             logger.debug(ex.getMessage());
-            throw new ModbusIOException("I/O exception - failed to read");
+            throw new ModbusIOException("I/O exception - failed to read", ex);
         }
     }
 

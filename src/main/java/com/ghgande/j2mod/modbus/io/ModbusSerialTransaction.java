@@ -158,8 +158,7 @@ public class ModbusSerialTransaction extends ModbusTransaction {
 
         //4. deal with exceptions
         if (response instanceof ExceptionResponse) {
-            throw new ModbusSlaveException(((ExceptionResponse)response).getExceptionCode()
-            );
+            throw new ModbusSlaveException(((ExceptionResponse)response).getExceptionCode());
         }
 
         if (isCheckingValidity()) {
