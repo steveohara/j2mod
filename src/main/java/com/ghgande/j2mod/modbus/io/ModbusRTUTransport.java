@@ -129,7 +129,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
             }
         }
         catch (IOException e) {
-            throw new IOException("getResponse serial port exception");
+            throw new IOException("getResponse serial port exception", e);
         }
     }
 
@@ -234,7 +234,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
             }
         }
         catch (IOException e) {
-            throw new IOException(String.format("getResponse serial port exception - %s", e.getMessage()));
+            throw new IOException("getResponse serial port exception", e);
         }
     }
 
@@ -273,7 +273,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
             }
         }
         catch (IOException ex) {
-            throw new ModbusIOException("I/O failed to write");
+            throw new ModbusIOException("I/O failed to write", ex);
         }
     }
 
@@ -415,7 +415,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
         catch (IOException ex) {
             logger.error("Last request: {}", ModbusUtil.toHex(lastRequest));
             logger.error(ex.getMessage());
-            throw new ModbusIOException("I/O exception - failed to read");
+            throw new ModbusIOException("I/O exception - failed to read", ex);
         }
     }
 }

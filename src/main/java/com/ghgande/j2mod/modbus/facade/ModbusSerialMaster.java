@@ -60,7 +60,7 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
             this.timeout = timeout;
         }
         catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException("Could not construct ModbusSerialMaster instance", e);
         }
     }
 

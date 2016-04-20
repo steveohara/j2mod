@@ -108,7 +108,7 @@ class UDPSlaveTerminal extends AbstractUDPTerminal {
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+        	logger.debug("Error while deactivating UDPSlaveTerminal", ex);
         }
     }
 

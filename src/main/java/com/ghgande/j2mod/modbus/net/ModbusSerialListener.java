@@ -78,7 +78,7 @@ public class ModbusSerialListener extends AbstractModbusListener {
                         handleRequest(transport);
                     }
                     catch (ModbusIOException ex) {
-                        logger.debug(ex.getMessage());
+                        logger.debug("Error handling request", ex);
                     }
                 }
                 else {
@@ -89,7 +89,7 @@ public class ModbusSerialListener extends AbstractModbusListener {
             }
         }
         catch (Exception e) {
-            e.printStackTrace();
+        	logger.debug("Error handling request", e);
         }
         finally {
             listening = false;

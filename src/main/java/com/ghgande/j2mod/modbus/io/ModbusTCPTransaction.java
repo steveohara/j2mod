@@ -120,7 +120,7 @@ public class ModbusTCPTransaction extends ModbusTransaction {
                 transport = connection.getModbusTransport();
             }
             catch (Exception ex) {
-                throw new ModbusIOException("Connection failed");
+                throw new ModbusIOException("Connection failed", ex);
             }
         }
 
@@ -166,7 +166,7 @@ public class ModbusTCPTransaction extends ModbusTransaction {
                 }
                 retryCounter++;
                 if (retryCounter >= retryLimit) {
-                    throw new ModbusIOException("Executing transaction failed (tried %d times) - %s", retries, ex.getMessage());
+                    throw new ModbusIOException("Executing transaction failed (tried " + retries + " times)", ex);
                 }
             }
         }
