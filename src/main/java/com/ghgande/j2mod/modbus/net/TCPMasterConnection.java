@@ -113,7 +113,7 @@ public class TCPMasterConnection {
                     socket.close();
                 }
                 catch (IOException e) {
-                    // Blah.
+                    logger.warn("Could not close socket", e);
                 }
                 connected = false;
             }
@@ -145,7 +145,7 @@ public class TCPMasterConnection {
                             socket.close();
                         }
                         catch (IOException e1) {
-                            // Do nothing.
+                            logger.warn("Could not close socket", e1);
                         }
                     }
                 }
@@ -163,7 +163,7 @@ public class TCPMasterConnection {
                 transport.close();
             }
             catch (IOException ex) {
-                logger.debug("close()");
+                logger.warn("Could not close transport", ex);
             }
             connected = false;
         }

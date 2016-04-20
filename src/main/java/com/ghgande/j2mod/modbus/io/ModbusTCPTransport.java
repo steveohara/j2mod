@@ -63,9 +63,9 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
             socket.setSoTimeout(timeout);
         }
         catch (IOException ex) {
-            logger.debug("ModbusTCPTransport::Socket invalid");
+            logger.warn("ModbusTCPTransport::Socket invalid", ex);
 
-            throw new IllegalStateException("Socket invalid");
+            throw new IllegalStateException("Socket invalid", ex);
         }
     }
 
@@ -102,7 +102,7 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                 socket.setSoTimeout(time);
             }
             catch (SocketException e) {
-                // Not sure what to do.
+                logger.warn("Socket exception occurred while setting timeout to " + time, e);
             }
         }
     }
@@ -146,7 +146,7 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
             logger.debug("Sent: {}", ModbusUtil.toHex(byteOutputStream.toByteArray()));
             // write more sophisticated exception handling
         }
-        catch (SocketException ex) {
+        catch (SocketException ex1) {
             if (master != null && !master.isConnected()) {
                 try {
                     master.connect();
@@ -155,10 +155,10 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                     // Do nothing.
                 }
             }
-            throw new ModbusIOException("I/O exception - failed to write - %s", ex.getMessage());
+            throw new ModbusIOException("Socket exception - failed to write", ex1);
         }
-        catch (Exception ex) {
-            throw new ModbusIOException("I/O exception - failed to write - %s", ex.getMessage());
+        catch (Exception ex2) {
+            throw new ModbusIOException("I/O exception - failed to write", ex2);
         }
     }
 
@@ -240,13 +240,13 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
             throw new ModbusIOException("End of File", true);
         }
         catch (SocketTimeoutException x) {
-            throw new ModbusIOException("Timeout reading request - %s", x.getMessage());
+            throw new ModbusIOException("Timeout reading request", x);
         }
         catch (SocketException sockex) {
-            throw new ModbusIOException("Socket Exception - %s", sockex.getMessage());
+            throw new ModbusIOException("Socket Exception", sockex);
         }
         catch (IOException ex) {
-            throw new ModbusIOException("I/O exception - failed to read - %s", ex.getMessage());
+            throw new ModbusIOException("I/O exception - failed to read", ex);
         }
     }
 
@@ -318,11 +318,11 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
             }
             return response;
         }
-        catch (SocketTimeoutException ex) {
-            throw new ModbusIOException("Timeout reading response - %s", ex.getMessage());
+        catch (SocketTimeoutException ex1) {
+            throw new ModbusIOException("Timeout reading response", ex1);
         }
-        catch (Exception ex) {
-            throw new ModbusIOException("I/O exception - failed to read - %s", ex.getMessage());
+        catch (Exception ex2) {
+            throw new ModbusIOException("I/O exception - failed to read", ex2);
         }
     }
 

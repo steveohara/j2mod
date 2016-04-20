@@ -69,7 +69,7 @@ public class TCPSlaveConnection {
                 socket.close();
             }
             catch (IOException ex) {
-                logger.debug(ex.getMessage());
+                logger.warn("Could not close socket", ex);
             }
             connected = false;
         }
