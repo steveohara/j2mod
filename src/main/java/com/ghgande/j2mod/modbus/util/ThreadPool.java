@@ -116,7 +116,7 @@ public class ThreadPool {
                 }
                 catch (Exception ex) {
                     if (running) {
-                        logger.error("Problem starting receiver thread - {}", ex.getMessage());
+                        logger.error("Problem starting receiver thread", ex);
                     }
                 }
             } while (running);

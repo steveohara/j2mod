@@ -108,7 +108,7 @@ class UDPSlaveTerminal extends AbstractUDPTerminal {
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error("Error deactivating UDPSlaveTerminal", ex);
         }
     }
 
@@ -181,7 +181,7 @@ class UDPSlaveTerminal extends AbstractUDPTerminal {
                     // Ignore the error if we are no longer listening
 
                     if (running) {
-                        logger.error("Problem reading UDP socket - {}", ex.getMessage());
+                        logger.error("Problem reading UDP socket", ex);
                     }
                 }
             } while (running);
@@ -250,7 +250,7 @@ class UDPSlaveTerminal extends AbstractUDPTerminal {
                     // Ignore the error if we are no longer listening
 
                     if (running) {
-                        logger.error("Problem reading UDP socket - {}", ex.getMessage());
+                        logger.error("Problem reading UDP socket", ex);
                     }
                 }
             } while (running);

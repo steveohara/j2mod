@@ -89,7 +89,7 @@ public class ModbusUDPTransport extends AbstractModbusTransport {
             }
         }
         catch (Exception ex) {
-            throw new ModbusIOException("I/O exception - failed to write - %s", ex.getMessage());
+            throw new ModbusIOException("I/O exception - failed to write", ex);
         }
     }
 
@@ -108,7 +108,7 @@ public class ModbusUDPTransport extends AbstractModbusTransport {
             return req;
         }
         catch (Exception ex) {
-            throw new ModbusIOException("I/O exception - failed to read - %s", ex.getMessage());
+            throw new ModbusIOException("I/O exception - failed to read", ex);
         }
     }
 
@@ -128,10 +128,10 @@ public class ModbusUDPTransport extends AbstractModbusTransport {
             return res;
         }
         catch (InterruptedIOException ioex) {
-            throw new ModbusIOException("Socket was interrupted - %s", ioex.getMessage());
+            throw new ModbusIOException("Socket was interrupted", ioex);
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            logger.debug("I/O exception while reading modbus response.", ex);
             throw new ModbusIOException("I/O exception - failed to read - %s", ex.getMessage());
         }
     }

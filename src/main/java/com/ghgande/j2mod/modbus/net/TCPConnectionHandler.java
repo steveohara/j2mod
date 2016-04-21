@@ -89,7 +89,7 @@ public class TCPConnectionHandler implements Runnable {
         }
         catch (ModbusIOException ex) {
             if (!ex.isEOF()) {
-                logger.debug(ex.getMessage());
+                logger.debug("ModbusIOException occurred before EOF", ex);
             }
         }
         finally {

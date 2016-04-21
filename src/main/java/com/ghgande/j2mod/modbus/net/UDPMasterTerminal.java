@@ -79,7 +79,7 @@ class UDPMasterTerminal extends AbstractUDPTerminal {
             active = false;
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error("Error closing socket", ex);
         }
     }
 
