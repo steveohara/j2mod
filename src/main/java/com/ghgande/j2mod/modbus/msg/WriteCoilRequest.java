@@ -86,7 +86,7 @@ public final class WriteCoilRequest extends ModbusRequest {
         DigitalOut dout;
 
         // 1. get process image
-        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage();
+        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage(getUnitID());
         // 2. get coil
         try {
             dout = procimg.getDigitalOut(getReference());

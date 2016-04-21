@@ -89,7 +89,7 @@ public final class ReadMultipleRegistersRequest extends ModbusRequest {
         Register[] regs;
 
         // 1. get process image
-        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage();
+        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage(getUnitID());
         // 2. get input registers range
         try {
             regs = procimg.getRegisterRange(getReference(), getWordCount());
