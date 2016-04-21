@@ -133,7 +133,7 @@ public abstract class AbstractModbusListener implements Runnable {
         ModbusResponse response;
 
         // Test if Process image exists and has a correct unit ID
-        ProcessImage spi = ModbusCoupler.getReference().getProcessImage();
+        ProcessImage spi = ModbusCoupler.getReference().getProcessImage(request.getUnitID());
         if (spi == null ||
             (spi.getUnitID() != 0 && request.getUnitID() != spi.getUnitID())) {
             response = request.createExceptionResponse(Modbus.ILLEGAL_ADDRESS_EXCEPTION);
