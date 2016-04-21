@@ -100,9 +100,9 @@ public class ModbusUDPListener extends AbstractModbusListener {
                 handleRequest(transport);
             }
         }
-        catch (ModbusIOException ex) {
-            if (!ex.isEOF()) {
-                logger.error(ex.getMessage());
+        catch (ModbusIOException ex1) {
+            if (!ex1.isEOF()) {
+                logger.error("Exception occurred before EOF while handling request", ex1);
             }
         }
         finally {
