@@ -11,7 +11,7 @@
     <version>2.1-SNAPSHOT</version>
     <description>A fork of the j2mod library to support the jSerialComm connector</description>
 
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -222,6 +222,19 @@
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                    	<Embed-Dependency>jSerialComm</Embed-Dependency>
+                    	<Import-Package>org.slf4j;version="[1.6,2)"</Import-Package>
+                    </instructions>
                 </configuration>
             </plugin>
 
