@@ -50,6 +50,9 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
     private TCPMasterConnection master = null;
     private boolean headless = false; // Some TCP implementations are.
 
+    public ModbusTCPTransport() {
+    }
+
     /**
      * Constructs a new <tt>ModbusTransport</tt> instance, for a given
      * <tt>Socket</tt>.

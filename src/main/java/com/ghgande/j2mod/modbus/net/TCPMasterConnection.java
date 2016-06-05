@@ -71,9 +71,11 @@ public class TCPMasterConnection {
      */
     private void prepareTransport() throws IOException {
         if (transport == null) {
+            logger.trace("prepareTransport() -> using standard TCP transport."); // xmight edit
             transport = new ModbusTCPTransport(socket);
         }
         else {
+            logger.trace("prepareTransport() -> using preset transport. ({})", transport.getClass().getSimpleName()); // xmight edit
             transport.setSocket(socket);
         }
     }
