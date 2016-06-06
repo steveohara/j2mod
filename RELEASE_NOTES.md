@@ -44,3 +44,8 @@
 
 ## Version 2.1.1
 * Corrected a problem with applying the timeouts when using the facade pattern
+
+## Version 2.1.2
+* Retrieve the localPort from opened socket if port is set to 0 #19
+* CR characters lost on ModbusSerialTransport #18
+* Corrected timeout setting issues on serial ports and harmonised setting timeout with IP methods

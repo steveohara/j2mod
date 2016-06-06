@@ -57,6 +57,7 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
     public ModbusSerialMaster(SerialParameters param, int timeout) {
         try {
             connection = new SerialConnection(param);
+            connection.setTimeout(timeout);
             this.timeout = timeout;
         }
         catch (Exception e) {
@@ -71,7 +72,7 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
      */
     public synchronized void connect() throws Exception {
         if (connection != null && !connection.isOpen()) {
-            connection.open(timeout);
+            connection.open();
             transaction = connection.getModbusTransport().createTransaction();
             setTransaction(transaction);
         }
@@ -91,8 +92,8 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
     @Override
     public void setTimeout(int timeout) {
         super.setTimeout(timeout);
-        if (connection != null && connection.getModbusTransport() != null) {
-            connection.getModbusTransport().setTimeout(timeout);
+        if (connection != null) {
+            connection.setTimeout(timeout);
         }
     }
 

@@ -8,7 +8,7 @@
     <artifactId>j2mod</artifactId>
     <name>j2mod</name>
     <url>https://github.com/steveohara/j2mod</url>
-    <version>2.1-SNAPSHOT</version>
+    <version>2.1.2-SNAPSHOT</version>
     <description>A fork of the j2mod library to support the jSerialComm connector</description>
 
     <packaging>jar</packaging>

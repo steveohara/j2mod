@@ -45,6 +45,7 @@ public class SerialConnection {
     private ModbusSerialTransport transport;
     private SerialPort serialPort;
     private InputStream inputStream;
+    private int timeout = Modbus.DEFAULT_TIMEOUT;
 
     /**
      * Creates a SerialConnection object and initializes variables passed in as
@@ -72,17 +73,6 @@ public class SerialConnection {
      * @throws Exception if an error occurs.
      */
     public void open() throws Exception {
-        open(Modbus.DEFAULT_TIMEOUT);
-    }
-
-    /**
-     * Opens the communication port using the specified read timeout
-     *
-     * @param timeout Receive timeout in milliseconds
-     *
-     * @throws Exception if an error occurs.
-     */
-    public void open(int timeout) throws Exception {
         serialPort = SerialPort.getCommPort(parameters.getPortName());
         serialPort.closePort();
         setConnectionParameters();
@@ -153,6 +143,27 @@ public class SerialConnection {
      */
     public boolean isOpen() {
         return serialPort != null;
+    }
+
+    /**
+     * Returns the timeout for this <tt>UDPMasterConnection</tt>.
+     *
+     * @return the timeout as <tt>int</tt>.
+     */
+    public synchronized int getTimeout() {
+        return timeout;
+    }
+
+    /**
+     * Sets the timeout for this <tt>UDPMasterConnection</tt>.
+     *
+     * @param timeout the timeout as <tt>int</tt>.
+     */
+    public synchronized void setTimeout(int timeout) {
+        this.timeout = timeout;
+        if (transport != null) {
+            transport.setTimeout(timeout);
+        }
     }
 
 }

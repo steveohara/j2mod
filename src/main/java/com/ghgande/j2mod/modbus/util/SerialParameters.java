@@ -509,4 +509,18 @@ public class SerialParameters {
         }
     }
 
+    @Override
+    public String toString() {
+        return "SerialParameters{" +
+                "portName='" + portName + '\'' +
+                ", baudRate=" + baudRate +
+                ", flowControlIn=" + flowControlIn +
+                ", flowControlOut=" + flowControlOut +
+                ", databits=" + databits +
+                ", stopbits=" + stopbits +
+                ", parity=" + parity +
+                ", encoding='" + encoding + '\'' +
+                ", echo=" + echo +
+                '}';
+    }
 }

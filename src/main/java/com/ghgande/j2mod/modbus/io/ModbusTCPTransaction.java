@@ -116,6 +116,7 @@ public class ModbusTCPTransaction extends ModbusTransaction {
         // Automatically re-connect if disconnected.
         if (!connection.isConnected()) {
             try {
+                logger.debug("connecting to: {}", connection.getAddress().toString());
                 connection.connect();
                 transport = connection.getModbusTransport();
             }
@@ -137,7 +138,7 @@ public class ModbusTCPTransaction extends ModbusTransaction {
                 do {
                     response = transport.readResponse();
                     if (logger.isDebugEnabled()) {
-                        logger.debug("response transaction ID = {}", response.getTransactionID());
+                        logger.debug("response transaction ID = {}, RESPONSE: {}", response.getTransactionID(), response.getHexMessage());
                         if (response.getTransactionID() != request.getTransactionID()) {
                             logger.debug("expected {}, got {}", request.getTransactionID(), response.getTransactionID());
                         }
