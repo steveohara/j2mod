@@ -42,13 +42,16 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
     private static final Logger logger = LoggerFactory.getLogger(ModbusTCPTransport.class);
 
     // instance attributes
-    private DataInputStream dataInputStream; // input stream
-    private DataOutputStream dataOutputStream; // output stream
-    private final BytesInputStream byteInputStream = new BytesInputStream(Modbus.MAX_MESSAGE_LENGTH + 6);
-    private final BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH + 6); // write frames
-    private Socket socket = null;
-    private TCPMasterConnection master = null;
-    private boolean headless = false; // Some TCP implementations are.
+    protected DataInputStream dataInputStream; // input stream
+    protected DataOutputStream dataOutputStream; // output stream
+    protected final BytesInputStream byteInputStream = new BytesInputStream(Modbus.MAX_MESSAGE_LENGTH + 6);
+    protected final BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH + 6); // write frames
+    protected Socket socket = null;
+    protected TCPMasterConnection master = null;
+    protected boolean headless = false; // Some TCP implementations are.
+
+    public ModbusTCPTransport() {
+    }
 
     /**
      * Constructs a new <tt>ModbusTransport</tt> instance, for a given

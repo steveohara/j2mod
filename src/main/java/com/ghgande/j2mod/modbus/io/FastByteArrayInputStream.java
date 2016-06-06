@@ -39,6 +39,7 @@ public class FastByteArrayInputStream extends InputStream {
      * Number of bytes in the input buffer.
      */
     protected int count;
+
     /**
      * Actual position pointer into the input buffer.
      */
@@ -118,6 +119,8 @@ public class FastByteArrayInputStream extends InputStream {
     public int available() {
         return count - pos;
     }
+
+    public int getCount() { return count; }
 
     public void mark(int readlimit) {
         logger.debug("mark()");

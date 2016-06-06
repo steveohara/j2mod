@@ -71,9 +71,11 @@ public class TCPMasterConnection {
      */
     private void prepareTransport() throws IOException {
         if (transport == null) {
+            logger.trace("prepareTransport() -> using standard TCP transport.");
             transport = new ModbusTCPTransport(socket);
         }
         else {
+            logger.trace("prepareTransport() -> using custom transport: {}", transport.getClass().getSimpleName());
             transport.setSocket(socket);
         }
     }
@@ -106,16 +108,14 @@ public class TCPMasterConnection {
      */
     public synchronized boolean isConnected() {
         if (connected && socket != null) {
-            if (!socket.isConnected() || socket.isClosed()
-                    || socket.isInputShutdown()
-                    || socket.isOutputShutdown()) {
+            if (!socket.isConnected() || socket.isClosed() || socket.isInputShutdown() || socket.isOutputShutdown()) {
                 try {
                     socket.close();
+                } catch (IOException e) {
+                    logger.error("Socket exception", e);
+                } finally {
+                    connected = false;
                 }
-                catch (IOException e) {
-                    // Blah.
-                }
-                connected = false;
             }
             else {
                 /*
@@ -161,11 +161,11 @@ public class TCPMasterConnection {
         if (connected) {
             try {
                 transport.close();
+            } catch (IOException ex) {
+                logger.debug("close()", ex);
+            } finally {
+                connected = false;
             }
-            catch (IOException ex) {
-                logger.debug("close()");
-            }
-            connected = false;
         }
     }
 
