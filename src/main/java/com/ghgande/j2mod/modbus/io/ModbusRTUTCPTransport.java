@@ -47,17 +47,18 @@ public class ModbusRTUTCPTransport extends ModbusTCPTransport {
             dataOutputStream.flush();
             logger.debug("Sent: {}", ModbusUtil.toHex(byteOutputStream.toByteArray()));
             // write more sophisticated exception handling
-        } catch (SocketException ex) {
+        } catch (SocketException ex1) {
             if (master != null && !master.isConnected()) {
                 try {
                     master.connect();
                 }
                 catch (Exception e) {
-                    throw new ModbusIOException("I/O exception - failed to write - %s", ex.getMessage(), ex);
+                    // Do nothing.
                 }
             }
-        } catch (Exception ex) {
-            throw new ModbusIOException("I/O exception - failed to write - %s", ex.getMessage(), ex);
+            throw new ModbusIOException("I/O exception - failed to write", ex1);
+        } catch (Exception ex2) {
+            throw new ModbusIOException("I/O exception - failed to write", ex2);
         }
     }
 }
