@@ -18,7 +18,7 @@ package com.ghgande.j2mod.modbus.cmd;
 import com.ghgande.j2mod.modbus.io.ModbusSerialTransaction;
 import com.ghgande.j2mod.modbus.msg.ReadInputRegistersRequest;
 import com.ghgande.j2mod.modbus.msg.ReadInputRegistersResponse;
-import com.ghgande.j2mod.modbus.net.SerialConnection;
+import com.ghgande.j2mod.modbus.net.JSerialCommPort;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,7 @@ public class SerialAITest {
 
     public static void main(String[] args) {
 
-        SerialConnection con = null;
+        JSerialCommPort con = null;
         ModbusSerialTransaction trans;
         ReadInputRegistersRequest req;
         ReadInputRegistersResponse res;
@@ -84,7 +84,7 @@ public class SerialAITest {
             System.out.printf("Encoding [%s]", params.getEncoding());
 
             //4. Open the connection
-            con = new SerialConnection(params);
+            con = new JSerialCommPort(params);
             con.open();
 
             //5. Prepare a request

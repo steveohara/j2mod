@@ -17,7 +17,7 @@ package com.ghgande.j2mod.modbus.facade;
 
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
-import com.ghgande.j2mod.modbus.net.SerialConnection;
+import com.ghgande.j2mod.modbus.net.JSerialCommPort;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class ModbusSerialMaster extends AbstractModbusMaster {
 
     private static final Logger logger = LoggerFactory.getLogger(ModbusSerialMaster.class);
-    private SerialConnection connection;
+    private JSerialCommPort connection;
 
     /**
      * Constructs a new master facade instance for communication
@@ -56,7 +56,7 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
      */
     public ModbusSerialMaster(SerialParameters param, int timeout) {
         try {
-            connection = new SerialConnection(param);
+            connection = new JSerialCommPort(param);
             connection.setTimeout(timeout);
             this.timeout = timeout;
         }

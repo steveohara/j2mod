@@ -308,7 +308,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * within the given time frame.
      *
      * @param len is the length of the echo to read.  Timeout will occur if the
-     *            echo is not received in the time specified in the SerialConnection.
+     *            echo is not received in the time specified in the JSerialCommPort.
      *
      * @throws IOException if a I/O error occurred.
      */
