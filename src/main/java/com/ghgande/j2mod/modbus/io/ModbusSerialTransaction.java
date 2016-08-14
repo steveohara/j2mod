@@ -22,6 +22,7 @@ import com.ghgande.j2mod.modbus.ModbusSlaveException;
 import com.ghgande.j2mod.modbus.msg.ExceptionResponse;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.net.JSerialCommPort;
+import com.ghgande.j2mod.modbus.net.SerialConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +68,7 @@ public class ModbusSerialTransaction extends ModbusTransaction {
      *
      * @param con a <tt>TCPMasterConnection</tt> instance.
      */
-    public ModbusSerialTransaction(JSerialCommPort con) {
+    public ModbusSerialTransaction(SerialConnection con) {
         setSerialConnection(con);
     }
 
@@ -77,7 +78,7 @@ public class ModbusSerialTransaction extends ModbusTransaction {
      *
      * @param con a <tt>JSerialCommPort</tt>.
      */
-    public void setSerialConnection(JSerialCommPort con) {
+    public void setSerialConnection(SerialConnection con) {
         synchronized (MUTEX) {
             transport = con.getModbusTransport();
         }

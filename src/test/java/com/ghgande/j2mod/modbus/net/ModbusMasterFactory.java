@@ -15,7 +15,6 @@
  */
 package com.ghgande.j2mod.modbus.net;
 
-import com.fazecast.jSerialComm.SerialPort;
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
 import com.ghgande.j2mod.modbus.io.ModbusRTUTransport;
@@ -57,13 +56,13 @@ public class ModbusMasterFactory {
             parms.setPortName(parts[1]);
             parms.setBaudRate(9600);
             parms.setDatabits(8);
-            parms.setParity(SerialPort.NO_PARITY);
+            parms.setParity(SerialConnection.NO_PARITY);
             parms.setStopbits(1);
-            parms.setFlowControlIn(SerialPort.FLOW_CONTROL_DISABLED);
+            parms.setFlowControlIn(SerialConnection.FLOW_CONTROL_DISABLED);
             parms.setEcho(false);
             try {
                 ModbusRTUTransport transport = new ModbusRTUTransport();
-                transport.setCommPort(SerialPort.getCommPort(parms.getPortName()));
+                transport.setCommPort(JSerialCommPort.getCommPort(parms.getPortName()));
                 transport.setEcho(false);
                 return transport;
             }

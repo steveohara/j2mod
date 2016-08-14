@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class ModbusSerialListener extends AbstractModbusListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ModbusSerialListener.class);
-    private JSerialCommPort serialCon;
+    private SerialConnection serialCon;
 
     /**
      * Constructs a new <tt>ModbusSerialListener</tt> instance.
