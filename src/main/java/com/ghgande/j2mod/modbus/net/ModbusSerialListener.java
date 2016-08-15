@@ -46,6 +46,15 @@ public class ModbusSerialListener extends AbstractModbusListener {
         serialCon = new SerialConnection(params);
     }
 
+    /**
+     *  Constructs a new <tt>ModbusSerialListener</tt> instance specifying the serial connection interface
+     * @param params
+     * @param serialCon
+     */
+    public ModbusSerialListener(SerialParameters params, SerialConnectionInterface serialCon){
+        this.serialCon = serialCon;
+    }
+
     @Override
     public void setTimeout(int timeout) {
         super.setTimeout(timeout);

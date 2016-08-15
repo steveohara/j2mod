@@ -39,7 +39,15 @@ public class ModbusMasterFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(ModbusMasterFactory.class);
 
-    public static AbstractModbusTransport createModbusMaster(String address) {
+    public static AbstractModbusTransport createModbusMaster(String address, SerialConnection serialConnection){
+        return createCustomModbusMaster(address, serialConnection);
+    }
+
+    public static AbstractModbusTransport createModbusMaster(String address){
+        return createCustomModbusMaster(address, null);
+    }
+
+    private static AbstractModbusTransport createCustomModbusMaster(String address, SerialConnection serialConnection) {
         String parts[] = address.split(" *: *");
         if (parts.length < 2) {
             throw new IllegalArgumentException("missing connection information");
@@ -62,7 +70,10 @@ public class ModbusMasterFactory {
             parms.setEcho(false);
             try {
                 ModbusRTUTransport transport = new ModbusRTUTransport();
-                transport.setCommPort(SerialConnection.getCommPort(parms.getPortName()));
+                if(serialConnection == null)
+                    transport.setCommPort(SerialConnection.getCommPort(parms.getPortName()));
+                else
+                    transport.setCommPort(serialConnection);
                 transport.setEcho(false);
                 return transport;
             }
