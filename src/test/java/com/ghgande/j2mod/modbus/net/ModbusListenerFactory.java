@@ -50,8 +50,8 @@ public class ModbusListenerFactory {
             parms.setBaudRate(19200);
             parms.setDatabits(8);
             parms.setEcho(false);
-            parms.setParity(SerialConnection.NO_PARITY);
-            parms.setFlowControlIn(SerialConnection.FLOW_CONTROL_DISABLED);
+            parms.setParity(SerialConnectionInterface.NO_PARITY);
+            parms.setFlowControlIn(SerialConnectionInterface.FLOW_CONTROL_DISABLED);
 
             ModbusSerialListener listener = new ModbusSerialListener(parms);
             if (parts.length > 2) {

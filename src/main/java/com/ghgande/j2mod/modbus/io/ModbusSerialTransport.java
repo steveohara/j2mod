@@ -20,7 +20,7 @@ import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
-import com.ghgande.j2mod.modbus.net.SerialConnection;
+import com.ghgande.j2mod.modbus.net.SerialConnectionInterface;
 import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      */
     public static final int FRAME_END = 2000;
 
-    protected SerialConnection commPort;
+    protected SerialConnectionInterface commPort;
     protected boolean echo = false;     // require RS-485 echo processing
     private final Set<AbstractSerialTransportListener> listeners = Collections.synchronizedSet(new HashSet<AbstractSerialTransportListener>());
 
@@ -75,7 +75,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
 
         // Wait here for the message to have been sent
 
-        double bytesPerSec = commPort.getBaudRate() / (commPort.getNumDataBits() + commPort.getNumStopBits() + (commPort.getParity() == SerialConnection.NO_PARITY ? 0 : 1));
+        double bytesPerSec = commPort.getBaudRate() / (commPort.getNumDataBits() + commPort.getNumStopBits() + (commPort.getParity() == SerialConnectionInterface.NO_PARITY ? 0 : 1));
         double delay = 1000000000.0 * msg.getOutputLength() / bytesPerSec;
         double delayMilliSeconds = Math.floor(delay / 1000000);
         double delayNanoSeconds = delay % 1000000;
@@ -122,7 +122,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     public void setTimeout(int time) {
         super.setTimeout(time);
         if (commPort != null) {
-            commPort.setComPortTimeouts(SerialConnection.TIMEOUT_READ_BLOCKING, timeout, 0);
+            commPort.setComPortTimeouts(SerialConnectionInterface.TIMEOUT_READ_BLOCKING, timeout, 0);
         }
     }
 
@@ -270,7 +270,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @throws IOException if an I/O related error occurs.
      */
-    public void setCommPort(SerialConnection cp) throws IOException {
+    public void setCommPort(SerialConnectionInterface cp) throws IOException {
         commPort = cp;
         setTimeout(timeout);
     }
@@ -308,7 +308,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * within the given time frame.
      *
      * @param len is the length of the echo to read.  Timeout will occur if the
-     *            echo is not received in the time specified in the JSerialCommPort.
+     *            echo is not received in the time specified in the SerialConnection.
      *
      * @throws IOException if a I/O error occurred.
      */

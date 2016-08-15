@@ -21,7 +21,7 @@ import com.ghgande.j2mod.modbus.facade.ModbusSerialMaster;
 import com.ghgande.j2mod.modbus.io.*;
 import com.ghgande.j2mod.modbus.msg.*;
 import com.ghgande.j2mod.modbus.net.ModbusMasterFactory;
-import com.ghgande.j2mod.modbus.net.SerialConnection;
+import com.ghgande.j2mod.modbus.net.SerialConnectionInterface;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.wiringpi.Gpio;
@@ -226,7 +226,7 @@ public class ReadInputRegistersWithCallbackTest {
 
     private static class EventListener extends AbstractSerialTransportListener {
         @Override
-        public void beforeMessageWrite(SerialConnection port, ModbusMessage msg) {
+        public void beforeMessageWrite(SerialConnectionInterface port, ModbusMessage msg) {
             Gpio.digitalWrite(RTS_PIN, true);
             try {
                 Thread.sleep(30);
@@ -237,7 +237,7 @@ public class ReadInputRegistersWithCallbackTest {
         }
 
         @Override
-        public void afterMessageWrite(SerialConnection port, ModbusMessage msg) {
+        public void afterMessageWrite(SerialConnectionInterface port, ModbusMessage msg) {
             Gpio.digitalWrite(RTS_PIN, false);
         }
     }

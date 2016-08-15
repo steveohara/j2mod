@@ -15,7 +15,7 @@
  */
 package com.ghgande.j2mod.modbus.util;
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.net.SerialConnection;
+import com.ghgande.j2mod.modbus.net.SerialConnectionInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,11 +52,11 @@ public class SerialParameters {
     public SerialParameters() {
         portName = "";
         baudRate = 9600;
-        flowControlIn = SerialConnection.FLOW_CONTROL_DISABLED;
-        flowControlOut = SerialConnection.FLOW_CONTROL_DISABLED;
+        flowControlIn = SerialConnectionInterface.FLOW_CONTROL_DISABLED;
+        flowControlOut = SerialConnectionInterface.FLOW_CONTROL_DISABLED;
         databits = 8;
-        stopbits = SerialConnection.ONE_STOP_BIT;
-        parity = SerialConnection.NO_PARITY;
+        stopbits = SerialConnectionInterface.ONE_STOP_BIT;
+        parity = SerialConnectionInterface.NO_PARITY;
         encoding = Modbus.DEFAULT_SERIAL_ENCODING;
         echo = false;
     }
@@ -105,11 +105,11 @@ public class SerialParameters {
         }
         setPortName(props.getProperty(prefix + "portName", ""));
         setBaudRate(props.getProperty(prefix + "baudRate", "" + 9600));
-        setFlowControlIn(props.getProperty(prefix + "flowControlIn", "" + SerialConnection.FLOW_CONTROL_DISABLED));
-        setFlowControlOut(props.getProperty(prefix + "flowControlOut", "" + SerialConnection.FLOW_CONTROL_DISABLED));
-        setParity(props.getProperty(prefix + "parity", "" + SerialConnection.NO_PARITY));
+        setFlowControlIn(props.getProperty(prefix + "flowControlIn", "" + SerialConnectionInterface.FLOW_CONTROL_DISABLED));
+        setFlowControlOut(props.getProperty(prefix + "flowControlOut", "" + SerialConnectionInterface.FLOW_CONTROL_DISABLED));
+        setParity(props.getProperty(prefix + "parity", "" + SerialConnectionInterface.NO_PARITY));
         setDatabits(props.getProperty(prefix + "databits", "8"));
-        setStopbits(props.getProperty(prefix + "stopbits", "" + SerialConnection.ONE_STOP_BIT));
+        setStopbits(props.getProperty(prefix + "stopbits", "" + SerialConnectionInterface.ONE_STOP_BIT));
         setEncoding(props.getProperty(prefix + "encoding", Modbus.DEFAULT_SERIAL_ENCODING));
         setEcho("true".equals(props.getProperty(prefix + "echo")));
     }
@@ -310,13 +310,13 @@ public class SerialParameters {
      */
     public void setStopbits(String stopbits) {
         if (ModbusUtil.isBlank(stopbits) || stopbits.equals("1")) {
-            this.stopbits = SerialConnection.ONE_STOP_BIT;
+            this.stopbits = SerialConnectionInterface.ONE_STOP_BIT;
         }
         else if (stopbits.equals("1.5")) {
-            this.stopbits = SerialConnection.ONE_POINT_FIVE_STOP_BITS;
+            this.stopbits = SerialConnectionInterface.ONE_POINT_FIVE_STOP_BITS;
         }
         else if (stopbits.equals("2")) {
-            this.stopbits = SerialConnection.TWO_STOP_BITS;
+            this.stopbits = SerialConnectionInterface.TWO_STOP_BITS;
         }
     }
 
@@ -327,11 +327,11 @@ public class SerialParameters {
      */
     public String getStopbitsString() {
         switch (stopbits) {
-            case SerialConnection.ONE_STOP_BIT:
+            case SerialConnectionInterface.ONE_STOP_BIT:
                 return "1";
-            case SerialConnection.ONE_POINT_FIVE_STOP_BITS:
+            case SerialConnectionInterface.ONE_POINT_FIVE_STOP_BITS:
                 return "1.5";
-            case SerialConnection.TWO_STOP_BITS:
+            case SerialConnectionInterface.TWO_STOP_BITS:
                 return "2";
             default:
                 return "1";
@@ -364,22 +364,22 @@ public class SerialParameters {
      */
     public void setParity(String parity) {
         if (ModbusUtil.isBlank(parity) || parity.equalsIgnoreCase("none")) {
-            this.parity = SerialConnection.NO_PARITY;
+            this.parity = SerialConnectionInterface.NO_PARITY;
         }
         else if (parity.equalsIgnoreCase("even")) {
-            this.parity = SerialConnection.EVEN_PARITY;
+            this.parity = SerialConnectionInterface.EVEN_PARITY;
         }
         else if (parity.equalsIgnoreCase("odd")) {
-            this.parity = SerialConnection.ODD_PARITY;
+            this.parity = SerialConnectionInterface.ODD_PARITY;
         }
         else if (parity.equalsIgnoreCase("mark")) {
-            this.parity = SerialConnection.MARK_PARITY;
+            this.parity = SerialConnectionInterface.MARK_PARITY;
         }
         else if (parity.equalsIgnoreCase("space")) {
-            this.parity = SerialConnection.SPACE_PARITY;
+            this.parity = SerialConnectionInterface.SPACE_PARITY;
         }
         else {
-            this.parity = SerialConnection.NO_PARITY;
+            this.parity = SerialConnectionInterface.NO_PARITY;
         }
     }
 
@@ -390,15 +390,15 @@ public class SerialParameters {
      */
     public String getParityString() {
         switch (parity) {
-            case SerialConnection.NO_PARITY:
+            case SerialConnectionInterface.NO_PARITY:
                 return "none";
-            case SerialConnection.EVEN_PARITY:
+            case SerialConnectionInterface.EVEN_PARITY:
                 return "even";
-            case SerialConnection.ODD_PARITY:
+            case SerialConnectionInterface.ODD_PARITY:
                 return "odd";
-            case SerialConnection.MARK_PARITY:
+            case SerialConnectionInterface.MARK_PARITY:
                 return "mark";
-            case SerialConnection.SPACE_PARITY:
+            case SerialConnectionInterface.SPACE_PARITY:
                 return "space";
             default:
                 return "none";
@@ -462,21 +462,21 @@ public class SerialParameters {
      */
     private int stringToFlow(String flowcontrol) {
         if (ModbusUtil.isBlank(flowcontrol) || flowcontrol.equalsIgnoreCase("none")) {
-            return SerialConnection.FLOW_CONTROL_DISABLED;
+            return SerialConnectionInterface.FLOW_CONTROL_DISABLED;
         }
         else if (flowcontrol.equalsIgnoreCase("xon/xoff out")) {
-            return SerialConnection.FLOW_CONTROL_XONXOFF_OUT_ENABLED;
+            return SerialConnectionInterface.FLOW_CONTROL_XONXOFF_OUT_ENABLED;
         }
         else if (flowcontrol.equalsIgnoreCase("xon/xoff in")) {
-            return SerialConnection.FLOW_CONTROL_XONXOFF_IN_ENABLED;
+            return SerialConnectionInterface.FLOW_CONTROL_XONXOFF_IN_ENABLED;
         }
         else if (flowcontrol.equalsIgnoreCase("rts/cts")) {
-            return SerialConnection.FLOW_CONTROL_CTS_ENABLED | SerialConnection.FLOW_CONTROL_RTS_ENABLED;
+            return SerialConnectionInterface.FLOW_CONTROL_CTS_ENABLED | SerialConnectionInterface.FLOW_CONTROL_RTS_ENABLED;
         }
         else if (flowcontrol.equalsIgnoreCase("dsr/dtr")) {
-            return SerialConnection.FLOW_CONTROL_DSR_ENABLED | SerialConnection.FLOW_CONTROL_DTR_ENABLED;
+            return SerialConnectionInterface.FLOW_CONTROL_DSR_ENABLED | SerialConnectionInterface.FLOW_CONTROL_DTR_ENABLED;
         }
-        return SerialConnection.FLOW_CONTROL_DISABLED;
+        return SerialConnectionInterface.FLOW_CONTROL_DISABLED;
     }
 
     /**
@@ -489,15 +489,15 @@ public class SerialParameters {
      */
     private String flowToString(int flowcontrol) {
         switch (flowcontrol) {
-            case SerialConnection.FLOW_CONTROL_DISABLED:
+            case SerialConnectionInterface.FLOW_CONTROL_DISABLED:
                 return "none";
-            case SerialConnection.FLOW_CONTROL_XONXOFF_OUT_ENABLED:
+            case SerialConnectionInterface.FLOW_CONTROL_XONXOFF_OUT_ENABLED:
                 return "xon/xoff out";
-            case SerialConnection.FLOW_CONTROL_XONXOFF_IN_ENABLED:
+            case SerialConnectionInterface.FLOW_CONTROL_XONXOFF_IN_ENABLED:
                 return "xon/xoff in";
-            case SerialConnection.FLOW_CONTROL_CTS_ENABLED:
+            case SerialConnectionInterface.FLOW_CONTROL_CTS_ENABLED:
                 return "rts/cts";
-            case SerialConnection.FLOW_CONTROL_DTR_ENABLED:
+            case SerialConnectionInterface.FLOW_CONTROL_DTR_ENABLED:
                 return "dsr/dtr";
             default:
                 return "none";
