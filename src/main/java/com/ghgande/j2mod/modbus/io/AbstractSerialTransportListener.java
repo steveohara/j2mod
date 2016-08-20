@@ -15,10 +15,10 @@
  */
 package com.ghgande.j2mod.modbus.io;
 
-import com.fazecast.jSerialComm.SerialPort;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
+import com.ghgande.j2mod.modbus.net.SerialConnectionInterface;
 
 /**
  * Any class that wants to listen for the begining and ending of read/writes
@@ -35,7 +35,7 @@ abstract public class AbstractSerialTransportListener {
      * @param port Port being used
      * @param msg  Message to be written
      */
-    public void beforeMessageWrite(SerialPort port, ModbusMessage msg) {
+    public void beforeMessageWrite(SerialConnectionInterface port, ModbusMessage msg) {
     }
 
     /**
@@ -44,7 +44,7 @@ abstract public class AbstractSerialTransportListener {
      * @param port Port being used
      * @param msg  Message written
      */
-    public void afterMessageWrite(SerialPort port, ModbusMessage msg) {
+    public void afterMessageWrite(SerialConnectionInterface port, ModbusMessage msg) {
     }
 
     /**
@@ -52,7 +52,7 @@ abstract public class AbstractSerialTransportListener {
      *
      * @param port Port to read
      */
-    public void beforeRequestRead(SerialPort port) {
+    public void beforeRequestRead(SerialConnectionInterface port) {
     }
 
     /**
@@ -61,7 +61,7 @@ abstract public class AbstractSerialTransportListener {
      * @param port Port to read
      * @param req  Request received
      */
-    public void afterRequestRead(SerialPort port, ModbusRequest req) {
+    public void afterRequestRead(SerialConnectionInterface port, ModbusRequest req) {
     }
 
     /**
@@ -69,7 +69,7 @@ abstract public class AbstractSerialTransportListener {
      *
      * @param port Port to read
      */
-    public void beforeResponseRead(SerialPort port) {
+    public void beforeResponseRead(SerialConnectionInterface port) {
     }
 
     /**
@@ -78,6 +78,6 @@ abstract public class AbstractSerialTransportListener {
      * @param port Port to read
      * @param res  Response received
      */
-    public void afterResponseRead(SerialPort port, ModbusResponse res) {
+    public void afterResponseRead(SerialConnectionInterface port, ModbusResponse res) {
     }
 }

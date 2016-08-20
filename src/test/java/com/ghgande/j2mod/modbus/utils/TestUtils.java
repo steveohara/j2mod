@@ -15,7 +15,7 @@
  */
 package com.ghgande.j2mod.modbus.utils;
 
-import com.fazecast.jSerialComm.SerialPort;
+import com.ghgande.j2mod.modbus.net.SerialConnectionInterface;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
@@ -80,7 +80,7 @@ public class TestUtils {
         String resourceName = String.format("/com/ghgande/j2mod/modbus/native/%s/%s", osName, exeName);
 
         try {
-            in = SerialPort.class.getResourceAsStream(resourceName);
+            in = SerialConnectionInterface.class.getResourceAsStream(resourceName);
             if (in == null) {
                 throw new Exception(String.format("Cannot find resource [%s]", resourceName));
             }

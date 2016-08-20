@@ -37,7 +37,7 @@ import java.io.InputStream;
  * @author Steve O'Hara (4energy)
  * @version 2.0 (March 2016)
  */
-public class SerialConnection {
+public class SerialConnection extends SerialConnectionInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(SerialConnection.class);
 
@@ -48,6 +48,13 @@ public class SerialConnection {
     private int timeout = Modbus.DEFAULT_TIMEOUT;
 
     /**
+     * Default constructor
+     */
+    public SerialConnection(){
+
+    }
+
+    /**
      * Creates a SerialConnection object and initializes variables passed in as
      * params.
      *
@@ -55,6 +62,12 @@ public class SerialConnection {
      */
     public SerialConnection(SerialParameters parameters) {
         this.parameters = parameters;
+    }
+
+    public static SerialConnectionInterface getCommPort(String commPort){
+        SerialConnection jSerialCommPort = new SerialConnection();
+        jSerialCommPort.serialPort = SerialPort.getCommPort(commPort);
+        return jSerialCommPort;
     }
 
     /**
@@ -72,8 +85,9 @@ public class SerialConnection {
      *
      * @throws Exception if an error occurs.
      */
-    public void open() throws Exception {
-        serialPort = SerialPort.getCommPort(parameters.getPortName());
+    public boolean open(){
+        if(serialPort == null)
+            serialPort = SerialPort.getCommPort(parameters.getPortName());
         serialPort.closePort();
         setConnectionParameters();
 
@@ -92,14 +106,20 @@ public class SerialConnection {
 
         // Open the input and output streams for the connection. If they won't
         // open, close the port before throwing an exception.
-        transport.setCommPort(serialPort);
+        try {
+            transport.setCommPort(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
 
         // Open the port so that we can get it's input stream.
         if (!serialPort.openPort()) {
             close();
-            throw new Exception("Error opening i/o streams");
+            return false;
         }
         inputStream = serialPort.getInputStream();
+        return true;
     }
 
     /**
@@ -170,4 +190,53 @@ public class SerialConnection {
         }
     }
 
+    @Override
+    public int readBytes(byte[] buffer, long bytesToRead) {
+        return serialPort.readBytes(buffer, bytesToRead);
+    }
+
+    @Override
+    public int writeBytes(byte[] buffer, long bytesToWrite) {
+        return serialPort.writeBytes(buffer, bytesToWrite);
+    }
+
+    @Override
+    public int bytesAvailable() {
+        return serialPort.bytesAvailable();
+    }
+
+    @Override
+    public int getBaudRate() {
+        return serialPort.getBaudRate();
+    }
+
+    @Override
+    public void setBaudRate(int newBaudRate) {
+        serialPort.setBaudRate(newBaudRate);
+    }
+
+    @Override
+    public int getNumDataBits() {
+        return serialPort.getNumDataBits();
+    }
+
+    @Override
+    public int getNumStopBits() {
+        return serialPort.getNumStopBits();
+    }
+
+    @Override
+    public int getParity() {
+        return serialPort.getParity();
+    }
+
+    @Override
+    public String getDescriptivePortName() {
+        return serialPort.getDescriptivePortName();
+    }
+
+    @Override
+    public void setComPortTimeouts(int newTimeoutMode, int newReadTimeout, int newWriteTimeout) {
+        serialPort.setComPortTimeouts(newTimeoutMode, newReadTimeout, newWriteTimeout);
+    }
 }

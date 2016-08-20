@@ -15,7 +15,6 @@
  */
 package com.ghgande.j2mod.modbus.net;
 
-import com.fazecast.jSerialComm.SerialPort;
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
 import com.ghgande.j2mod.modbus.io.ModbusRTUTransport;
@@ -40,7 +39,15 @@ public class ModbusMasterFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(ModbusMasterFactory.class);
 
-    public static AbstractModbusTransport createModbusMaster(String address) {
+    public static AbstractModbusTransport createModbusMaster(String address, SerialConnectionInterface serialConnection){
+        return createCustomModbusMaster(address, serialConnection);
+    }
+
+    public static AbstractModbusTransport createModbusMaster(String address){
+        return createCustomModbusMaster(address, null);
+    }
+
+    private static AbstractModbusTransport createCustomModbusMaster(String address, SerialConnectionInterface serialConnection) {
         String parts[] = address.split(" *: *");
         if (parts.length < 2) {
             throw new IllegalArgumentException("missing connection information");
@@ -57,13 +64,16 @@ public class ModbusMasterFactory {
             parms.setPortName(parts[1]);
             parms.setBaudRate(9600);
             parms.setDatabits(8);
-            parms.setParity(SerialPort.NO_PARITY);
+            parms.setParity(SerialConnectionInterface.NO_PARITY);
             parms.setStopbits(1);
-            parms.setFlowControlIn(SerialPort.FLOW_CONTROL_DISABLED);
+            parms.setFlowControlIn(SerialConnectionInterface.FLOW_CONTROL_DISABLED);
             parms.setEcho(false);
             try {
                 ModbusRTUTransport transport = new ModbusRTUTransport();
-                transport.setCommPort(SerialPort.getCommPort(parms.getPortName()));
+                if(serialConnection == null)
+                    transport.setCommPort(SerialConnection.getCommPort(parms.getPortName()));
+                else
+                    transport.setCommPort(serialConnection);
                 transport.setEcho(false);
                 return transport;
             }
