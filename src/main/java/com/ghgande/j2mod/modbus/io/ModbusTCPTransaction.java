@@ -144,7 +144,7 @@ public class ModbusTCPTransaction extends ModbusTransaction {
                         }
                     }
                 } while (response != null &&
-                        (!isCheckingValidity() || (request.getTransactionID() != 0 && request.getTransactionID() != response.getTransactionID())) &&
+                        (isCheckingValidity() && (request.getTransactionID() != 0 && request.getTransactionID() != response.getTransactionID())) &&
                         ++retryCounter < retryLimit);
 
                 if (retryCounter >= retryLimit) {
