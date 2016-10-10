@@ -78,16 +78,19 @@ public class TCPMasterConnection {
             if (useRtuOverTcp) {
                 logger.trace("prepareTransport() -> using RTU over TCP transport.");
                 transport = new ModbusRTUTCPTransport(socket);
+                transport.setMaster(this);
             }
             else {
                 logger.trace("prepareTransport() -> using standard TCP transport.");
                 transport = new ModbusTCPTransport(socket);
+                transport.setMaster(this);
             }
         }
         else {
             logger.trace("prepareTransport() -> using custom transport: {}", transport.getClass().getSimpleName());
             transport.setSocket(socket);
         }
+        transport.setTimeout(timeout);
     }
 
     /**

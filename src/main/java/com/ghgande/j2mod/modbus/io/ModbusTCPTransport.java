@@ -123,7 +123,11 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
         }
     }
 
-    @Override
+	public void setMaster(TCPMasterConnection master) {
+		this.master = master;
+	}
+
+	@Override
     public void close() throws IOException {
         dataInputStream.close();
         dataOutputStream.close();
