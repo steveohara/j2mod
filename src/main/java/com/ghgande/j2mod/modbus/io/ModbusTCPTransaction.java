@@ -162,11 +162,13 @@ public class ModbusTCPTransaction extends ModbusTransaction {
                     }
                     catch (Exception e) {
                         // Nope, fail this transaction.
+                    	incrementTransactionID();
                         throw new ModbusIOException("Connection lost", e);
                     }
                 }
                 retryCounter++;
                 if (retryCounter >= retryLimit) {
+                	incrementTransactionID();
                     throw new ModbusIOException("Executing transaction failed (tried " + retries + " times)", ex);
                 }
             }
@@ -174,6 +176,7 @@ public class ModbusTCPTransaction extends ModbusTransaction {
 
         // The slave may have returned an exception -- check for that.
         if (response instanceof ExceptionResponse) {
+        	incrementTransactionID();
             throw new ModbusSlaveException(((ExceptionResponse)response).getExceptionCode());
         }
 
