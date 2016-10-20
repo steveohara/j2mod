@@ -145,33 +145,6 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
     }
 
     
-    /**
-     * Set the amount of retries for opening
-     * the connection for executing the transaction.
-     * <p>
-     *
-     * @param retries the amount of retries as <tt>int</tt>.
-     */
-    public void setRetries( int retries )
-    {
-    	  if (transaction != null) {
-              ((ModbusTCPTransaction)transaction).setRetries(retries);
-          }
-    }
-    
-    /**
-     * Sets the flag that controls whether the
-     * validity of a transaction will be checked.
-     * <p>
-     *
-     * @param b true if checking validity, false otherwise.
-     */
-    public void setCheckingValidity(boolean b) {
-  	  if (transaction != null) {
-          ((ModbusTCPTransaction)transaction).setCheckingValidity(b);
-      }
-    }
-    
     @Override
     public void setTimeout(int timeout) {
         super.setTimeout(timeout);

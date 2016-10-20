@@ -18,6 +18,7 @@ package com.ghgande.j2mod.modbus.facade;
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
+import com.ghgande.j2mod.modbus.io.ModbusTCPTransaction;
 import com.ghgande.j2mod.modbus.io.ModbusTransaction;
 import com.ghgande.j2mod.modbus.msg.*;
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
@@ -461,6 +462,35 @@ abstract public class AbstractModbusMaster {
         this.timeout = timeout;
     }
 
+    
+    /**
+     * Set the amount of retries for opening
+     * the connection for executing the transaction.
+     * <p>
+     *
+     * @param retries the amount of retries as <tt>int</tt>.
+     */
+    public void setRetries( int retries )
+    {
+    	  if (transaction != null) {
+              transaction.setRetries(retries);
+          }
+    }
+    
+    /**
+     * Sets the flag that controls whether the
+     * validity of a transaction will be checked.
+     * <p>
+     *
+     * @param b true if checking validity, false otherwise.
+     */
+    public void setCheckingValidity(boolean b) {
+  	  if (transaction != null) {
+          transaction.setCheckingValidity(b);
+      }
+    }
+    
+    
     /**
      * Returns the transport being used by the
      *
