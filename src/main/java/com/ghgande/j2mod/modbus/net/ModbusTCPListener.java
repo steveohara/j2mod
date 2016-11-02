@@ -96,7 +96,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
              * attacks via massive parallel program logins can probably be
              * prevented.
              */
-            int floodProtection = 5;
+            int floodProtection = 50;
             serverSocket = new ServerSocket(port, floodProtection, address);
             serverSocket.setSoTimeout(timeout);
             logger.debug("Listening to {} (Port {})", serverSocket.toString(), port);
