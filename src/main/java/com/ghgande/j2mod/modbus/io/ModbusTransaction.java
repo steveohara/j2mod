@@ -62,6 +62,7 @@ public abstract class ModbusTransaction {
      */
     public void setRequest(ModbusRequest req) {
         request = req;
+        request.setTransactionID(getTransactionID());
     }
 
     /**

@@ -306,7 +306,6 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
             synchronized (byteInputStream) {
                 // use same buffer
                 byte[] buffer = byteInputStream.getBuffer();
-                logger.debug("Read: {}", ModbusUtil.toHex(buffer, 0, byteInputStream.count));
                 if (!headless) {
                     // All Modbus TCP transactions start with 6 bytes. Get them.
                     if (dataInputStream.read(buffer, 0, 6) == -1) {
@@ -336,6 +335,7 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                     byteInputStream.reset();
                     byteInputStream.skip(7);
                     int function = byteInputStream.readUnsignedByte();
+                    logger.debug("Read: {}", ModbusUtil.toHex(buffer, 0, 6 + count));
                     response = ModbusResponse.createModbusResponse(function);
 
                     // Rewind the input buffer, then read the data into the
