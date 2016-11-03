@@ -144,6 +144,7 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
         }
     }
 
+    
     @Override
     public void setTimeout(int timeout) {
         super.setTimeout(timeout);
