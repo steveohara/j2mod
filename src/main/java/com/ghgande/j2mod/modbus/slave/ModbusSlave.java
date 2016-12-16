@@ -51,20 +51,22 @@ public class ModbusSlave {
      *
      * @param port     Port to listen on if IP type
      * @param poolSize Pool size for TCP slaves
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
-    protected ModbusSlave(int port, int poolSize) throws ModbusException {
-        this(ModbusSlaveType.TCP, port, poolSize, null);
+    protected ModbusSlave(int port, int poolSize, boolean useRtuOverTcp) throws ModbusException {
+        this(ModbusSlaveType.TCP, port, poolSize, null, useRtuOverTcp);
     }
 
     /**
      * Creates a UDP modbus slave
      *
      * @param port Port to listen on if IP type
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
-    protected ModbusSlave(int port) throws ModbusException {
-        this(ModbusSlaveType.UDP, port, 0, null);
+    protected ModbusSlave(int port, boolean useRtuOverTcp) throws ModbusException {
+        this(ModbusSlaveType.UDP, port, 0, null, useRtuOverTcp);
     }
 
     /**
@@ -74,7 +76,7 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(SerialParameters serialParams) throws ModbusException {
-        this(ModbusSlaveType.SERIAL, 0, 0, serialParams);
+        this(ModbusSlaveType.SERIAL, 0, 0, serialParams, false);
     }
 
     /**
@@ -84,9 +86,10 @@ public class ModbusSlave {
      * @param port         Port to listen on if IP type
      * @param poolSize     Pool size for TCP slaves
      * @param serialParams Serial parameters for serial type slaves
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
-    private ModbusSlave(ModbusSlaveType type, int port, int poolSize, SerialParameters serialParams) throws ModbusException {
+    private ModbusSlave(ModbusSlaveType type, int port, int poolSize, SerialParameters serialParams, boolean useRtuOverTcp) throws ModbusException {
         this.type = type == null ? ModbusSlaveType.TCP : type;
         this.port = port;
         this.serialParams = serialParams;
@@ -98,7 +101,7 @@ public class ModbusSlave {
             listener = new ModbusUDPListener();
         }
         else if (this.type.is(ModbusSlaveType.TCP)) {
-            listener = new ModbusTCPListener(poolSize);
+            listener = new ModbusTCPListener(poolSize, useRtuOverTcp);
         }
         else {
             listener = new ModbusSerialListener(serialParams);

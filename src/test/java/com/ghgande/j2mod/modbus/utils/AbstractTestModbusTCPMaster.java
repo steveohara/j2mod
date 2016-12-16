@@ -83,7 +83,7 @@ public class AbstractTestModbusTCPMaster extends AbstractTestModbus {
             getSimpleProcessImage();
 
             // Create a TCP listener with 5 threads in pool, default address
-            listener = new ModbusTCPListener(5);
+            listener = new ModbusTCPListener(5, false);
             listener.setListening(true);
             listener.setPort(PORT);
             new Thread(listener).start();
