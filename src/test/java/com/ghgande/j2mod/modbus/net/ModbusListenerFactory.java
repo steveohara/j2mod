@@ -70,7 +70,7 @@ public class ModbusListenerFactory {
         else if (parts[0].toLowerCase().equals("tcp")) {
             // Create a ModbusTCPListener with the default interface
             // value.  The second optional value is the TCP port number
-            ModbusTCPListener listener = new ModbusTCPListener(5);
+            ModbusTCPListener listener = new ModbusTCPListener(5, false);
             if (parts.length > 2) {
                 int port = Integer.parseInt(parts[2]);
                 listener.setPort(port);

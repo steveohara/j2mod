@@ -42,11 +42,11 @@ public class AbstractTestModbusTCPSlaveNonCoupler extends AbstractTestModbusTCPS
         try {
             port = PORT + 1;
             modPollTool = TestUtils.loadModPollTool();
-            ModbusSlave slave = ModbusSlaveFactory.createTCPSlave(PORT, 5);
+            ModbusSlave slave = ModbusSlaveFactory.createTCPSlave(PORT, 5, false);
             slave.addProcessImage(UNIT_ID, getSimpleProcessImage());
             slave.open();
 
-            slave = ModbusSlaveFactory.createTCPSlave(PORT + 1, 5);
+            slave = ModbusSlaveFactory.createTCPSlave(PORT + 1, 5, false);
             slave.addProcessImage(UNIT_ID, getSimpleProcessImage());
             slave.open();
         }

@@ -41,6 +41,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
     private ServerSocket serverSocket = null;
     private ThreadPool threadPool;
     private Thread listener;
+    private boolean useRtuOverTcp;
 
     /**
      * Constructs a ModbusTCPListener instance.<br>
@@ -48,10 +49,13 @@ public class ModbusTCPListener extends AbstractModbusListener {
      * @param poolsize the size of the <tt>ThreadPool</tt> used to handle incoming
      *                 requests.
      * @param addr     the interface to use for listening.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
-    public ModbusTCPListener(int poolsize, InetAddress addr) {
+    public ModbusTCPListener(int poolsize, InetAddress addr, boolean useRtuOverTcp) {
         threadPool = new ThreadPool(poolsize);
         address = addr;
+        this.useRtuOverTcp = useRtuOverTcp;
     }
 
     /**
@@ -62,8 +66,10 @@ public class ModbusTCPListener extends AbstractModbusListener {
      *
      * @param poolsize the size of the <tt>ThreadPool</tt> used to handle incoming
      *                 requests.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
-    public ModbusTCPListener(int poolsize) {
+    public ModbusTCPListener(int poolsize, boolean useRtuOverTcp) {
         threadPool = new ThreadPool(poolsize);
         try {
             address = InetAddress.getByAddress(new byte[]{0, 0, 0, 0});
@@ -71,6 +77,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
         catch (UnknownHostException ex) {
             // Can't happen -- size is fixed.
         }
+        this.useRtuOverTcp = useRtuOverTcp;
     }
 
     @Override
@@ -125,7 +132,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
                 }
                 logger.debug("Making new connection {}", incoming.toString());
                 if (listening) {
-                    threadPool.execute(new TCPConnectionHandler(this, new TCPSlaveConnection(incoming)));
+                    threadPool.execute(new TCPConnectionHandler(this, new TCPSlaveConnection(incoming, useRtuOverTcp)));
                 }
                 else {
                     incoming.close();

@@ -17,6 +17,7 @@ package com.ghgande.j2mod.modbus.net;
 
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
+import com.ghgande.j2mod.modbus.io.ModbusRTUTCPTransport;
 import com.ghgande.j2mod.modbus.io.ModbusTCPTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +48,11 @@ public class TCPSlaveConnection {
      * instance.
      *
      * @param socket the socket instance to be used for communication.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
-    public TCPSlaveConnection(Socket socket) {
+    public TCPSlaveConnection(Socket socket, boolean useRtuOverTcp) {
         try {
-            setSocket(socket);
+            setSocket(socket, useRtuOverTcp);
         }
         catch (IOException ex) {
             logger.debug("TCPSlaveConnection::Socket invalid");
@@ -90,14 +92,21 @@ public class TCPSlaveConnection {
      * <tt>TCPMasterConnection</tt> for use.
      *
      * @param socket the socket to be used for communication.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      *
      * @throws IOException if an I/O related error occurs.
      */
-    private void setSocket(Socket socket) throws IOException {
+    private void setSocket(Socket socket, boolean useRtuOverTcp) throws IOException {
         this.socket = socket;
 
         if (transport == null) {
-            transport = new ModbusTCPTransport(socket);
+        	if(useRtuOverTcp){
+                logger.trace("setSocket() -> using RTU over TCP transport.");
+                transport = new ModbusRTUTCPTransport(socket);
+        	} else{
+                logger.trace("setSocket() -> using standard TCP transport.");
+                transport = new ModbusTCPTransport(socket);
+        	}
         }
         else {
             transport.setSocket(socket);
