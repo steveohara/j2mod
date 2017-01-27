@@ -25,6 +25,8 @@ import com.ghgande.j2mod.modbus.util.SerialParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,7 +57,34 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(int port, int poolSize, boolean useRtuOverTcp) throws ModbusException {
-        this(ModbusSlaveType.TCP, port, poolSize, null, useRtuOverTcp);
+        this(ModbusSlaveType.TCP, getDefaultAddress(), port, poolSize, null, useRtuOverTcp);
+    }
+
+    /**
+     * Creates a TCP modbus slave
+     *
+     * @param address  IP address to listen on
+     * @param port     Port to listen on if IP type
+     * @param poolSize Pool size for TCP slaves
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     * @throws ModbusException If a problem occurs e.g. port already in use
+     */
+    protected ModbusSlave(InetAddress address, int port, int poolSize, boolean useRtuOverTcp) throws ModbusException {
+        this(ModbusSlaveType.TCP, address, port, poolSize, null, useRtuOverTcp);
+    }
+
+    /**
+     * Returns default ip address
+     *
+     * @return Default address
+     */
+    private static InetAddress getDefaultAddress() {
+        try {
+            return InetAddress.getByAddress(new byte[]{0, 0, 0, 0});
+        } catch (UnknownHostException e) {
+            //this is not possible
+            return null;
+        }
     }
 
     /**
@@ -66,7 +95,19 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(int port, boolean useRtuOverTcp) throws ModbusException {
-        this(ModbusSlaveType.UDP, port, 0, null, useRtuOverTcp);
+        this(ModbusSlaveType.UDP, getDefaultAddress(), port, 0, null, useRtuOverTcp);
+    }
+
+    /**
+     * Creates a UDP modbus slave
+     *
+     * @param address IP address to listen on
+     * @param port Port to listen on if IP type
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     * @throws ModbusException If a problem occurs e.g. port already in use
+     */
+    protected ModbusSlave(InetAddress address, int port, boolean useRtuOverTcp) throws ModbusException {
+        this(ModbusSlaveType.UDP, address, port, 0, null, useRtuOverTcp);
     }
 
     /**
@@ -76,20 +117,21 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(SerialParameters serialParams) throws ModbusException {
-        this(ModbusSlaveType.SERIAL, 0, 0, serialParams, false);
+        this(ModbusSlaveType.SERIAL, getDefaultAddress(),0, 0, serialParams, false);
     }
 
     /**
      * Creates an appropriate type of listener
      *
      * @param type         Type of slave to create
+     * @param address      IP address to listen on
      * @param port         Port to listen on if IP type
      * @param poolSize     Pool size for TCP slaves
      * @param serialParams Serial parameters for serial type slaves
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
-    private ModbusSlave(ModbusSlaveType type, int port, int poolSize, SerialParameters serialParams, boolean useRtuOverTcp) throws ModbusException {
+    private ModbusSlave(ModbusSlaveType type, InetAddress address, int port, int poolSize, SerialParameters serialParams, boolean useRtuOverTcp) throws ModbusException {
         this.type = type == null ? ModbusSlaveType.TCP : type;
         this.port = port;
         this.serialParams = serialParams;
@@ -108,6 +150,7 @@ public class ModbusSlave {
         }
 
         listener.setListening(true);
+        listener.setAddress(address);
         listener.setPort(port);
         listener.setTimeout(0);
     }
