@@ -57,7 +57,7 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(int port, int poolSize, boolean useRtuOverTcp) throws ModbusException {
-        this(ModbusSlaveType.TCP, getDefaultAddress(), port, poolSize, null, useRtuOverTcp);
+        this(ModbusSlaveType.TCP, null, port, poolSize, null, useRtuOverTcp);
     }
 
     /**
@@ -74,20 +74,6 @@ public class ModbusSlave {
     }
 
     /**
-     * Returns default ip address
-     *
-     * @return Default address
-     */
-    private static InetAddress getDefaultAddress() {
-        try {
-            return InetAddress.getByAddress(new byte[]{0, 0, 0, 0});
-        } catch (UnknownHostException e) {
-            //this is not possible
-            return null;
-        }
-    }
-
-    /**
      * Creates a UDP modbus slave
      *
      * @param port Port to listen on if IP type
@@ -95,7 +81,7 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(int port, boolean useRtuOverTcp) throws ModbusException {
-        this(ModbusSlaveType.UDP, getDefaultAddress(), port, 0, null, useRtuOverTcp);
+        this(ModbusSlaveType.UDP, null, port, 0, null, useRtuOverTcp);
     }
 
     /**
@@ -117,7 +103,7 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(SerialParameters serialParams) throws ModbusException {
-        this(ModbusSlaveType.SERIAL, getDefaultAddress(),0, 0, serialParams, false);
+        this(ModbusSlaveType.SERIAL, null,0, 0, serialParams, false);
     }
 
     /**

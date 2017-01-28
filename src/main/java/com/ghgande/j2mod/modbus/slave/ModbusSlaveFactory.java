@@ -65,7 +65,7 @@ public class ModbusSlaveFactory {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     public static synchronized ModbusSlave createTCPSlave(int port, int poolSize, boolean useRtuOverTcp) throws ModbusException {
-        return ModbusSlaveFactory.createTCPSlave(getDefaultAddress(), port, poolSize, useRtuOverTcp);
+        return ModbusSlaveFactory.createTCPSlave(null, port, poolSize, useRtuOverTcp);
     }
 
     /**
@@ -92,20 +92,6 @@ public class ModbusSlaveFactory {
     }
 
     /**
-     * Returns default ip address
-     *
-     * @return Default address
-     */
-    private static InetAddress getDefaultAddress() {
-        try {
-            return InetAddress.getByAddress(new byte[]{0, 0, 0, 0});
-        } catch (UnknownHostException e) {
-            //this is not possible
-            return null;
-        }
-    }
-
-    /**
      * Creates a UDP modbus slave or returns the one already allocated to this port
      *
      * @param port Port to listen on
@@ -114,7 +100,7 @@ public class ModbusSlaveFactory {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     public static synchronized ModbusSlave createUDPSlave(int port) throws ModbusException {
-        return createUDPSlave(getDefaultAddress(), port);
+        return createUDPSlave(null, port);
     }
 
     /**
