@@ -22,8 +22,7 @@ import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
-import com.ghgande.j2mod.modbus.slave.ModbusSlave;
-import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,24 +178,14 @@ public abstract class AbstractModbusListener implements Runnable {
         transport.writeMessage(response);
     }
 
+    
     /**
      * Returns the related process image for this listener and Unit Id
-     *
-     * @param unitId Unit ID
-     * @return Process image associated with this listener and Unit ID
+     * 
+     * @param unitId Unit Id
+     * @return Process image associated with this listener and Unit Id
      */
-    public ProcessImage getProcessImage(int unitId) {
-        ModbusSlave slave = ModbusSlaveFactory.getSlave(this);
-        if (slave != null) {
-            return slave.getProcessImage(unitId);
-        }
-        else {
+    public abstract ProcessImage getProcessImage(int unitId);
 
-            // Legacy: Use the ModbusCoupler if no image was associated with the listener
-            //         This will be removed when the ModbusCoupler is removed
-
-            return ModbusCoupler.getReference().getProcessImage(unitId);
-        }
-    }
 
 }

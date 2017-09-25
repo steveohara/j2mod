@@ -15,9 +15,13 @@
  */
 package com.ghgande.j2mod.modbus.net;
 
+import com.ghgande.j2mod.modbus.ModbusCoupler;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
 import com.ghgande.j2mod.modbus.io.ModbusSerialTransport;
+import com.ghgande.j2mod.modbus.procimg.ProcessImage;
+import com.ghgande.j2mod.modbus.slave.ModbusSerialSlave;
+import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,12 +41,22 @@ public class ModbusSerialListener extends AbstractModbusListener {
     private static final Logger logger = LoggerFactory.getLogger(ModbusSerialListener.class);
     private AbstractSerialConnection serialCon;
 
+    private SerialParameters serialParams;
+    
+    /**
+     * Constructor.
+     */
+    public ModbusSerialListener(){
+        
+    } 
+  
     /**
      * Constructs a new <tt>ModbusSerialListener</tt> instance.
      *
      * @param params a <tt>SerialParameters</tt> instance.
      */
     public ModbusSerialListener(SerialParameters params) {
+        this.serialParams=params;
         serialCon = new SerialConnection(params);
     }
 
@@ -114,6 +128,41 @@ public class ModbusSerialListener extends AbstractModbusListener {
         listening = false;
         if (serialCon != null) {
             serialCon.close();
+        }
+    }
+
+    /**
+     * @return the serialParams
+     */
+    public final SerialParameters getSerialParams() {
+        return serialParams;
+    }
+
+    /**
+     * @param serialParams the serialParams to set
+     */
+    public final void setSerialParams(SerialParameters serialParams) {
+        this.serialParams = serialParams;
+        serialCon = new SerialConnection(serialParams);
+    }
+
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see com.ghgande.j2mod.modbus.net.AbstractModbusListener#getProcessImage(int)
+     */
+    @Override
+    public ProcessImage getProcessImage(int unitId) {
+        ModbusSerialSlave slave = ModbusSlaveFactory.getSerialSlave(serialParams);
+        if (slave != null) {
+            return slave.getProcessImage(unitId);
+        } else {
+
+            // Legacy: Use the ModbusCoupler if no image was associated with the listener
+            // This will be removed when the ModbusCoupler is removed
+
+            return ModbusCoupler.getReference().getProcessImage(unitId);
         }
     }
 

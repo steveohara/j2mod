@@ -15,8 +15,13 @@
  */
 package com.ghgande.j2mod.modbus.net;
 
+import com.ghgande.j2mod.modbus.ModbusCoupler;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.io.ModbusUDPTransport;
+import com.ghgande.j2mod.modbus.procimg.ProcessImage;
+import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
+import com.ghgande.j2mod.modbus.slave.ModbusUDPSlave;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,7 +123,30 @@ public class ModbusUDPListener extends AbstractModbusListener {
 
     @Override
     public void stop() {
-        terminal.deactivate();
-        listening = false;
+        if (terminal != null){
+            terminal.deactivate();
+            listening = false;
+        }
+        
+        
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see com.ghgande.j2mod.modbus.net.AbstractModbusListener#getProcessImage(int)
+     */
+    @Override
+    public ProcessImage getProcessImage(int unitId) {
+        ModbusUDPSlave slave = ModbusSlaveFactory.getUDPSlave(address, port);
+        if (slave != null) {
+            return slave.getProcessImage(unitId);
+        } else {
+
+            // Legacy: Use the ModbusCoupler if no image was associated with the listener
+            // This will be removed when the ModbusCoupler is removed
+
+            return ModbusCoupler.getReference().getProcessImage(unitId);
+        }
     }
 }
