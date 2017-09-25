@@ -58,7 +58,7 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
     
     /**
      * Return if the Slave has any process images.
-     * @return
+     * @return true/false
      */
     public boolean hasProcessImages() {
         return processImages.size() > 0;
@@ -66,7 +66,7 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
 
     /**
      * Start Slave Listener.
-     * @throws ModbusException
+     * @throws ModbusException Exception if cannot start.
      */
     public void open() throws ModbusException {
 
@@ -87,7 +87,6 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
 
     /**
      * Stop Slave Listener.
-     * @throws ModbusException
      */
     public void close() {
         ModbusSlaveFactory.close(this);
@@ -120,7 +119,7 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
     /**
      * Returns the process image for the given Unit ID
      *
-     * @param unitId
+     * @param unitId  Unit ID
      * @return Process image
      */
     public ProcessImage getProcessImage(int unitId) {
@@ -130,7 +129,7 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
     /**
      * Removes the process image for the given Unit ID
      *
-     * @param unitId
+     * @param unitId - Unit ID
      * @return Process image
      */
     public ProcessImage removeProcessImage(int unitId) {
@@ -140,8 +139,8 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
     /**
      * Adds a process image for the given Unit ID
      *
-     * @param unitId
-     * @param processImage
+     * @param unitId - Unit ID
+     * @param processImage - Process Image
      * @return Process image
      */
     public ProcessImage addProcessImage(int unitId, ProcessImage processImage) {

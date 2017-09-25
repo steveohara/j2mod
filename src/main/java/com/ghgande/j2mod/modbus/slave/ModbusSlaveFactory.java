@@ -86,7 +86,7 @@ public class ModbusSlaveFactory {
      *
      * @param address IP address to listen on
      * @param port Port to listen on
-     * @param poolSize Pool size of listener threads
+     * @param pool  Executor Service of listener threads.
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      * @return new or existing TCP modbus slave associated with the port
      *
@@ -211,7 +211,6 @@ public class ModbusSlaveFactory {
      * Closes this slave and removes it from the running list
      *
      * @param slave Slave to remove
-     * @throws ModbusException
      */
     public static synchronized void close(AbstractModbusSlave<?> slave){
         if (slave != null) {
@@ -234,8 +233,6 @@ public class ModbusSlaveFactory {
 
     /**
      * Closes all slaves and removes them from the running list
-     * 
-     * @throws ModbusException
      */
     public static synchronized void close() {
         for (AbstractModbusSlave<?> slave : new ArrayList<AbstractModbusSlave<?>>(slaves.values())) {

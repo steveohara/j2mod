@@ -63,8 +63,8 @@ public class ModbusSerialListener extends AbstractModbusListener {
     /**
      * Constructs a new <tt>ModbusSerialListener</tt> instance specifying the serial connection interface
      *
-     * @param params
-     * @param serialCon
+     * @param params - a <tt>SerialParameters</tt> instance.
+     * @param serialCon - a <tt>SerialConnection</tt> 
      */
     public ModbusSerialListener(SerialParameters params, AbstractSerialConnection serialCon) {
         this.serialCon = serialCon;

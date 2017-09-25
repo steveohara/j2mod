@@ -36,7 +36,11 @@ import java.util.Map;
  * @author Steve O'Hara (4energy)
  * @version 2.0 (March 2016)
  *
- * @deprecated As of 2.3.4 This mechanism for handling process images has been superseded by a more flexible mechanism {@link com.ghgande.j2mod.modbus.slave.ModbusSlave} and {@link com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory}
+ * @deprecated As of 2.3.4 This mechanism for handling process images has been superseded by a more flexible mechanism see
+ * {@link com.ghgande.j2mod.modbus.slave.ModbusTCPSlave},
+ * {@link com.ghgande.j2mod.modbus.slave.ModbusUDPSlave},
+ * {@link com.ghgande.j2mod.modbus.slave.ModbusSerialSlave}
+ * and {@link com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory}
  */
 @Deprecated
 public class ModbusCoupler {

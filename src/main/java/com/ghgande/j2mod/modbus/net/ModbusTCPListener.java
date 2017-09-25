@@ -31,7 +31,6 @@ import java.util.concurrent.Executors;
 /**
  * Class that implements a ModbusTCPListener.
  * <p>
- * <p>
  * If listening, it accepts incoming requests passing them on to be handled.
  * If not listening, silently drops the requests.
  *
@@ -59,7 +58,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
     /**
      * Constructs a ModbusTCPListener instance.<br>
      *
-     * @param poolsize the size of the <tt>ThreadPool</tt> used to handle incoming
+     * @param poolsize the size of the ThreadPool used to handle incoming
      *            requests.
      * @param addr the interface to use for listening.
      */
@@ -70,13 +69,25 @@ public class ModbusTCPListener extends AbstractModbusListener {
     /**
      * Constructs a ModbusTCPListener instance.<br>
      *
-     * @param poolsize the size of the <tt>ThreadPool</tt> used to handle incoming
+     * @param poolsize the size of the ThreadPool used to handle incoming
      *            requests.
      * @param addr the interface to use for listening.
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
     public ModbusTCPListener(int poolsize, InetAddress addr, boolean useRtuOverTcp) {
-        threadPool = Executors.newFixedThreadPool(poolsize);
+        this( Executors.newFixedThreadPool(poolsize),addr,useRtuOverTcp);
+    }
+    
+    /**
+     * Constructs a ModbusTCPListener instance.<br>
+     *
+     * @param pool the <tt>ExecutorService</tt> used to handle incoming
+     *            requests.
+     * @param addr the interface to use for listening.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     */
+    public ModbusTCPListener(ExecutorService pool, InetAddress addr, boolean useRtuOverTcp) {
+        threadPool = pool;
         try {
             address = addr==null?InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }):addr;
         } catch (UnknownHostException e) {
