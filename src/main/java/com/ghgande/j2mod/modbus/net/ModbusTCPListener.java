@@ -155,7 +155,9 @@ public class ModbusTCPListener extends AbstractModbusListener {
                 }
                 logger.debug("Making new connection {}", incoming.toString());
                 if (listening) {
-                    threadPool.execute(new TCPConnectionHandler(this, new TCPSlaveConnection(incoming, useRtuOverTcp)));
+                    TCPSlaveConnection slave =  new TCPSlaveConnection(incoming, useRtuOverTcp);
+                    slave.setTimeout(timeout);
+                    threadPool.execute(new TCPConnectionHandler(this, slave));
                 }
                 else {
                     incoming.close();
