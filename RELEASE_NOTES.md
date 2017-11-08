@@ -104,3 +104,6 @@
 
 ## Version 2.3.7
 * Fixed a format error in the thrown connection retry catch block
+* Propagate ModbusTCPListener timeout to the TCPSlaveConnection #59 - thanks javi
+* Not possible to override handleRequest in ModbusSlave #57 - thanks javi
+* Extending ModbusSlave exceptions list

@@ -147,7 +147,7 @@ public abstract class AbstractModbusListener implements Runnable {
      * @param listener Listener that the request was received by
      * @throws ModbusIOException If there is an issue with the transport or transmission
      */
-    void handleRequest(AbstractModbusTransport transport, AbstractModbusListener listener) throws ModbusIOException {
+    protected void handleRequest(AbstractModbusTransport transport, AbstractModbusListener listener) throws ModbusIOException {
 
         // Get the request from the transport. It will be processed
         // using an associated process image
