@@ -27,12 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class that implements a ModbusSerialListener.<br>
- * If listening, it accepts incoming requests passing them on to be handled.
+ * Class that implements a ModbusSerialListener.<br> If listening, it accepts incoming requests passing them on to be handled.
  *
  * @author Dieter Wimberger
- * @author Julie Haugh Code cleanup in prep to refactor with ModbusListener
- *         interface
+ * @author Julie Haugh Code cleanup in prep to refactor with ModbusListener interface
  * @author Steve O'Hara (4energy)
  * @version 2.0 (March 2016)
  */
@@ -42,21 +40,21 @@ public class ModbusSerialListener extends AbstractModbusListener {
     private AbstractSerialConnection serialCon;
 
     private SerialParameters serialParams;
-    
+
     /**
      * Constructor.
      */
-    public ModbusSerialListener(){
-        
-    } 
-  
+    public ModbusSerialListener() {
+
+    }
+
     /**
      * Constructs a new <tt>ModbusSerialListener</tt> instance.
      *
      * @param params a <tt>SerialParameters</tt> instance.
      */
     public ModbusSerialListener(SerialParameters params) {
-        this.serialParams=params;
+        this.serialParams = params;
         serialCon = new SerialConnection(params);
     }
 
@@ -64,7 +62,7 @@ public class ModbusSerialListener extends AbstractModbusListener {
      * Constructs a new <tt>ModbusSerialListener</tt> instance specifying the serial connection interface
      *
      * @param params - a <tt>SerialParameters</tt> instance.
-     * @param serialCon - a <tt>SerialConnection</tt> 
+     * @param serialCon - a <tt>SerialConnection</tt>
      */
     public ModbusSerialListener(SerialParameters params, AbstractSerialConnection serialCon) {
         this.serialCon = serialCon;
@@ -74,7 +72,7 @@ public class ModbusSerialListener extends AbstractModbusListener {
     public void setTimeout(int timeout) {
         super.setTimeout(timeout);
         if (serialCon != null && listening) {
-            ModbusSerialTransport transport = (ModbusSerialTransport)serialCon.getModbusTransport();
+            ModbusSerialTransport transport = (ModbusSerialTransport) serialCon.getModbusTransport();
             if (transport != null) {
                 transport.setTimeout(timeout);
             }
@@ -100,22 +98,18 @@ public class ModbusSerialListener extends AbstractModbusListener {
                 if (listening) {
                     try {
                         handleRequest(transport, this);
-                    }
-                    catch (ModbusIOException ex) {
+                    } catch (ModbusIOException ex) {
                         logger.debug(ex.getMessage());
                     }
-                }
-                else {
+                } else {
                     // Not listening -- read and discard the request so the
                     // input doesn't get clogged up.
                     transport.readRequest(this);
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Exception occurred while handling request.", e);
-        }
-        finally {
+        } finally {
             listening = false;
             if (serialCon != null) {
                 serialCon.close();
@@ -126,9 +120,7 @@ public class ModbusSerialListener extends AbstractModbusListener {
     @Override
     public void stop() {
         listening = false;
-        if (serialCon != null) {
-            serialCon.close();
-        }
+        
     }
 
     /**

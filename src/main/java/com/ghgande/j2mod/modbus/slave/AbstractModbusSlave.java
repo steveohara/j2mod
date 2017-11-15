@@ -15,18 +15,17 @@
  */
 package com.ghgande.j2mod.modbus.slave;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Joe Montanari
- *
  */
 public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
+
     private T listener;
     private boolean isRunning;
 
@@ -55,9 +54,10 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
      */
     protected abstract void initListener();
 
-    
+
     /**
      * Return if the Slave has any process images.
+     *
      * @return true/false
      */
     public boolean hasProcessImages() {
@@ -66,9 +66,10 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
 
     /**
      * Start Slave Listener.
+     *
      * @throws ModbusException Exception if cannot start.
      */
-    public void open() throws ModbusException {
+    public synchronized void open() throws ModbusException {
 
         // Start the listener if it isn' already running
 
@@ -119,7 +120,7 @@ public abstract class AbstractModbusSlave<T extends AbstractModbusListener> {
     /**
      * Returns the process image for the given Unit ID
      *
-     * @param unitId  Unit ID
+     * @param unitId Unit ID
      * @return Process image
      */
     public ProcessImage getProcessImage(int unitId) {

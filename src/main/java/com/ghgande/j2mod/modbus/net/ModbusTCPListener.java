@@ -15,24 +15,25 @@
  */
 package com.ghgande.j2mod.modbus.net;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.ghgande.j2mod.modbus.ModbusCoupler;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
 import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
 import com.ghgande.j2mod.modbus.slave.ModbusTCPSlave;
-
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Class that implements a ModbusTCPListener.
- * <p>
- * If listening, it accepts incoming requests passing them on to be handled.
- * If not listening, silently drops the requests.
+ * Class that implements a ModbusTCPListener. <p> If listening, it accepts incoming requests passing them on to be handled. If not
+ * listening, silently drops the requests.
  *
  * @author Dieter Wimberger
  * @author Julie Haugh
@@ -45,21 +46,20 @@ public class ModbusTCPListener extends AbstractModbusListener {
 
     private ServerSocket serverSocket = null;
     private ExecutorService threadPool;
-    private Thread listener;
+    //private Thread listener;
     private boolean useRtuOverTcp;
 
     /**
      * Constructor.
      */
     public ModbusTCPListener() {
-        
+
     }
 
     /**
      * Constructs a ModbusTCPListener instance.<br>
      *
-     * @param poolsize the size of the ThreadPool used to handle incoming
-     *            requests.
+     * @param poolsize the size of the ThreadPool used to handle incoming requests.
      * @param addr the interface to use for listening.
      */
     public ModbusTCPListener(int poolsize, InetAddress addr) {
@@ -69,58 +69,50 @@ public class ModbusTCPListener extends AbstractModbusListener {
     /**
      * Constructs a ModbusTCPListener instance.<br>
      *
-     * @param poolsize the size of the ThreadPool used to handle incoming
-     *            requests.
+     * @param poolsize the size of the ThreadPool used to handle incoming requests.
      * @param addr the interface to use for listening.
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
     public ModbusTCPListener(int poolsize, InetAddress addr, boolean useRtuOverTcp) {
-        this( Executors.newFixedThreadPool(poolsize),addr,useRtuOverTcp);
+        this(Executors.newFixedThreadPool(poolsize), addr, useRtuOverTcp);
     }
-    
+
     /**
      * Constructs a ModbusTCPListener instance.<br>
      *
-     * @param pool the <tt>ExecutorService</tt> used to handle incoming
-     *            requests.
+     * @param pool the <tt>ExecutorService</tt> used to handle incoming requests.
      * @param addr the interface to use for listening.
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
     public ModbusTCPListener(ExecutorService pool, InetAddress addr, boolean useRtuOverTcp) {
         threadPool = pool;
         try {
-            address = addr==null?InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }):addr;
+            address = addr == null ? InetAddress.getByAddress(new byte[]{0, 0, 0, 0}) : addr;
         } catch (UnknownHostException e) {
-         // Can't happen -- size is fixed.
+            // Can't happen -- size is fixed.
         }
         this.useRtuOverTcp = useRtuOverTcp;
     }
 
     /**
-     * /**
-     * Constructs a ModbusTCPListener instance. This interface is created
-     * to listen on the wildcard address (0.0.0.0), which will accept TCP packets
-     * on all available adapters/interfaces
+     * /** Constructs a ModbusTCPListener instance. This interface is created to listen on the wildcard address (0.0.0.0), which will accept
+     * TCP packets on all available adapters/interfaces
      *
-     * @param poolsize the size of the <tt>ThreadPool</tt> used to handle incoming
-     *            requests.
+     * @param poolsize the size of the <tt>ThreadPool</tt> used to handle incoming requests.
      */
     public ModbusTCPListener(int poolsize) {
         this(poolsize, false);
     }
 
     /**
-     * /**
-     * Constructs a ModbusTCPListener instance. This interface is created
-     * to listen on the wildcard address (0.0.0.0), which will accept TCP packets
-     * on all available adapters/interfaces
+     * /** Constructs a ModbusTCPListener instance. This interface is created to listen on the wildcard address (0.0.0.0), which will accept
+     * TCP packets on all available adapters/interfaces
      *
-     * @param poolsize the size of the <tt>ThreadPool</tt> used to handle incoming
-     *            requests.
+     * @param poolsize the size of the <tt>ThreadPool</tt> used to handle incoming requests.
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
     public ModbusTCPListener(int poolsize, boolean useRtuOverTcp) {
-        this(poolsize,null,useRtuOverTcp);
+        this(poolsize, null, useRtuOverTcp);
 
     }
 
@@ -155,11 +147,11 @@ public class ModbusTCPListener extends AbstractModbusListener {
         // Catch any fatal errors and set the listening flag to false to indicate an error
         catch (Exception e) {
             error = String.format("Cannot start TCP listener - %s", e.getMessage());
+            logger.error(error);
             listening = false;
             return;
         }
 
-        listener = Thread.currentThread();
         listening = true;
         try {
 
@@ -175,7 +167,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
                 }
                 logger.debug("Making new connection {}", incoming.toString());
                 if (listening) {
-                    TCPSlaveConnection slave =  new TCPSlaveConnection(incoming, useRtuOverTcp);
+                    TCPSlaveConnection slave = new TCPSlaveConnection(incoming, useRtuOverTcp);
                     slave.setTimeout(timeout);
                     threadPool.execute(new TCPConnectionHandler(this, slave));
                 } else {
@@ -184,6 +176,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
             }
         } catch (IOException e) {
             error = String.format("Problem starting listener - %s", e.getMessage());
+            logger.error(error);
         }
     }
 
@@ -194,9 +187,9 @@ public class ModbusTCPListener extends AbstractModbusListener {
             if (serverSocket != null) {
                 serverSocket.close();
             }
-            if (listener != null) {
-                listener.join();
-            }
+            //if (listener != null) {
+            //listener.join();
+            //}
             if (threadPool != null) {
                 threadPool.shutdown();
             }
