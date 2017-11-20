@@ -15,38 +15,9 @@
  */
 package com.ghgande.j2mod.modbus.slave;
 
-import com.ghgande.j2mod.modbus.util.ModbusUtil;
-
 /**
  * Descibes the types of Modbus Slaves
  */
 public enum ModbusSlaveType {
     TCP, UDP, SERIAL;
-
-    /**
-     * Returns true if this type is one of those listed
-     *
-     * @param types Array of types to check for
-     * @return True if this is one of the array
-     */
-    public boolean is(ModbusSlaveType... types) {
-        if (!ModbusUtil.isBlank(types)) {
-            for (ModbusSlaveType type : types) {
-                if (equals(type)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Returns a unique key for this port and type
-     *
-     * @param port Port number
-     * @return Unique key
-     */
-    public String getKey(int port) {
-        return toString() + port;
-    }
 }
