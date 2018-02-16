@@ -89,8 +89,19 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      * @throws Exception if the connection cannot be established.
      */
     public synchronized void connect() throws Exception {
+        connect(false);
+    }
+
+    /**
+     * Connects this <tt>ModbusTCPMaster</tt> with the slave.
+     *
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     *
+     * @throws Exception if the connection cannot be established.
+     */
+    public synchronized void connect(boolean useRtuOverTcp) throws Exception {
         if (connection != null && !connection.isConnected()) {
-            connection.connect();
+            connection.connect(useRtuOverTcp);
             transaction = connection.getModbusTransport().createTransaction();
             ((ModbusTCPTransaction)transaction).setReconnecting(reconnecting);
             setTransaction(transaction);

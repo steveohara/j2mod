@@ -54,6 +54,7 @@ public class ModbusIOException extends ModbusException {
      * <p>
      *
      * @param message the message describing this <tt>ModbusIOException</tt>.
+     * @param values optional values of the exception
      */
     public ModbusIOException(String message, Object... values) {
         super(message, values);

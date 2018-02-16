@@ -41,3 +41,78 @@
 * Facilitate multiple processimages in ModbusCoupler. #11 - thanks martentamerius
 * WriteMultipleRegisters (Function Code : 0x10) does not work. #14 - chnaged use of signed shorts to unsigned
 * Serial/RTU slower on 2.x #16 - worked around an issue with jSerialComm where setting timeouts on an open port injected a 200ms delay
+
+## Version 2.1.1
+* Corrected a problem with applying the timeouts when using the facade pattern
+
+## Version 2.1.2
+* Retrieve the localPort from opened socket if port is set to 0 #19
+* CR characters lost on ModbusSerialTransport #18
+* Corrected timeout setting issues on serial ports and harmonised setting timeout with IP methods
+
+## Version 2.1.3
+* Added support for Modbus RTU over TCP #21 - thanks axuan25
+* Code requires guards around a number of the functions #22
+
+## Version 2.2.0
+* Modbus Slave Multiple Port Support #23
+* Set ModbusCoupler to deprecated in favour of the new ModbusSlaveFactory and ModbusSlave sub-system
+* Fixed some javadoc errors - thanks jan
+* Timeout error on socket listener - thanks jan
+* Now allows for slaves to share same socket but different protocols
+
+## Version 2.2.1
+* Amend TCPMasterConnection socket timeout handling #27 - thanks David
+
+## Version 2.2.2
+* Fixed NPE in close method of SerialConnection if Comms port was never successfully opened
+
+## Version 2.3.0
+* Adjusted write timers with fiddle factors to allow for idiosyncratic hardware
+* jSerialComm library decoupled from implementation #28 - thanks Felipe
+
+## Version 2.3.1
+* Length of ReadWriteMultipleResponse indicates 1 byte too much? #31 - thanks elasticoder
+* Function code 0x17 first performs a read and then the write. #32 - thanks elasticoder
+* Double socket creation in ModbusTCP. #33 - thanks stoorm5
+
+## Version 2.3.2
+* Increased maximum queue length for incoming connections. #38 - thanks martentamerius
+* Incorrect javadoc for ModbusSlaveFactory #35 - thanks bertrik
+* Adds setRetries and setCheckingValidity services into ModbusTCPMaster #30 - thanks ericauguie
+* Added RTU over TCP #43 - thanks eli-mcgowan
+* Fixed setting timeout of TCPMaster does not get applied to transactions #41
+* Reduce an NPE - Serial port connection #40
+* Fixed issue with serial write bytes delay if data bits not specified
+
+## Version 2.3.3
+* Specify IP address in ModbusSlaveFactory #46 - thanks MindVark
+* Added getConnection() to AbstractSerialConnection - thanks nnadeau
+* Reading full stream instead of parts - thanks liebehentze
+
+## Version 2.3.4
+* Fixed NullpointException at handleRequest in AbstractModbusListener #47
+* Add checks to see if serial port is available during connect #45
+
+## Version 2.3.5
+* Fixed a typo in the failure debug message
+* Fixed the omission of the bit count when reading a DiscreteInput request
+
+## Version 2.3.6
+* Debug logger messages causing garbage collections even when DEBUG mode is not enabled #53
+* RS485 echo in RTU mode #51 - thanks david
+
+## Version 2.3.7
+* Fixed a format error in the thrown connection retry catch block
+* Propagate ModbusTCPListener timeout to the TCPSlaveConnection #59 - thanks javi
+* Not possible to override handleRequest in ModbusSlave #57 - thanks javi
+* Extending ModbusSlave exceptions list
+
+## Version 2.3.8
+* Added a sleep timer to the TCP/UDP/serial transaction retry loops
+* Added the timeout value to the serial write
+* Responded to vulnerabilities highlighted by FindBugs
+
+## Version 2.3.9
+* Critical regression introduced in previous release whereby the sharing of stream buffers was being trampled over
+* Serial CRC was not correctly checking both bytes

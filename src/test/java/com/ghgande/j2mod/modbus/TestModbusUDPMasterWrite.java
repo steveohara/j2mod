@@ -19,8 +19,7 @@ import com.ghgande.j2mod.modbus.procimg.SimpleInputRegister;
 import com.ghgande.j2mod.modbus.utils.AbstractTestModbusUDPMaster;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * This class tests the UDP master write features of the library
@@ -33,7 +32,7 @@ public class TestModbusUDPMasterWrite extends AbstractTestModbusUDPMaster {
         try {
             boolean before = master.readCoils(UNIT_ID, 1, 1).getBit(0);
             master.writeCoil(UNIT_ID, 1, !before);
-            assertEquals("Incorrect status for coil 1", true, !before);
+            assertTrue("Incorrect status for coil 1", !before);
             master.writeCoil(UNIT_ID, 1, before);
         }
         catch (Exception e) {

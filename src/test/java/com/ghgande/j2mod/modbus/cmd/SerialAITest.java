@@ -18,6 +18,7 @@ package com.ghgande.j2mod.modbus.cmd;
 import com.ghgande.j2mod.modbus.io.ModbusSerialTransaction;
 import com.ghgande.j2mod.modbus.msg.ReadInputRegistersRequest;
 import com.ghgande.j2mod.modbus.msg.ReadInputRegistersResponse;
+import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 import com.ghgande.j2mod.modbus.net.SerialConnection;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ public class SerialAITest {
 
     public static void main(String[] args) {
 
-        SerialConnection con = null;
+        AbstractSerialConnection con = null;
         ModbusSerialTransaction trans;
         ReadInputRegistersRequest req;
         ReadInputRegistersResponse res;

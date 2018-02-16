@@ -149,12 +149,7 @@ class UDPSlaveTerminal extends AbstractUDPTerminal {
             running = false;
             thread.interrupt();
             while (!closed) {
-                try {
-                    Thread.sleep(100);
-                }
-                catch (InterruptedException e) {
-                    logger.debug("interrupted");
-                }
+                ModbusUtil.sleep(100);
             }
         }
 
@@ -217,12 +212,7 @@ class UDPSlaveTerminal extends AbstractUDPTerminal {
             running = false;
             socket.close();
             while (!closed) {
-                try {
-                    Thread.sleep(100);
-                }
-                catch (InterruptedException e) {
-                    logger.debug("interrupted");
-                }
+                ModbusUtil.sleep(100);
             }
         }
 

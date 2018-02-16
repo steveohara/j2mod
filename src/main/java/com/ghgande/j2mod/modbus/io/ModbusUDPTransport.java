@@ -20,6 +20,7 @@ import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.net.AbstractUDPTerminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +95,7 @@ public class ModbusUDPTransport extends AbstractModbusTransport {
     }
 
     @Override
-    public ModbusRequest readRequest() throws ModbusIOException {
+    public ModbusRequest readRequest(AbstractModbusListener listener) throws ModbusIOException {
         try {
             ModbusRequest req;
             synchronized (byteInputStream) {

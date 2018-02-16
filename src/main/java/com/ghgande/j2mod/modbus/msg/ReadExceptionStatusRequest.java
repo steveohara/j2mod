@@ -16,6 +16,7 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -46,6 +47,7 @@ public final class ReadExceptionStatusRequest extends ModbusRequest {
 
     /**
      * createResponse -- create an empty response for this request.
+     * @return Empty response
      */
     public ModbusResponse getResponse() {
         ReadExceptionStatusResponse response;
@@ -66,16 +68,14 @@ public final class ReadExceptionStatusRequest extends ModbusRequest {
         return response;
     }
 
-    /**
-     * The ModbusCoupler doesn't have a means of reporting the serial
-     * device exception status.
-     */
-    public ModbusResponse createResponse() {
+    @Override
+    public ModbusResponse createResponse(AbstractModbusListener listener) {
         return createExceptionResponse(Modbus.ILLEGAL_FUNCTION_EXCEPTION);
     }
 
     /**
      * writeData -- output this Modbus message to dout.
+     * @throws java.io.IOException
      */
     public void writeData(DataOutput dout) throws IOException {
         dout.write(getMessage());
@@ -83,13 +83,14 @@ public final class ReadExceptionStatusRequest extends ModbusRequest {
 
     /**
      * readData -- dummy function.  There is no data with the request.
+     * @throws java.io.IOException
      */
     public void readData(DataInput din) throws IOException {
     }
 
     /**
-     * getMessage -- return an empty array as there is no data for
-     * this request.
+     * getMessage
+     * @return an empty array as there is no data for this request
      */
     public byte[] getMessage() {
 

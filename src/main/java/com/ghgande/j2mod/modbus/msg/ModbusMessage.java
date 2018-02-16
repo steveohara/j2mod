@@ -29,6 +29,7 @@ public interface ModbusMessage extends Transportable {
     /**
      * Check the flag which indicates that this <tt>ModbusMessage</tt> is for a
      * headless (serial, or headless networked) connection.
+     * @return is for a headless (serial, or headless networked) connection
      */
     boolean isHeadless();
 

@@ -22,7 +22,6 @@ import java.util.Vector;
 
 /**
  * A cleanroom implementation of the Observable pattern.
- * <p/>
  *
  * @author Dieter Wimberger (wimpi)
  * @author Steve O'Hara (4energy)

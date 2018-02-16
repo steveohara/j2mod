@@ -37,12 +37,14 @@ public class AbstractTestModbusTCPSlave extends AbstractTestModbusTCPMaster {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractTestModbusTCPSlave.class);
     private static AbstractModbusListener listener = null;
-    private static File modPollTool;
+    protected static File modPollTool;
+    protected static int port = PORT;
 
     @BeforeClass
     public static void setUpSlave() {
         assumeTrue("This platform does not support modpoll so the result of this test will be ignored", TestUtils.platformSupportsModPoll());
         try {
+            port = PORT;
             modPollTool = TestUtils.loadModPollTool();
             listener = createTCPSlave();
         }
@@ -114,8 +116,8 @@ public class AbstractTestModbusTCPSlave extends AbstractTestModbusTCPMaster {
      */
     private static boolean execModPoll(int register, int type, Integer outValue, String expectedOutput, int numberOfRegisters) {
         try {
-            String output = TestUtils.execToString(String.format("%s -m tcp -p 1502 -a %d -r %d -t %d -c %d -1 %s %s",
-                    modPollTool.toString(), UNIT_ID, register, type, numberOfRegisters,
+            String output = TestUtils.execToString(String.format("%s -m tcp -p %d -a %d -r %d -t %d -c %d -1 %s %s",
+                    modPollTool.toString(), port, UNIT_ID, register, type, numberOfRegisters,
                     LOCALHOST, outValue == null ? "" : outValue));
             boolean returnValue = output != null && output.replaceAll("[\r]", "").contains(expectedOutput);
             if (!returnValue) {

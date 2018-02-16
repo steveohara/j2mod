@@ -15,7 +15,6 @@
  */
 package com.ghgande.j2mod.modbus.net;
 
-import com.fazecast.jSerialComm.SerialPort;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +50,8 @@ public class ModbusListenerFactory {
             parms.setBaudRate(19200);
             parms.setDatabits(8);
             parms.setEcho(false);
-            parms.setParity(SerialPort.NO_PARITY);
-            parms.setFlowControlIn(SerialPort.FLOW_CONTROL_DISABLED);
+            parms.setParity(AbstractSerialConnection.NO_PARITY);
+            parms.setFlowControlIn(AbstractSerialConnection.FLOW_CONTROL_DISABLED);
 
             ModbusSerialListener listener = new ModbusSerialListener(parms);
             if (parts.length > 2) {

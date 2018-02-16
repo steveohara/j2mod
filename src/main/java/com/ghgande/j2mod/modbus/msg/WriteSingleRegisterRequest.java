@@ -16,7 +16,7 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.IllegalAddressException;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
 import com.ghgande.j2mod.modbus.procimg.Register;
@@ -82,12 +82,13 @@ public final class WriteSingleRegisterRequest extends ModbusRequest {
         return response;
     }
 
-    public ModbusResponse createResponse() {
+    @Override
+    public ModbusResponse createResponse(AbstractModbusListener listener) {
         WriteSingleRegisterResponse response;
         Register reg;
 
         // 1. get process image
-        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage(getUnitID());
+        ProcessImage procimg = listener.getProcessImage(getUnitID());
         // 2. get register
         try {
             reg = procimg.getRegister(reference);

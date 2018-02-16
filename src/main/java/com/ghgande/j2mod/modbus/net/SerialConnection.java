@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Class that implements a serial connection which can be used for master and
@@ -37,7 +39,7 @@ import java.io.InputStream;
  * @author Steve O'Hara (4energy)
  * @version 2.0 (March 2016)
  */
-public class SerialConnection {
+public class SerialConnection extends AbstractSerialConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(SerialConnection.class);
 
@@ -45,6 +47,14 @@ public class SerialConnection {
     private ModbusSerialTransport transport;
     private SerialPort serialPort;
     private InputStream inputStream;
+    private int timeout = Modbus.DEFAULT_TIMEOUT;
+
+    /**
+     * Default constructor
+     */
+    public SerialConnection() {
+
+    }
 
     /**
      * Creates a SerialConnection object and initializes variables passed in as
@@ -57,33 +67,32 @@ public class SerialConnection {
     }
 
     /**
-     * Returns the <tt>ModbusTransport</tt> instance to be used for receiving
-     * and sending messages.
+     * Returns a JSerialComm implementation for the given comms port
      *
-     * @return a <tt>ModbusTransport</tt> instance.
+     * @param commPort Comms port e.g. /dev/ttyAMA0
+     * @return JSerialComm implementation
      */
+    public static AbstractSerialConnection getCommPort(String commPort) {
+        SerialConnection jSerialCommPort = new SerialConnection();
+        jSerialCommPort.serialPort = SerialPort.getCommPort(commPort);
+        return jSerialCommPort;
+    }
+
+
+    @Override
     public AbstractModbusTransport getModbusTransport() {
         return transport;
     }
 
-    /**
-     * Opens the communication port using the default read timeout Modbus.DEFAULT_TIMEOUT
-     *
-     * @throws Exception if an error occurs.
-     */
-    public void open() throws Exception {
-        open(Modbus.DEFAULT_TIMEOUT);
-    }
-
-    /**
-     * Opens the communication port using the specified read timeout
-     *
-     * @param timeout Receive timeout in milliseconds
-     *
-     * @throws Exception if an error occurs.
-     */
-    public void open(int timeout) throws Exception {
-        serialPort = SerialPort.getCommPort(parameters.getPortName());
+    @Override
+    public void open() throws IOException {
+        if (serialPort == null) {
+            serialPort = SerialPort.getCommPort(parameters.getPortName());
+            if (serialPort.getDescriptivePortName().contains("Bad Port")) {
+                serialPort = null;
+                throw new IOException(String.format("Port %s is not a valid name for a port on this platform", parameters.getPortName()));
+            }
+        }
         serialPort.closePort();
         setConnectionParameters();
 
@@ -102,38 +111,45 @@ public class SerialConnection {
 
         // Open the input and output streams for the connection. If they won't
         // open, close the port before throwing an exception.
-        transport.setCommPort(serialPort);
+        transport.setCommPort(this);
 
         // Open the port so that we can get it's input stream.
         if (!serialPort.openPort()) {
             close();
-            throw new Exception("Error opening i/o streams");
+            Set<String> ports = getCommPorts();
+            StringBuilder portList = new StringBuilder("<NONE>");
+            if (!ports.isEmpty()) {
+                portList = new StringBuilder();
+                for (String port : ports) {
+                    portList.append(portList.length() == 0 ? "" : ",").append(port);
+                }
+            }
+            throw new IOException(String.format("Port [%s] cannot be opened or does not exist - Valid ports are: [%s]", parameters.getPortName(), portList.toString()));
         }
         inputStream = serialPort.getInputStream();
     }
 
-    /**
-     * Sets the connection parameters to the setting in the parameters object.
-     * If set fails return the parameters object to original settings and throw
-     * exception.
-     */
+    @Override
     public void setConnectionParameters() {
 
         // Set connection parameters, if set fails return parameters object
-        // to original state.
-        serialPort.setComPortParameters(parameters.getBaudRate(), parameters.getDatabits(), parameters.getStopbits(), parameters.getParity());
-        serialPort.setFlowControl(parameters.getFlowControlIn() | parameters.getFlowControlOut());
+        // to original state
+
+        if (serialPort != null) {
+            serialPort.setComPortParameters(parameters.getBaudRate(), parameters.getDatabits(), parameters.getStopbits(), parameters.getParity());
+            serialPort.setFlowControl(parameters.getFlowControlIn() | parameters.getFlowControlOut());
+        }
     }
 
-    /**
-     * Close the port and clean up associated elements.
-     */
+    @Override
     public void close() {
-        // Check to make sure sPort has reference to avoid a NPE.
+        // Check to make sure serial port has reference to avoid a NPE
+
         if (serialPort != null) {
             try {
-                transport.close();
-                inputStream.close();
+                if (inputStream != null) {
+                    inputStream.close();
+                }
             }
             catch (IOException e) {
                 logger.debug(e.getMessage());
@@ -146,13 +162,85 @@ public class SerialConnection {
         serialPort = null;
     }
 
-    /**
-     * Reports the open status of the port.
-     *
-     * @return true if port is open, false if port is closed.
-     */
+    @Override
     public boolean isOpen() {
         return serialPort != null;
     }
 
+    @Override
+    public synchronized int getTimeout() {
+        return timeout;
+    }
+
+    @Override
+    public synchronized void setTimeout(int timeout) {
+        this.timeout = timeout;
+        if (transport != null) {
+            transport.setTimeout(timeout);
+        }
+    }
+
+    @Override
+    public int readBytes(byte[] buffer, long bytesToRead) {
+        return serialPort.readBytes(buffer, bytesToRead);
+    }
+
+    @Override
+    public int writeBytes(byte[] buffer, long bytesToWrite) {
+        return serialPort.writeBytes(buffer, bytesToWrite);
+    }
+
+    @Override
+    public int bytesAvailable() {
+        return serialPort.bytesAvailable();
+    }
+
+    @Override
+    public int getBaudRate() {
+        return serialPort.getBaudRate();
+    }
+
+    @Override
+    public void setBaudRate(int newBaudRate) {
+        serialPort.setBaudRate(newBaudRate);
+    }
+
+    @Override
+    public int getNumDataBits() {
+        return serialPort.getNumDataBits();
+    }
+
+    @Override
+    public int getNumStopBits() {
+        return serialPort.getNumStopBits();
+    }
+
+    @Override
+    public int getParity() {
+        return serialPort.getParity();
+    }
+
+    @Override
+    public String getDescriptivePortName() {
+        return serialPort.getDescriptivePortName();
+    }
+
+    @Override
+    public void setComPortTimeouts(int newTimeoutMode, int newReadTimeout, int newWriteTimeout) {
+        if (serialPort != null) {
+            serialPort.setComPortTimeouts(newTimeoutMode, newReadTimeout, newWriteTimeout);
+        }
+    }
+
+    @Override
+    public Set<String> getCommPorts() {
+        Set<String> returnValue = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        SerialPort[] ports = SerialPort.getCommPorts();
+        if (ports != null && ports.length > 0) {
+            for (SerialPort port : ports) {
+                returnValue.add(port.getSystemPortName());
+            }
+        }
+        return returnValue;
+    }
 }

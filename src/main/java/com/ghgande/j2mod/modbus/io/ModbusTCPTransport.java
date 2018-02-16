@@ -20,6 +20,7 @@ import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection;
 import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
@@ -42,13 +43,19 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
     private static final Logger logger = LoggerFactory.getLogger(ModbusTCPTransport.class);
 
     // instance attributes
-    private DataInputStream dataInputStream; // input stream
-    private DataOutputStream dataOutputStream; // output stream
-    private final BytesInputStream byteInputStream = new BytesInputStream(Modbus.MAX_MESSAGE_LENGTH + 6);
-    private final BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH + 6); // write frames
-    private Socket socket = null;
-    private TCPMasterConnection master = null;
-    private boolean headless = false; // Some TCP implementations are.
+    protected DataInputStream dataInputStream; // input stream
+    protected DataOutputStream dataOutputStream; // output stream
+    protected final BytesInputStream byteInputStream = new BytesInputStream(Modbus.MAX_MESSAGE_LENGTH + 6);
+    protected final BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH + 6); // write frames
+    protected Socket socket = null;
+    protected TCPMasterConnection master = null;
+    protected boolean headless = false; // Some TCP implementations are.
+
+    /**
+     * Default constructor
+     */
+    public ModbusTCPTransport() {
+    }
 
     /**
      * Constructs a new <tt>ModbusTransport</tt> instance, for a given
@@ -94,6 +101,15 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
         headless = true;
     }
 
+    /**
+     * Set the transport to be headless
+     *
+     * @param headless True if headless
+     */
+    public void setHeadless(boolean headless) {
+        this.headless = headless;
+    }
+
     @Override
     public void setTimeout(int time) {
         super.setTimeout(time);
@@ -105,6 +121,10 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                 logger.warn("Socket exception occurred while setting timeout to " + time, e);
             }
         }
+    }
+
+    public void setMaster(TCPMasterConnection master) {
+        this.master = master;
     }
 
     @Override
@@ -126,7 +146,26 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
 
     @Override
     public void writeMessage(ModbusMessage msg) throws ModbusIOException {
+        writeMessage(msg, false);
+    }
+
+    /**
+     * Writes a <tt>ModbusMessage</tt> to the
+     * output stream of this <tt>ModbusTransport</tt>.
+     * <p>
+     *
+     * @param msg           a <tt>ModbusMessage</tt>.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     *
+     * @throws ModbusIOException data cannot be
+     *                           written properly to the raw output stream of
+     *                           this <tt>ModbusTransport</tt>.
+     */
+    protected void writeMessage(ModbusMessage msg, boolean useRtuOverTcp) throws ModbusIOException {
         try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Sending: {}", msg.getHexMessage());
+            }
             byte message[] = msg.getMessage();
 
             byteOutputStream.reset();
@@ -141,9 +180,19 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                 byteOutputStream.write(message);
             }
 
+            // Add CRC for RTU over TCP
+            if (useRtuOverTcp) {
+                int len = byteOutputStream.size();
+                int[] crc = ModbusUtil.calculateCRC(byteOutputStream.getBuffer(), 0, len);
+                byteOutputStream.writeByte(crc[0]);
+                byteOutputStream.writeByte(crc[1]);
+            }
+
             dataOutputStream.write(byteOutputStream.toByteArray());
             dataOutputStream.flush();
-            logger.debug("Sent: {}", ModbusUtil.toHex(byteOutputStream.toByteArray()));
+            if (logger.isDebugEnabled()) {
+                logger.debug("Successfully sent: {}", ModbusUtil.toHex(byteOutputStream.toByteArray()));
+            }
             // write more sophisticated exception handling
         }
         catch (SocketException ex1) {
@@ -155,10 +204,10 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                     // Do nothing.
                 }
             }
-            throw new ModbusIOException("I/O exception - failed to write", ex1);
+            throw new ModbusIOException("I/O socket exception - failed to write - {}", ex1.getMessage());
         }
         catch (Exception ex2) {
-            throw new ModbusIOException("I/O exception - failed to write", ex2);
+            throw new ModbusIOException("General exception - failed to write - {}", ex2.getMessage());
         }
     }
 
@@ -171,7 +220,7 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
      * @throws ModbusIOException
      */
     @Override
-    public ModbusRequest readRequest() throws ModbusIOException {
+    public ModbusRequest readRequest(AbstractModbusListener listener) throws ModbusIOException {
 
         ModbusRequest req;
         try {
@@ -181,9 +230,7 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                 byte[] buffer = byteInputStream.getBuffer();
 
                 if (!headless) {
-                    if (dataInputStream.read(buffer, 0, 6) == -1) {
-                        throw new EOFException("Premature end of stream (Header truncated)");
-                    }
+                    dataInputStream.readFully(buffer, 0, 6);
 
                     // The transaction ID must be treated as an unsigned short in
                     // order for validation to work correctly.
@@ -192,11 +239,11 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                     int protocol = ModbusUtil.registerToShort(buffer, 2);
                     int count = ModbusUtil.registerToShort(buffer, 4);
 
-                    if (dataInputStream.read(buffer, 6, count) == -1) {
-                        throw new ModbusIOException("Premature end of stream (Message truncated)");
-                    }
+                    dataInputStream.readFully(buffer, 6, count);
 
-                    logger.debug("Read: {}", ModbusUtil.toHex(buffer, 0, count + 6));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Read: {}", ModbusUtil.toHex(buffer, 0, count + 6));
+                    }
 
                     byteInputStream.reset(buffer, (6 + count));
                     byteInputStream.skip(6);
@@ -231,7 +278,9 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                     // proper error correction and recovery.
 
                     dataInputStream.readShort();
-                    logger.debug("Read: {}", req.getHexMessage());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Read: {}", req.getHexMessage());
+                    }
                 }
             }
             return req;
@@ -260,12 +309,10 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
             synchronized (byteInputStream) {
                 // use same buffer
                 byte[] buffer = byteInputStream.getBuffer();
-                logger.debug("Read: {}", ModbusUtil.toHex(buffer, 0, byteInputStream.count));
+                logger.debug("Reading response...");
                 if (!headless) {
                     // All Modbus TCP transactions start with 6 bytes. Get them.
-                    if (dataInputStream.read(buffer, 0, 6) == -1) {
-                        throw new ModbusIOException("Premature end of stream (Header truncated)");
-                    }
+                    dataInputStream.readFully(buffer, 0, 6);
 
                     /*
                      * The transaction ID is the first word (offset 0) in the
@@ -283,9 +330,7 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                     int protocol = ModbusUtil.registerToShort(buffer, 2);
                     int count = ModbusUtil.registerToShort(buffer, 4);
 
-                    if (dataInputStream.read(buffer, 6, count) == -1) {
-                        throw new ModbusIOException("Premature end of stream (Message truncated)");
-                    }
+                    dataInputStream.readFully(buffer, 6, count);
                     byteInputStream.reset(buffer, (6 + count));
                     byteInputStream.reset();
                     byteInputStream.skip(7);
@@ -316,13 +361,19 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                     dataInputStream.readShort();
                 }
             }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Successfully read: {}", response.getHexMessage());
+            }
             return response;
         }
-        catch (SocketTimeoutException ex1) {
-            throw new ModbusIOException("Timeout reading response", ex1);
+        catch (EOFException ex1) {
+            throw new ModbusIOException("Premature end of stream (Message truncated) - {}", ex1.getMessage());
         }
-        catch (Exception ex2) {
-            throw new ModbusIOException("I/O exception - failed to read", ex2);
+        catch (SocketTimeoutException ex2) {
+            throw new ModbusIOException("Socket timeout reading response - {}", ex2.getMessage());
+        }
+        catch (Exception ex3) {
+            throw new ModbusIOException("General exception - failed to read - {}", ex3.getMessage());
         }
     }
 

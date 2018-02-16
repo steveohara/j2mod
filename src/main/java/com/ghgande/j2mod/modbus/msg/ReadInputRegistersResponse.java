@@ -22,6 +22,7 @@ import com.ghgande.j2mod.modbus.procimg.SimpleInputRegister;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Class implementing a <tt>ReadInputRegistersRequest</tt>. The implementation
@@ -56,10 +57,10 @@ public final class ReadInputRegistersResponse extends ModbusResponse {
         super();
 
         setFunctionCode(Modbus.READ_INPUT_REGISTERS);
-        setDataLength(registers.length * 2 + 1);
+        setDataLength(registers == null ? 0 : (registers.length * 2 + 1));
 
-        byteCount = registers.length * 2 + 1;
-        this.registers = registers;
+        this.registers = registers == null ? null : Arrays.copyOf(registers, registers.length);
+        byteCount = registers == null ? 0 : (registers.length * 2);
     }
 
     /**
@@ -83,9 +84,10 @@ public final class ReadInputRegistersResponse extends ModbusResponse {
 
     /**
      * Set the number of words to be written.
+     * @param count Number of words in response
      */
     public void setWordCount(int count) {
-        byteCount = count * 2 + 1;
+        byteCount = count * 2;
     }
 
     /**
@@ -138,11 +140,12 @@ public final class ReadInputRegistersResponse extends ModbusResponse {
 
     /**
      * Sets the entire block of registers for this response
+     * @param registers Array of registers
      */
     public void setRegisters(InputRegister[] registers) {
-        setDataLength(registers.length * 2 + 1);
-        byteCount = registers.length * 2 + 1;
-        this.registers = registers;
+        setDataLength(registers == null ? 0 : (registers.length * 2 + 1));
+        this.registers = registers == null ? null : Arrays.copyOf(registers, registers.length);
+        byteCount = registers == null ? 0 : (registers.length * 2);
     }
 
     public void writeData(DataOutput dout) throws IOException {
@@ -162,7 +165,7 @@ public final class ReadInputRegistersResponse extends ModbusResponse {
         }
         this.registers = registers;
 
-        setDataLength(byteCount + 1);
+        setDataLength(byteCount);
     }
 
     public byte[] getMessage() {

@@ -16,7 +16,7 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.DigitalOut;
 import com.ghgande.j2mod.modbus.procimg.IllegalAddressException;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
@@ -81,12 +81,13 @@ public final class WriteCoilRequest extends ModbusRequest {
         return response;
     }
 
-    public ModbusResponse createResponse() {
+    @Override
+    public ModbusResponse createResponse(AbstractModbusListener listener) {
         WriteCoilResponse response;
         DigitalOut dout;
 
         // 1. get process image
-        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage(getUnitID());
+        ProcessImage procimg = listener.getProcessImage(getUnitID());
         // 2. get coil
         try {
             dout = procimg.getDigitalOut(getReference());

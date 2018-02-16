@@ -16,11 +16,11 @@
 package com.ghgande.j2mod.modbus.io;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -262,11 +262,13 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                 byteOutputStream.writeByte(crc[1]);
                 // write message
                 writeBytes(byteOutputStream.getBuffer(), byteOutputStream.size());
-                logger.debug("Sent: {}", ModbusUtil.toHex(byteOutputStream.getBuffer(), 0, byteOutputStream.size()));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Sent: {}", ModbusUtil.toHex(byteOutputStream.getBuffer(), 0, byteOutputStream.size()));
+                }
                 // clears out the echoed message
                 // for RS485
                 if (echo) {
-                    readEcho(len);
+                    readEcho(len + 2);
                 }
                 lastRequest = new byte[len];
                 System.arraycopy(byteOutputStream.getBuffer(), 0, lastRequest, 0, len);
@@ -277,18 +279,8 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
         }
     }
 
-    /**
-     * readRequest - Read a slave request.
-     *
-     * @return a <tt>ModbusRequest</tt> to be processed by the slave simulator
-     */
-    protected ModbusRequest readRequestIn() throws ModbusIOException {
-        ModbusCoupler coupler = ModbusCoupler.getReference();
-
-        if (coupler == null || coupler.isMaster()) {
-            throw new RuntimeException("Operation not supported");
-        }
-
+    @Override
+    protected ModbusRequest readRequestIn(AbstractModbusListener listener) throws ModbusIOException {
         boolean done;
         ModbusRequest request;
         int dlength;
@@ -319,14 +311,15 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                          */
                         getRequest(fc, byteInputOutputStream);
                         dlength = byteInputOutputStream.size() - 2; // less the crc
-                        logger.debug("Response: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, dlength + 2));
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Response: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, dlength + 2));
+                        }
 
                         byteInputStream.reset(inBuffer, dlength);
 
                         // check CRC
                         int[] crc = ModbusUtil.calculateCRC(inBuffer, 0, dlength); // does not include CRC
-                        if (ModbusUtil.unsignedByteToInt(inBuffer[dlength]) != crc[0] &&
-                                ModbusUtil.unsignedByteToInt(inBuffer[dlength + 1]) != crc[1]) {
+                        if (ModbusUtil.unsignedByteToInt(inBuffer[dlength]) != crc[0] || ModbusUtil.unsignedByteToInt(inBuffer[dlength + 1]) != crc[1]) {
                             logger.debug("CRC should be {}, {}", crc[0], crc[1]);
 
                             // Drain the input in case the frame was misread and more
@@ -358,6 +351,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
      * readResponse - Read the bytes for the response from the slave.
      *
      * @return a <tt>ModbusRespose</tt>
+     * @throws com.ghgande.j2mod.modbus.ModbusIOException
      */
     protected ModbusResponse readResponseIn() throws ModbusIOException {
         boolean done;
@@ -390,12 +384,14 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                          */
                         getResponse(fc, byteInputOutputStream);
                         dlength = byteInputOutputStream.size() - 2; // less the crc
-                        logger.debug("Response: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, dlength + 2));
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Response: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, dlength + 2));
+                        }
                         byteInputStream.reset(inBuffer, dlength);
 
                         // check CRC
                         int[] crc = ModbusUtil.calculateCRC(inBuffer, 0, dlength); // does not include CRC
-                        if (ModbusUtil.unsignedByteToInt(inBuffer[dlength]) != crc[0] && ModbusUtil.unsignedByteToInt(inBuffer[dlength + 1]) != crc[1]) {
+                        if (ModbusUtil.unsignedByteToInt(inBuffer[dlength]) != crc[0] || ModbusUtil.unsignedByteToInt(inBuffer[dlength + 1]) != crc[1]) {
                             logger.debug("CRC should be {}, {}", crc[0], crc[1]);
                             throw new IOException("CRC Error in received frame: " + dlength + " bytes: " + ModbusUtil.toHex(byteInputStream.getBuffer(), 0, dlength));
                         }
@@ -413,9 +409,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
             return response;
         }
         catch (IOException ex) {
-            logger.error("Last request: {}", ModbusUtil.toHex(lastRequest));
-            logger.error(ex.getMessage());
-            throw new ModbusIOException("I/O exception - failed to read");
+            throw new ModbusIOException("I/O exception - failed to read response for request [%s] - %s", ModbusUtil.toHex(lastRequest), ex.getMessage());
         }
     }
 }

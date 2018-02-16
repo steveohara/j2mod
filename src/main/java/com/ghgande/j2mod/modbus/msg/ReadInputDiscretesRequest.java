@@ -16,7 +16,7 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.DigitalIn;
 import com.ghgande.j2mod.modbus.procimg.IllegalAddressException;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
@@ -96,12 +96,13 @@ public final class ReadInputDiscretesRequest extends ModbusRequest {
         return response;
     }
 
-    public ModbusResponse createResponse() {
+    @Override
+    public ModbusResponse createResponse(AbstractModbusListener listener) {
         ReadInputDiscretesResponse response;
         DigitalIn[] dins;
 
         // 1. get process image
-        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage(getUnitID());
+        ProcessImage procimg = listener.getProcessImage(getUnitID());
         // 2. get input discretes range
         try {
             dins = procimg.getDigitalInRange(getReference(), getBitCount());

@@ -48,7 +48,8 @@ public final class MaskWriteRegisterResponse
     }
 
     /**
-     * getReference -- return the reference field.
+     * getReference
+     * @return the reference field
      */
     public int getReference() {
         return reference;
@@ -88,6 +89,7 @@ public final class MaskWriteRegisterResponse
 
     /**
      * setOrMask -- set OR mask
+     * @param mask
      */
     public void setOrMask(int mask) {
         orMask = mask;
@@ -95,6 +97,7 @@ public final class MaskWriteRegisterResponse
 
     /**
      * writeData -- output the completed Modbus message to dout
+     * @throws java.io.IOException
      */
     public void writeData(DataOutput dout) throws IOException {
         dout.write(getMessage());
@@ -104,6 +107,7 @@ public final class MaskWriteRegisterResponse
      * readData -- input the Modbus message from din.  If there was a
      * header, such as for Modbus/TCP, it will have been read
      * already.
+     * @throws java.io.IOException
      */
     public void readData(DataInput din) throws IOException {
         reference = din.readUnsignedShort();
@@ -113,6 +117,7 @@ public final class MaskWriteRegisterResponse
 
     /**
      * getMessage -- format the message into a byte array.
+     * @return Byte array of the message
      */
     public byte[] getMessage() {
         byte results[] = new byte[6];

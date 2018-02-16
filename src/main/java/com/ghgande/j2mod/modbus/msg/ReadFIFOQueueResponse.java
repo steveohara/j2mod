@@ -22,6 +22,7 @@ import com.ghgande.j2mod.modbus.procimg.SimpleInputRegister;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Class implementing a <tt>ReadFIFOQueueResponse</tt>.
@@ -87,12 +88,13 @@ public final class ReadFIFOQueueResponse extends ModbusResponse {
      * @param regs Array of registers
      */
     public synchronized void setRegisters(InputRegister[] regs) {
-        registers = regs;
         if (regs == null) {
+            registers = null;
             count = 0;
             return;
         }
 
+        registers = Arrays.copyOf(regs, regs.length);
         if (regs.length > 31) {
             throw new IllegalArgumentException();
         }
@@ -106,6 +108,7 @@ public final class ReadFIFOQueueResponse extends ModbusResponse {
 
     /**
      * writeData -- output the completed Modbus message to dout
+     * @throws java.io.IOException
      */
     public void writeData(DataOutput dout) throws IOException {
         dout.write(getMessage());
@@ -114,6 +117,7 @@ public final class ReadFIFOQueueResponse extends ModbusResponse {
     /**
      * readData -- input the Modbus message from din. If there was a header,
      * such as for Modbus/TCP, it will have been read already.
+     * @throws java.io.IOException
      */
     public void readData(DataInput din) throws IOException {
 
@@ -136,6 +140,7 @@ public final class ReadFIFOQueueResponse extends ModbusResponse {
 
     /**
      * getMessage -- format the message into a byte array.
+     * @return Byte array of message
      */
     public byte[] getMessage() {
         byte result[] = new byte[count * 2 + 4];

@@ -22,6 +22,8 @@ import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
+import com.ghgande.j2mod.modbus.slave.ModbusSlave;
+import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +38,7 @@ import java.net.InetAddress;
 public abstract class AbstractModbusListener implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractModbusListener.class);
-    protected  int port = Modbus.DEFAULT_PORT;
+    protected int port = Modbus.DEFAULT_PORT;
     protected boolean listening;
     protected InetAddress address;
     protected String error;
@@ -63,12 +65,30 @@ public abstract class AbstractModbusListener implements Runnable {
     }
 
     /**
+     * Returns the port being listened on
+     *
+     * @return Port number &gt; 0
+     */
+    public int getPort() {
+        return port;
+    }
+
+    /**
      * Sets the address of the interface to be listened to.
      *
      * @param addr an <tt>InetAddress</tt> instance.
      */
     public void setAddress(InetAddress addr) {
         address = addr;
+    }
+
+    /**
+     * Returns the address bound to this socket
+     *
+     * @return Bound address
+     */
+    public InetAddress getAddress() {
+        return address;
     }
 
     /**
@@ -87,7 +107,7 @@ public abstract class AbstractModbusListener implements Runnable {
      * A <tt>ModbusTCPListener</tt> will silently drop any requests if the
      * listening state is set to <tt>false</tt>.
      *
-     * @param b
+     * @param b listening state
      */
     public void setListening(boolean b) {
         listening = b;
@@ -104,6 +124,7 @@ public abstract class AbstractModbusListener implements Runnable {
 
     /**
      * Get the socket timeout
+     *
      * @return Socket timeout in milliseconds
      */
     public int getTimeout() {
@@ -112,6 +133,7 @@ public abstract class AbstractModbusListener implements Runnable {
 
     /**
      * Sets the socket timeout
+     *
      * @param timeout Timeout in milliseconds
      */
     public void setTimeout(int timeout) {
@@ -123,29 +145,58 @@ public abstract class AbstractModbusListener implements Runnable {
      * and sends back a response
      *
      * @param transport Transport to read request from
-     * @throws ModbusIOException
+     * @param listener Listener that the request was received by
+     * @throws ModbusIOException If there is an issue with the transport or transmission
      */
-    protected static void handleRequest(AbstractModbusTransport transport) throws ModbusIOException {
+    protected void handleRequest(AbstractModbusTransport transport, AbstractModbusListener listener) throws ModbusIOException {
 
         // Get the request from the transport. It will be processed
-        // using an associated process image.
-        ModbusRequest request = transport.readRequest();
+        // using an associated process image
+
+        if (transport == null) {
+            throw new ModbusIOException("No transport specified");
+        }
+        ModbusRequest request = transport.readRequest(listener);
+        if (request == null) {
+            throw new ModbusIOException("Request for transport {} is invalid (null)", transport.getClass().getSimpleName());
+        }
         ModbusResponse response;
 
         // Test if Process image exists and has a correct unit ID
-        ProcessImage spi = ModbusCoupler.getReference().getProcessImage(request.getUnitID());
-        if (spi == null ||
-            (spi.getUnitID() != 0 && request.getUnitID() != spi.getUnitID())) {
+        ProcessImage spi = getProcessImage(request.getUnitID());
+        if (spi == null || (spi.getUnitID() != 0 && request.getUnitID() != spi.getUnitID())) {
             response = request.createExceptionResponse(Modbus.ILLEGAL_ADDRESS_EXCEPTION);
         }
         else {
-            response = request.createResponse();
+            response = request.createResponse(this);
         }
-        logger.debug("Request:{}", request.getHexMessage());
-        logger.debug("Response:{}", response.getHexMessage());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Request:{}", request.getHexMessage());
+            logger.debug("Response:{}", response.getHexMessage());
+        }
 
         // Write the response
         transport.writeMessage(response);
+    }
+
+    /**
+     * Returns the related process image for this listener and Unit Id
+     *
+     * @param unitId Unit ID
+     * @return Process image associated with this listener and Unit ID
+     */
+    public ProcessImage getProcessImage(int unitId) {
+        ModbusSlave slave = ModbusSlaveFactory.getSlave(this);
+        if (slave != null) {
+            return slave.getProcessImage(unitId);
+        }
+        else {
+
+            // Legacy: Use the ModbusCoupler if no image was associated with the listener
+            //         This will be removed when the ModbusCoupler is removed
+
+            return ModbusCoupler.getReference().getProcessImage(unitId);
+        }
     }
 
 }

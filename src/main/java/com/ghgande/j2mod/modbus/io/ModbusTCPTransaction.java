@@ -22,6 +22,7 @@ import com.ghgande.j2mod.modbus.ModbusSlaveException;
 import com.ghgande.j2mod.modbus.msg.ExceptionResponse;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection;
+import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +117,7 @@ public class ModbusTCPTransaction extends ModbusTransaction {
         // Automatically re-connect if disconnected.
         if (!connection.isConnected()) {
             try {
+                logger.debug("connecting to: {}", connection.getAddress().toString());
                 connection.connect();
                 transport = connection.getModbusTransport();
             }
@@ -127,46 +129,68 @@ public class ModbusTCPTransaction extends ModbusTransaction {
         // Try sending the message up to retries time. Note that the message
         // is read immediately after being written, with no flushing of buffers.
         int retryCounter = 0;
-        int retryLimit = (retries > 0 ? retries : 1);
+        int retryLimit = (retries > 0 ? retries : Modbus.DEFAULT_RETRIES);
+        transport.setTimeout(connection.getTimeout());
+        boolean keepTrying = true;
 
-        while (retryCounter < retryLimit) {
+        while (keepTrying) {
             try {
-                logger.debug("request transaction ID = {}", request.getTransactionID());
+                logger.debug("Writing message (try: {}) request transaction ID = {}", retryCounter, request.getTransactionID());
                 transport.writeMessage(request);
                 response = null;
-                do {
+                while (keepTrying) {
                     response = transport.readResponse();
                     if (logger.isDebugEnabled()) {
-                        logger.debug("response transaction ID = {}", response.getTransactionID());
+                        logger.debug("Response transaction ID = {}, RESPONSE: {}", response.getTransactionID(), response.getHexMessage());
                         if (response.getTransactionID() != request.getTransactionID()) {
-                            logger.debug("expected {}, got {}", request.getTransactionID(), response.getTransactionID());
+                            logger.debug("Expected {}, got {}", request.getTransactionID(), response.getTransactionID());
                         }
                     }
-                } while (response != null &&
-                        (!isCheckingValidity() || (request.getTransactionID() != 0 && request.getTransactionID() != response.getTransactionID())) &&
-                        ++retryCounter < retryLimit);
+                    keepTrying = false;
 
-                if (retryCounter >= retryLimit) {
-                    throw new ModbusIOException("Executing transaction failed (tried " + retries + " times)");
+                    // We need to keep retrying if;
+                    //   a) the response is empty or
+                    //   b) we have been told to check the validity and the request/response transaction IDs don't match AND
+                    //   c) we haven't exceeded the maximum retry count
+                    if (response == null || (validityCheck && (request.getTransactionID() != 0 && request.getTransactionID() != response.getTransactionID()))) {
+                        retryCounter++;
+                        if (retryCounter >= retryLimit) {
+                            throw new ModbusIOException("Executing transaction failed (tried {} times)", retryLimit);
+                        }
+                        keepTrying = true;
+                        long sleepTime = getRandomSleepTime(retryCounter);
+                        if (response == null) {
+                            logger.debug("Failed to get any response (try: {}) - retrying after {} milliseconds", retryCounter, sleepTime);
+                        }
+                        else {
+                            logger.debug("Failed to get a valid response, transaction IDs do not match (try: {}) - retrying after {} milliseconds", retryCounter, sleepTime);
+                        }
+                        ModbusUtil.sleep(sleepTime);
+                    }
                 }
-
-                // Both methods were successful, so the transaction must
-                // have been executed.
-                break;
             }
             catch (ModbusIOException ex) {
-                if (!connection.isConnected()) {
-                    try {
-                        connection.connect();
-                    }
-                    catch (Exception e) {
-                        // Nope, fail this transaction.
-                        throw new ModbusIOException("Connection lost", e);
-                    }
+
+                // If this has happened, then we should close and re-open the connection
+                // before re-trying
+
+                try {
+                    logger.debug("Failed transaction (try: {}) - {} closing and re-opening connection", retryCounter, ex.getMessage());
+                    boolean usingRtuOverTCP = transport instanceof ModbusRTUTCPTransport;
+                    connection.close();
+                    connection.connect(usingRtuOverTCP);
+                }
+                catch (Exception e) {
+                    throw new ModbusIOException("Connection lost", e);
                 }
                 retryCounter++;
                 if (retryCounter >= retryLimit) {
-                    throw new ModbusIOException("Executing transaction failed (tried " + retries + " times)", ex);
+                    throw new ModbusIOException("Executing transaction failed (tried {} times) {}", retryLimit, ex.getMessage());
+                }
+                else {
+                    long sleepTime = getRandomSleepTime(retryCounter);
+                    logger.debug("Failed transaction (try: {}) - retrying after {} milliseconds", retryCounter, sleepTime);
+                    ModbusUtil.sleep(sleepTime);
                 }
             }
         }

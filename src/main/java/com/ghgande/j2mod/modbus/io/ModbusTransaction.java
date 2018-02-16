@@ -20,6 +20,8 @@ import com.ghgande.j2mod.modbus.ModbusException;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 
+import java.util.Random;
+
 /**
  * Interface defining a ModbusTransaction.
  * <p>
@@ -36,9 +38,10 @@ public abstract class ModbusTransaction {
     protected AbstractModbusTransport transport;
     protected ModbusRequest request;
     protected ModbusResponse response;
-    protected boolean validityCheck = Modbus.DEFAULT_VALIDITYCHECK;
-    protected int retries = Modbus.DEFAULT_RETRIES;
-    protected static int transactionID = Modbus.DEFAULT_TRANSACTION_ID;
+    boolean validityCheck = Modbus.DEFAULT_VALIDITYCHECK;
+    int retries = Modbus.DEFAULT_RETRIES;
+    private Random random = new Random(System.nanoTime());
+    static int transactionID = Modbus.DEFAULT_TRANSACTION_ID;
 
     /**
      * Returns the <tt>ModbusRequest</tt> instance
@@ -121,8 +124,9 @@ public abstract class ModbusTransaction {
 
     /**
      * getTransactionID -- get the next transaction ID to use.
+     * @return next transaction ID to use
      */
-    public int getTransactionID() {
+    synchronized public int getTransactionID() {
         /*
          * Ensure that the transaction ID is in the valid range between
          * 1 and MAX_TRANSACTION_ID (65534).  If not, the value will be forced
@@ -135,6 +139,16 @@ public abstract class ModbusTransaction {
             transactionID = 1;
         }
         return transactionID;
+    }
+
+    /**
+     * A useful method for getting a random sleep time based on an increment of the retry count and retry sleep time
+     *
+     * @param count Retry count
+     * @return Random sleep time in milliseconds
+     */
+    long getRandomSleepTime(int count) {
+        return (Modbus.RETRY_SLEEP_TIME / 2) + (long) (random.nextDouble() * Modbus.RETRY_SLEEP_TIME * count);
     }
 
     /**

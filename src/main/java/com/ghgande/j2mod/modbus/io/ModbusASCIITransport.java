@@ -16,11 +16,11 @@
 package com.ghgande.j2mod.modbus.io;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
 import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
@@ -51,6 +51,7 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
     public ModbusASCIITransport() {
     }
 
+    @Override
     protected void writeMessageOut(ModbusMessage msg) throws ModbusIOException {
 
         try {
@@ -64,7 +65,9 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
                 //write message
                 writeAsciiByte(FRAME_START);               //FRAMESTART
                 writeAsciiBytes(buf, len);                 //PDU
-                logger.debug("Writing: {}", ModbusUtil.toHex(buf, 0, len));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Writing: {}", ModbusUtil.toHex(buf, 0, len));
+                }
                 writeAsciiByte(calculateLRC(buf, 0, len)); //LRC
                 writeAsciiByte(FRAME_END);                 //FRAMEEND
                 byteOutputStream.reset();
@@ -81,7 +84,8 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
         }
     }
 
-    public ModbusRequest readRequestIn() throws ModbusIOException {
+    @Override
+    public ModbusRequest readRequestIn(AbstractModbusListener listener) throws ModbusIOException {
 
         boolean done = false;
         ModbusRequest request = null;
@@ -112,7 +116,7 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
                     int unitID = byteInputStream.readUnsignedByte();
 
                     //check message with this slave unit identifier
-                    ProcessImage spi = ModbusCoupler.getReference().getProcessImage(unitID);
+                    ProcessImage spi = listener.getProcessImage(unitID);
                     if (spi == null) {
                         continue;
                     }
@@ -138,6 +142,7 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
 
     }
 
+    @Override
     protected ModbusResponse readResponseIn() throws ModbusIOException {
 
         boolean done = false;
@@ -162,7 +167,9 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
                         byteInputOutputStream.writeByte(in);
                     }
                     int len = byteInputOutputStream.size();
-                    logger.debug("Received: {}", ModbusUtil.toHex(inBuffer, 0, len));
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Received: {}", ModbusUtil.toHex(inBuffer, 0, len));
+                    }
                     //check LRC
                     if (inBuffer[len - 1] != calculateLRC(inBuffer, 0, len, 1)) {
                         continue;
@@ -193,16 +200,33 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
         }
     }
 
+    /**
+     * Calculates a LRC checksum
+     *
+     * @param data   Data to use
+     * @param off    Offset into byte array
+     * @param length Number of bytes to use
+     * @return Checksum
+     */
     private static int calculateLRC(byte[] data, int off, int length) {
         return calculateLRC(data, off, length, 0);
     }
 
+    /**
+     * Calculates a LRC checksum
+     *
+     * @param data     Data to use
+     * @param off      Offset into byte array
+     * @param length   Number of bytes to use
+     * @param tailskip Bytes to skip at tail
+     * @return Checksum
+     */
     private static byte calculateLRC(byte[] data, int off, int length, int tailskip) {
         int lrc = 0;
         for (int i = off; i < length - tailskip; i++) {
-            lrc += ((int)data[i]) & 0xFF;
+            lrc += ((int) data[i]) & 0xFF;
         }
-        return (byte)((-lrc) & 0xff);
+        return (byte) ((-lrc) & 0xff);
     }
 
 }

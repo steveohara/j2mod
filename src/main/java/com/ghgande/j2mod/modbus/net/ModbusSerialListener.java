@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 public class ModbusSerialListener extends AbstractModbusListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ModbusSerialListener.class);
-    private SerialConnection serialCon;
+    private AbstractSerialConnection serialCon;
 
     /**
      * Constructs a new <tt>ModbusSerialListener</tt> instance.
@@ -44,6 +44,15 @@ public class ModbusSerialListener extends AbstractModbusListener {
      */
     public ModbusSerialListener(SerialParameters params) {
         serialCon = new SerialConnection(params);
+    }
+
+    /**
+     * Constructs a new <tt>ModbusSerialListener</tt> instance specifying the serial connection interface
+     *
+     * @param serialCon Serial connection to use
+     */
+    public ModbusSerialListener(AbstractSerialConnection serialCon) {
+        this.serialCon = serialCon;
     }
 
     @Override
@@ -71,31 +80,26 @@ public class ModbusSerialListener extends AbstractModbusListener {
 
         listening = true;
         try {
+            AbstractModbusTransport transport = serialCon.getModbusTransport();
             while (listening) {
-                AbstractModbusTransport transport = serialCon.getModbusTransport();
-                if (listening) {
-                    try {
-                        handleRequest(transport);
-                    }
-                    catch (ModbusIOException ex) {
-                        logger.debug(ex.getMessage());
-                    }
+                try {
+                    handleRequest(transport, this);
                 }
-                else {
-                    // Not listening -- read and discard the request so the
-                    // input doesn't get clogged up.
-                    transport.readRequest();
+                catch (ModbusIOException ex) {
+                    logger.debug(ex.getMessage());
                 }
             }
+
+            // Not listening -- read and discard the request so the
+            // input doesn't get clogged up.
+            transport.readRequest(this);
         }
         catch (Exception e) {
             logger.error("Exception occurred while handling request.", e);
         }
         finally {
             listening = false;
-            if (serialCon != null) {
-                serialCon.close();
-            }
+            serialCon.close();
         }
     }
 

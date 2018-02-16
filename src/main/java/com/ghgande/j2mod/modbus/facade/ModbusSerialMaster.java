@@ -17,6 +17,7 @@ package com.ghgande.j2mod.modbus.facade;
 
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
+import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 import com.ghgande.j2mod.modbus.net.SerialConnection;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class ModbusSerialMaster extends AbstractModbusMaster {
 
     private static final Logger logger = LoggerFactory.getLogger(ModbusSerialMaster.class);
-    private SerialConnection connection;
+    private AbstractSerialConnection connection;
 
     /**
      * Constructs a new master facade instance for communication
@@ -57,11 +58,16 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
     public ModbusSerialMaster(SerialParameters param, int timeout) {
         try {
             connection = new SerialConnection(param);
+            connection.setTimeout(timeout);
             this.timeout = timeout;
         }
         catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    public AbstractSerialConnection getConnection() {
+        return connection;
     }
 
     /**
@@ -71,7 +77,7 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
      */
     public synchronized void connect() throws Exception {
         if (connection != null && !connection.isOpen()) {
-            connection.open(timeout);
+            connection.open();
             transaction = connection.getModbusTransport().createTransaction();
             setTransaction(transaction);
         }
@@ -91,8 +97,8 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
     @Override
     public void setTimeout(int timeout) {
         super.setTimeout(timeout);
-        if (connection != null && connection.getModbusTransport() != null) {
-            connection.getModbusTransport().setTimeout(timeout);
+        if (connection != null) {
+            connection.setTimeout(timeout);
         }
     }
 

@@ -19,7 +19,9 @@ import com.ghgande.j2mod.modbus.msg.*;
 import com.ghgande.j2mod.modbus.utils.AbstractTestModbusTCPMaster;
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This class tests the TCP master write features of the library
@@ -30,9 +32,9 @@ public class TestModbusTCPWrite extends AbstractTestModbusTCPMaster {
     @Test
     public void testWriteCoils() {
         WriteCoilResponse res = (WriteCoilResponse)writeRequest(Modbus.WRITE_COIL, 1, 1);
-        assertEquals("Incorrect write status for coil 2", true, res.getCoil());
+        assertTrue("Incorrect write status for coil 2", res.getCoil());
         ReadCoilsResponse res1 = (ReadCoilsResponse)readRequest(Modbus.READ_COILS, 1, 1);
-        assertEquals("Incorrect status for coil 2", true, res1.getCoilStatus(0));
+        assertTrue("Incorrect status for coil 2", res1.getCoilStatus(0));
     }
 
     @Test
@@ -58,9 +60,9 @@ public class TestModbusTCPWrite extends AbstractTestModbusTCPMaster {
         WriteMultipleCoilsResponse res = (WriteMultipleCoilsResponse)writeRequest(Modbus.WRITE_MULTIPLE_COILS, 50000, 1, 0, 1);
         assertEquals("Incorrect write status for coils 50000 to 50002", 3, res.getBitCount());
         ReadCoilsResponse res1 = (ReadCoilsResponse)readRequest(Modbus.READ_COILS, 50000, 3);
-        assertEquals("Incorrect status for coil 50000", true, res1.getCoilStatus(0));
-        assertEquals("Incorrect status for coil 50001", false, res1.getCoilStatus(1));
-        assertEquals("Incorrect status for coil 50002", true, res1.getCoilStatus(2));
+        assertTrue("Incorrect status for coil 50000", res1.getCoilStatus(0));
+        assertFalse("Incorrect status for coil 50001", res1.getCoilStatus(1));
+        assertTrue("Incorrect status for coil 50002", res1.getCoilStatus(2));
     }
 
 }

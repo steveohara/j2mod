@@ -23,6 +23,7 @@ import com.ghgande.j2mod.modbus.msg.ExceptionResponse;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.net.AbstractUDPTerminal;
 import com.ghgande.j2mod.modbus.net.UDPMasterConnection;
+import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,6 +135,9 @@ public class ModbusUDPTransaction extends ModbusTransaction {
                 retryCount++;
                 if (retryCount > retries) {
                     logger.error("Cannot send UDP message", ex);
+                }
+                else {
+                    ModbusUtil.sleep(getRandomSleepTime(retryCount));
                 }
             }
         }

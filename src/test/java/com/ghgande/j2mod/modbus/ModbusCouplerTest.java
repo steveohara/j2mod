@@ -55,14 +55,4 @@ public final class ModbusCouplerTest {
         Assert.assertEquals(testImageTwo, modbusCoupler.getProcessImage(TESTIMAGE2_UNITID));
     }
 
-    @Test
-    public void testMasterSlave() {
-        ModbusCoupler modbusCoupler = ModbusCoupler.getReference();
-        modbusCoupler.setMaster(true);
-        Assert.assertTrue(modbusCoupler.isMaster());
-        Assert.assertFalse(modbusCoupler.isSlave());
-        modbusCoupler.setMaster(false);
-        Assert.assertFalse(modbusCoupler.isMaster());
-        Assert.assertTrue(modbusCoupler.isSlave());
-    }
 }

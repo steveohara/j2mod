@@ -26,7 +26,6 @@ import java.io.UnsupportedEncodingException;
  * This class is a replacement implementation for ByteArrayOutputStream
  * that does not synchronize every
  * byte written.
- * <p/>
  *
  * @author Mark Hayes
  * @author Dieter Wimberger
@@ -40,12 +39,12 @@ public class FastByteArrayOutputStream extends OutputStream {
     /**
      * Defines the default oputput buffer size (100 bytes).
      */
-    public static final int DEFAULT_INIT_SIZE = 100;
+    private static final int DEFAULT_INIT_SIZE = 100;
     /**
      * Defines the default increment of the output buffer size
      * (100 bytes).
      */
-    public static final int DEFAULT_BUMP_SIZE = 100;
+    private static final int DEFAULT_BUMP_SIZE = 100;
 
     /**
      * Number of bytes in the output buffer.
@@ -55,17 +54,17 @@ public class FastByteArrayOutputStream extends OutputStream {
     /**
      * Increment of the output buffer size on overflow.
      */
-    protected int bumpLen;
+    private int bumpLen;
 
     /**
      * Output buffer <tt>byte[]</tt>.
      */
-    protected byte[] buf;
+    byte[] buf;
 
     /**
      * Creates an output stream with default sizes.
      */
-    public FastByteArrayOutputStream() {
+    FastByteArrayOutputStream() {
         buf = new byte[DEFAULT_INIT_SIZE];
         bumpLen = DEFAULT_BUMP_SIZE;
     }
@@ -76,7 +75,7 @@ public class FastByteArrayOutputStream extends OutputStream {
      *
      * @param initialSize the initial size of the buffer.
      */
-    public FastByteArrayOutputStream(int initialSize) {
+    FastByteArrayOutputStream(int initialSize) {
         buf = new byte[initialSize];
         bumpLen = DEFAULT_BUMP_SIZE;
     }
@@ -89,29 +88,6 @@ public class FastByteArrayOutputStream extends OutputStream {
      */
     public FastByteArrayOutputStream(int initialSize, int bumpSize) {
         buf = new byte[initialSize];
-        bumpLen = bumpSize;
-    }
-
-    /**
-     * Creates an output stream with a given initial buffer and a default
-     * bump size.
-     *
-     * @param buffer the initial buffer; will be owned by this object.
-     */
-    public FastByteArrayOutputStream(byte[] buffer) {
-        buf = buffer;
-        bumpLen = DEFAULT_BUMP_SIZE;
-    }
-
-    /**
-     * Creates an output stream with a given initial buffer and a given
-     * bump size.
-     *
-     * @param buffer   the initial buffer; will be owned by this object.
-     * @param bumpSize the amount to increment the buffer.
-     */
-    public FastByteArrayOutputStream(byte[] buffer, int bumpSize) {
-        buf = buffer;
         bumpLen = bumpSize;
     }
 

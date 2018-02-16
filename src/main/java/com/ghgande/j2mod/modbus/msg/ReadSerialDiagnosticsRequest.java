@@ -16,6 +16,7 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -66,13 +67,15 @@ public final class ReadSerialDiagnosticsRequest extends ModbusRequest {
 
     /**
      * getWordCount -- get the number of words in data.
+     * @return Number of words in the data
      */
     public int getWordCount() {
         return 1;
     }
 
     /**
-     * getData -- return the first data item.
+     * getData
+     * @return the first data item
      */
     public int getData() {
         return data;
@@ -80,6 +83,7 @@ public final class ReadSerialDiagnosticsRequest extends ModbusRequest {
 
     /**
      * setData -- Set the optional data value
+     * @param value
      */
     public void setData(int value) {
         data = (short)value;
@@ -89,6 +93,7 @@ public final class ReadSerialDiagnosticsRequest extends ModbusRequest {
      * getData -- Get the data item at the index.
      *
      * @param index - Unused, must be 0.
+     * @return Data at index 0
      *
      * @deprecated
      */
@@ -116,6 +121,7 @@ public final class ReadSerialDiagnosticsRequest extends ModbusRequest {
 
     /**
      * createResponse -- create an empty response for this request.
+     * @return Empty response
      */
     public ModbusResponse getResponse() {
         ReadSerialDiagnosticsResponse response;
@@ -139,16 +145,14 @@ public final class ReadSerialDiagnosticsRequest extends ModbusRequest {
         return response;
     }
 
-    /**
-     * The ModbusCoupler doesn't have a means of reporting the slave
-     * state or ID information.
-     */
-    public ModbusResponse createResponse() {
+    @Override
+    public ModbusResponse createResponse(AbstractModbusListener listener) {
         return createExceptionResponse(Modbus.ILLEGAL_FUNCTION_EXCEPTION);
     }
 
     /**
      * writeData -- output the completed Modbus message to dout
+     * @throws java.io.IOException
      */
     public void writeData(DataOutput dout) throws IOException {
         dout.write(getMessage());
@@ -156,6 +160,7 @@ public final class ReadSerialDiagnosticsRequest extends ModbusRequest {
 
     /**
      * readData -- Read the function code and data value
+     * @throws java.io.IOException
      */
     public void readData(DataInput din) throws IOException {
         function = din.readUnsignedShort();
@@ -164,6 +169,7 @@ public final class ReadSerialDiagnosticsRequest extends ModbusRequest {
 
     /**
      * getMessage -- Create the DIAGNOSTICS message paylaod.
+     * @return Response as byte array
      */
     public byte[] getMessage() {
         byte result[] = new byte[4];

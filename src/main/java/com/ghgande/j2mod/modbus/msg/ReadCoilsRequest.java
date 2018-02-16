@@ -16,7 +16,7 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.DigitalOut;
 import com.ghgande.j2mod.modbus.procimg.IllegalAddressException;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
@@ -91,12 +91,12 @@ public final class ReadCoilsRequest extends ModbusRequest {
     }
 
     @Override
-    public ModbusResponse createResponse() {
+    public ModbusResponse createResponse(AbstractModbusListener listener) {
         ModbusResponse response;
         DigitalOut[] douts;
 
         // 1. get process image
-        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage(getUnitID());
+        ProcessImage procimg = listener.getProcessImage(getUnitID());
         // 2. get input discretes range
         try {
             douts = procimg.getDigitalOutRange(getReference(), getBitCount());

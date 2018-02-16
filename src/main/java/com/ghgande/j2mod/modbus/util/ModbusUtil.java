@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Helper class that provides utility methods.
@@ -93,7 +94,6 @@ public final class ModbusUtil {
             0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42,
             0x43, 0x83, 0x41, 0x81, 0x80, 0x40
     };
-    private static BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH);
 
     /**
      * Converts a <tt>ModbusMessage</tt> instance into
@@ -104,15 +104,14 @@ public final class ModbusUtil {
      * @return the converted hex encoded string representation of the message.
      */
     public static String toHex(ModbusMessage msg) {
+        BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH);
         String ret = "-1";
         try {
-            synchronized (byteOutputStream) {
-                msg.writeTo(byteOutputStream);
-                ret = toHex(byteOutputStream.getBuffer(), 0, byteOutputStream.size());
-                byteOutputStream.reset();
-            }
+            msg.writeTo(byteOutputStream);
+            ret = toHex(byteOutputStream.getBuffer(), 0, byteOutputStream.size());
         }
         catch (IOException ex) {
+            logger.debug("Hex conversion error {}", ex);
         }
         return ret;
     }
@@ -134,24 +133,26 @@ public final class ModbusUtil {
      * The <tt>String</tt> will coontain two hex digit characters
      * for each byte from the passed in <tt>byte[]</tt>.<br>
      * The bytes will be separated by a space character.
-     * <p/>
      *
      * @param data   the array of bytes to be converted into a hex-string.
      * @param off    the offset to start converting from.
-     * @param length the number of bytes to be converted.
+     * @param end    the offset of the end of the byte array.
      *
      * @return the generated hexadecimal representation as <code>String</code>.
      */
-    public static String toHex(byte[] data, int off, int length) {
+    public static String toHex(byte[] data, int off, int end) {
         //double size, two bytes (hex range) for one byte
         StringBuilder buf = new StringBuilder(data.length * 2);
-        for (int i = off; i < length; i++) {
+        if (end > data.length) {
+            end = data.length;
+        }
+        for (int i = off; i < end; i++) {
             //don't forget the second hex digit
             if (((int)data[i] & 0xff) < 0x10) {
                 buf.append("0");
             }
             buf.append(Long.toString((int)data[i] & 0xff, 16).toUpperCase());
-            if (i < data.length - 1) {
+            if (i < end - 1) {
                 buf.append(" ");
             }
         }
@@ -161,7 +162,6 @@ public final class ModbusUtil {
     /**
      * Returns a <tt>byte[]</tt> containing the given
      * byte as unsigned hexadecimal number digits.
-     * <p/>
      *
      * @param i the int to be converted into a hex string.
      *
@@ -186,9 +186,9 @@ public final class ModbusUtil {
     /**
      * Converts the register (a 16 bit value) into an unsigned short.
      * The value returned is:
-     * <p><pre><code>(((a &amp; 0xff) &lt;&lt; 8) | (b &amp; 0xff))
-     * </code></pre>
-     * <p/>
+     *
+     * <pre><code>(((a &amp; 0xff) &lt;&lt; 8) | (b &amp; 0xff))</code></pre>
+     *
      * This conversion has been taken from the documentation of
      * the <tt>DataInput</tt> interface.
      *
@@ -207,12 +207,12 @@ public final class ModbusUtil {
      * (2 bytes).
      * The byte values in the register, in the  order
      * shown, are:
-     * <p/>
+     *
      * <pre><code>
      * (byte)(0xff &amp; (v &gt;&gt; 8))
      * (byte)(0xff &amp; v)
      * </code></pre>
-     * <p/>
+     *
      * This conversion has been taken from the documentation of
      * the <tt>DataOutput</tt> interface.
      *
@@ -233,11 +233,11 @@ public final class ModbusUtil {
      * Converts the given register (16-bit value) into
      * a <tt>short</tt>.
      * The value returned is:
-     * <p/>
+     *
      * <pre><code>
      * (short)((a &lt;&lt; 8) | (b &amp; 0xff))
      * </code></pre>
-     * <p/>
+     *
      * This conversion has been taken from the documentation of
      * the <tt>DataInput</tt> interface.
      *
@@ -253,11 +253,11 @@ public final class ModbusUtil {
      * Converts the register (16-bit value) at the given index
      * into a <tt>short</tt>.
      * The value returned is:
-     * <p/>
+     *
      * <pre><code>
      * (short)((a &lt;&lt; 8) | (b &amp; 0xff))
      * </code></pre>
-     * <p/>
+     *
      * This conversion has been taken from the documentation of
      * the <tt>DataInput</tt> interface.
      *
@@ -275,7 +275,7 @@ public final class ModbusUtil {
      * (2 bytes).
      * The byte values in the register, in the  order
      * shown, are:
-     * <p/>
+     *
      * <pre><code>
      * (byte)(0xff &amp; (v &gt;&gt; 8))
      * (byte)(0xff &amp; v)
@@ -295,8 +295,8 @@ public final class ModbusUtil {
     /**
      * Converts a byte[4] binary int value to a primitive int.<br>
      * The value returned is:
-     * <p><pre>
-     * <code>
+     *
+     * <pre><code>
      * (((a &amp; 0xff) &lt;&lt; 24) | ((b &amp; 0xff) &lt;&lt; 16) |
      * &#32;((c &amp; 0xff) &lt;&lt; 8) | (d &amp; 0xff))
      * </code></pre>
@@ -485,4 +485,50 @@ public final class ModbusUtil {
 
         return crc;
     }
+
+    /**
+     * Return true if the string is null or empty
+     *
+     * @param value String to check
+     * @return True if the value is blank or empty
+     */
+    public static boolean isBlank(String value) {
+        return value == null || value.isEmpty();
+    }
+
+    /**
+     * Return true if the list is null or empty
+     *
+     * @param list List to check
+     * @return True if the list is blank or empty
+     */
+    public static boolean isBlank(List<Object> list) {
+        return list == null || list.isEmpty();
+    }
+
+    /**
+     * Return true if the array is null or empty
+     *
+     * @param list Array to check
+     * @return True if the array is blank or empty
+     */
+    public static boolean isBlank(Object[] list) {
+        return list == null || list.length == 0;
+    }
+
+    /**
+     * Sleeps safely for the specified amount of time unless awoken by an interruption
+     *
+     * @param time Time in milliseconds
+     */
+    public static void sleep(long time) {
+        try {
+            Thread.sleep(time);
+        }
+        catch (InterruptedException ex) {
+            logger.warn("Backout sleep timer has been interrupted");
+        }
+
+    }
+
 }

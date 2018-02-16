@@ -19,8 +19,8 @@ import com.ghgande.j2mod.modbus.procimg.InputRegister;
 import com.ghgande.j2mod.modbus.utils.AbstractTestModbusTCPMaster;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static junit.framework.TestCase.assertFalse;
+import static org.junit.Assert.*;
 
 /**
  * This class tests the TCP master read features of the library
@@ -31,8 +31,8 @@ public class TestModbusTCPMasterRead extends AbstractTestModbusTCPMaster {
     @Test
     public void testReadCoils() {
         try {
-            assertEquals("Incorrect status for coil 0", true, master.readCoils(UNIT_ID, 0, 1).getBit(0));
-            assertEquals("Incorrect status for coil 1", false, master.readCoils(UNIT_ID, 1, 1).getBit(0));
+            assertTrue("Incorrect status for coil 0", master.readCoils(UNIT_ID, 0, 1).getBit(0));
+            assertFalse("Incorrect status for coil 1", master.readCoils(UNIT_ID, 1, 1).getBit(0));
         }
         catch (Exception e) {
             fail(String.format("Cannot read - %s", e.getMessage()));
@@ -56,8 +56,8 @@ public class TestModbusTCPMasterRead extends AbstractTestModbusTCPMaster {
     @Test
     public void testReadDiscretes() {
         try {
-            assertEquals("Incorrect status for discrete 1", false, master.readInputDiscretes(UNIT_ID, 0, 1).getBit(0));
-            assertEquals("Incorrect status for discrete 2", true, master.readInputDiscretes(UNIT_ID, 1, 1).getBit(0));
+            assertFalse("Incorrect status for discrete 1", master.readInputDiscretes(UNIT_ID, 0, 1).getBit(0));
+            assertTrue("Incorrect status for discrete 2", master.readInputDiscretes(UNIT_ID, 1, 1).getBit(0));
         }
         catch (Exception e) {
             fail(String.format("Cannot read - %s", e.getMessage()));

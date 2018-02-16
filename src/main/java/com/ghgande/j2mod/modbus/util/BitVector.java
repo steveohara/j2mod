@@ -65,6 +65,7 @@ public final class BitVector {
      * wrapping the given byte data.
      *
      * @param data a byte[] containing packed bits.
+     * @param size
      *
      * @return the newly created <tt>BitVector</tt> instance.
      */
@@ -178,6 +179,7 @@ public final class BitVector {
      * <p>
      *
      * @param data a <tt>byte[]</tt>.
+     * @param size
      */
     public final void setBytes(byte[] data, int size) {
         System.arraycopy(data, 0, this.data, 0, data.length);

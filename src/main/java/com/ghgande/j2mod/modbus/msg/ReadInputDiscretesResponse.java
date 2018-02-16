@@ -55,7 +55,6 @@ public final class ReadInputDiscretesResponse
      * Constructs a new <tt>ReadInputDiscretesResponse</tt>
      * instance with a given count of input discretes
      * (i.e. bits).
-     * <b>
      *
      * @param count the number of bits to be read.
      */
@@ -68,7 +67,6 @@ public final class ReadInputDiscretesResponse
     /**
      * Returns the number of bits (i.e. input discretes)
      * read with the request.
-     * <p>
      *
      * @return the number of bits that have been read.
      */
@@ -145,6 +143,9 @@ public final class ReadInputDiscretesResponse
 
         //decode bytes into bitvector
         discretes = BitVector.createBitVector(data);
+        if (discretes != null) {
+            bitCount = discretes.size();
+        }
 
         //update data length
         setDataLength(count + 1);

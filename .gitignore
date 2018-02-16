@@ -34,3 +34,5 @@ out/
 
 # Vagrant
 .vagrant/
+
+modpoll-*

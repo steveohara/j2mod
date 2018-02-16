@@ -23,6 +23,7 @@ import com.ghgande.j2mod.modbus.utils.AbstractTestModbusUDPMaster;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * This class tests the TCP master write features of the library
@@ -33,9 +34,9 @@ public class TestModbusUDPWrite extends AbstractTestModbusUDPMaster {
     @Test
     public void testWriteCoils() {
         WriteCoilResponse res = (WriteCoilResponse)writeRequest(Modbus.WRITE_COIL, 1, 1);
-        assertEquals("Incorrect write status for coil 2", true, res.getCoil());
+        assertTrue("Incorrect write status for coil 2", res.getCoil());
         ReadCoilsResponse res1 = (ReadCoilsResponse)readRequest(Modbus.READ_COILS, 1, 1);
-        assertEquals("Incorrect status for coil 2", true, res1.getCoilStatus(0));
+        assertTrue("Incorrect status for coil 2", res1.getCoilStatus(0));
     }
 
     @Test

@@ -76,6 +76,10 @@ public class ModbusSlaveException extends ModbusException {
                 return "Slave Device Busy";
             case 8:
                 return "Memory Parity Error";
+            case 10:
+                return "Gateway Path Unavailable";
+            case 11:
+                return "Gateway Target Device Failed to Respond";
         }
         return "Error Code = " + type;
     }

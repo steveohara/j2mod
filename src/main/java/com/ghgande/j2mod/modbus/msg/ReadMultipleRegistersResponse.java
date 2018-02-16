@@ -22,6 +22,7 @@ import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Class implementing a <tt>ReadMultipleRegistersResponse</tt>. The
@@ -56,10 +57,10 @@ public final class ReadMultipleRegistersResponse extends ModbusResponse {
         super();
 
         setFunctionCode(Modbus.READ_MULTIPLE_REGISTERS);
-        setDataLength(registers.length * 2 + 1);
+        setDataLength(registers == null ? 0 : (registers.length * 2 + 1));
 
-        this.registers = registers;
-        byteCount = registers.length * 2;
+        this.registers = registers == null ? null : Arrays.copyOf(registers, registers.length);
+        byteCount = registers == null ? 0 : (registers.length * 2);
     }
 
     /**
@@ -136,11 +137,12 @@ public final class ReadMultipleRegistersResponse extends ModbusResponse {
 
     /**
      * Sets the entire block of registers for this response
+     * @param registers Array of registers to use
      */
     public void setRegisters(Register[] registers) {
-        byteCount = registers.length * 2;
+        byteCount = registers == null ? 0 : registers.length * 2;
+        this.registers = registers == null ? null : Arrays.copyOf(registers, registers.length);
         setDataLength(byteCount + 1);
-        this.registers = registers;
     }
 
     public void writeData(DataOutput dout) throws IOException {

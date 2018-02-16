@@ -71,7 +71,7 @@ abstract public class AbstractModbusMaster {
 
     /**
      * Reads a given number of coil states from the slave.
-     * <p/>
+     *
      * Note that the number of bits in the bit vector will be
      * forced to the number originally requested.
      *
@@ -95,7 +95,7 @@ abstract public class AbstractModbusMaster {
         readCoilsRequest.setBitCount(count);
         transaction.setRequest(readCoilsRequest);
         transaction.execute();
-        BitVector bv = ((ReadCoilsResponse)getAndCheckResponse()).getCoils();
+        BitVector bv = ((ReadCoilsResponse) getAndCheckResponse()).getCoils();
         bv.forceSize(count);
         return bv;
     }
@@ -122,12 +122,12 @@ abstract public class AbstractModbusMaster {
         writeCoilRequest.setCoil(state);
         transaction.setRequest(writeCoilRequest);
         transaction.execute();
-        return ((WriteCoilResponse)getAndCheckResponse()).getCoil();
+        return ((WriteCoilResponse) getAndCheckResponse()).getCoil();
     }
 
     /**
      * Writes a given number of coil states to the slave.
-     * <p/>
+     *
      * Note that the number of coils to be written is given
      * implicitly, through {@link BitVector#size()}.
      *
@@ -152,7 +152,7 @@ abstract public class AbstractModbusMaster {
 
     /**
      * Reads a given number of input discrete states from the slave.
-     * <p/>
+     *
      * Note that the number of bits in the bit vector will be
      * forced to the number originally requested.
      *
@@ -183,7 +183,7 @@ abstract public class AbstractModbusMaster {
 
     /**
      * Reads a given number of input registers from the slave.
-     * <p/>
+     *
      * Note that the number of input registers returned (i.e. array length)
      * will be according to the number received in the slave response.
      *
@@ -206,12 +206,12 @@ abstract public class AbstractModbusMaster {
         readInputRegistersRequest.setWordCount(count);
         transaction.setRequest(readInputRegistersRequest);
         transaction.execute();
-        return ((ReadInputRegistersResponse)getAndCheckResponse()).getRegisters();
+        return ((ReadInputRegistersResponse) getAndCheckResponse()).getRegisters();
     }
 
     /**
      * Reads a given number of registers from the slave.
-     * <p/>
+     *
      * Note that the number of registers returned (i.e. array length)
      * will be according to the number received in the slave response.
      *
@@ -234,7 +234,7 @@ abstract public class AbstractModbusMaster {
         readMultipleRegistersRequest.setWordCount(count);
         transaction.setRequest(readMultipleRegistersRequest);
         transaction.execute();
-        return ((ReadMultipleRegistersResponse)getAndCheckResponse()).getRegisters();
+        return ((ReadMultipleRegistersResponse) getAndCheckResponse()).getRegisters();
     }
 
     /**
@@ -285,7 +285,7 @@ abstract public class AbstractModbusMaster {
 
     /**
      * Reads a given number of coil states from the slave.
-     * <p/>
+     *
      * Note that the number of bits in the bit vector will be
      * forced to the number originally requested.
      *
@@ -319,7 +319,7 @@ abstract public class AbstractModbusMaster {
 
     /**
      * Writes a given number of coil states to the slave.
-     * <p/>
+     *
      * Note that the number of coils to be written is given
      * implicitly, through {@link BitVector#size()}.
      *
@@ -335,7 +335,7 @@ abstract public class AbstractModbusMaster {
 
     /**
      * Reads a given number of input discrete states from the slave.
-     * <p/>
+     *
      * Note that the number of bits in the bit vector will be
      * forced to the number originally requested.
      *
@@ -354,7 +354,7 @@ abstract public class AbstractModbusMaster {
 
     /**
      * Reads a given number of input registers from the slave.
-     * <p/>
+     *
      * Note that the number of input registers returned (i.e. array length)
      * will be according to the number received in the slave response.
      *
@@ -372,7 +372,7 @@ abstract public class AbstractModbusMaster {
 
     /**
      * Reads a given number of registers from the slave.
-     * <p/>
+     *
      * Note that the number of registers returned (i.e. array length)
      * will be according to the number received in the slave response.
      *
@@ -422,7 +422,7 @@ abstract public class AbstractModbusMaster {
      *
      * @return Modbus response
      *
-     * @throws ModbusException
+     * @throws ModbusException If response is null
      */
     private ModbusResponse getAndCheckResponse() throws ModbusException {
         ModbusResponse res = transaction.getResponse();
@@ -435,7 +435,7 @@ abstract public class AbstractModbusMaster {
     /**
      * Checks to make sure there is a transaction to use
      *
-     * @throws ModbusException
+     * @throws ModbusException If transaction is null
      */
     private void checkTransaction() throws ModbusException {
         if (transaction == null) {
@@ -462,12 +462,34 @@ abstract public class AbstractModbusMaster {
     }
 
     /**
+     * Set the amount of retries for opening
+     * the connection for executing the transaction.
+     *
+     * @param retries the amount of retries as <tt>int</tt>.
+     */
+    synchronized public void setRetries(int retries) {
+        if (transaction != null) {
+            transaction.setRetries(retries);
+        }
+    }
+
+    /**
+     * Sets the flag that controls whether the
+     * validity of a transaction will be checked.
+     *
+     * @param b true if checking validity, false otherwise.
+     */
+    synchronized public void setCheckingValidity(boolean b) {
+        if (transaction != null) {
+            transaction.setCheckingValidity(b);
+        }
+    }
+
+    /**
      * Returns the transport being used by the
      *
      * @return ModbusTransport
      */
     public abstract AbstractModbusTransport getTransport();
-
-
 
 }

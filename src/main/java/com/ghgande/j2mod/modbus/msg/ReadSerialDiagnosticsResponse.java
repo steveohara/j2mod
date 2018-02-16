@@ -66,13 +66,15 @@ public final class ReadSerialDiagnosticsResponse extends ModbusResponse {
 
     /**
      * getWordCount -- get the number of words in data.
+     * @return Number of words in the data
      */
     public int getWordCount() {
         return 1;
     }
 
     /**
-     * getData -- return the first data item.
+     * getData
+     * @return the first data item
      */
     public int getData() {
         return data;
@@ -80,6 +82,7 @@ public final class ReadSerialDiagnosticsResponse extends ModbusResponse {
 
     /**
      * setData -- Set the optional data value
+     * @param value optional data value
      */
     public void setData(int value) {
         data = (short)value;
@@ -89,6 +92,7 @@ public final class ReadSerialDiagnosticsResponse extends ModbusResponse {
      * getData -- Get the data item at the index.
      *
      * @param index - Unused, must be 0.
+     * @return Data at index 0
      *
      * @deprecated
      */
@@ -118,6 +122,7 @@ public final class ReadSerialDiagnosticsResponse extends ModbusResponse {
 
     /**
      * writeData -- output the completed Modbus message to dout
+     * @throws java.io.IOException
      */
     public void writeData(DataOutput dout) throws IOException {
         dout.write(getMessage());
@@ -125,6 +130,7 @@ public final class ReadSerialDiagnosticsResponse extends ModbusResponse {
 
     /**
      * readData -- Read the function code and data value
+     * @throws java.io.IOException
      */
     public void readData(DataInput din) throws IOException {
         function = din.readUnsignedShort();
@@ -133,6 +139,7 @@ public final class ReadSerialDiagnosticsResponse extends ModbusResponse {
 
     /**
      * getMessage -- Create the DIAGNOSTICS message paylaod.
+     * @return message paylaod
      */
     public byte[] getMessage() {
         byte result[] = new byte[4];

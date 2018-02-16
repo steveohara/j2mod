@@ -20,6 +20,8 @@ import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
+import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,14 +47,14 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     /**
      * Defines a virtual number for the FRAME START token (COLON).
      */
-    public static final int FRAME_START = 1000;
+    static final int FRAME_START = 1000;
     /**
      * Defines a virtual number for the FRAME_END token (CR LF).
      */
-    public static final int FRAME_END = 2000;
+    static final int FRAME_END = 2000;
 
-    protected SerialPort commPort;
-    protected boolean echo = false;     // require RS-485 echo processing
+    private AbstractSerialConnection commPort;
+    boolean echo = false;     // require RS-485 echo processing
     private final Set<AbstractSerialTransportListener> listeners = Collections.synchronizedSet(new HashSet<AbstractSerialTransportListener>());
 
     /**
@@ -66,27 +68,36 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         return transaction;
     }
 
-    /**
-     * The <code>writeMessage</code> method writes a modbus serial message to
-     * its serial output stream to a specified slave unit ID.
-     *
-     * @param msg a <code>ModbusMessage</code> value
-     *
-     * @throws ModbusIOException if an error occurs
-     */
+    @Override
     public void writeMessage(ModbusMessage msg) throws ModbusIOException {
         open();
         notifyListenersBeforeWrite(msg);
         writeMessageOut(msg);
+        long startTime = System.nanoTime();
 
         // Wait here for the message to have been sent
 
-        double bytesPerSec = commPort.getBaudRate() / (commPort.getNumDataBits() + commPort.getNumStopBits() + (commPort.getParity() == SerialPort.NO_PARITY ? 0 : 1));
+        double bytesPerSec = commPort.getBaudRate() / (((commPort.getNumDataBits() == 0) ? 8 : commPort.getNumDataBits()) + ((commPort.getNumStopBits() == 0) ? 1 : commPort.getNumStopBits()) + ((commPort.getParity() == SerialPort.NO_PARITY) ? 0 : 1));
         double delay = 1000000000.0 * msg.getOutputLength() / bytesPerSec;
         double delayMilliSeconds = Math.floor(delay / 1000000);
         double delayNanoSeconds = delay % 1000000;
         try {
-            Thread.sleep((int)delayMilliSeconds, (int)delayNanoSeconds);
+
+            // For delays less than a millisecond, we need to chew CPU cycles unfortunately
+            // There are some fiddle factors here to allow for some oddities in the hardware
+
+            if (delayMilliSeconds == 0.0) {
+                int priority = Thread.currentThread().getPriority();
+                Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+                long end = startTime + ((int) (delayNanoSeconds * 1.3));
+                while (System.nanoTime() < end) {
+                    // noop
+                }
+                Thread.currentThread().setPriority(priority);
+            }
+            else {
+                Thread.sleep((int) (delayMilliSeconds * 1.4), (int) delayNanoSeconds);
+            }
         }
         catch (Exception e) {
             logger.debug("nothing to do");
@@ -94,31 +105,16 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         notifyListenersAfterWrite(msg);
     }
 
-    /**
-     * The <code>readRequest</code> method listens continuously on the serial
-     * input stream for master request messages and replies if the request slave
-     * ID matches its own set in ModbusCoupler.getUnitID().
-     *
-     * @return a <code>ModbusRequest</code> value
-     *
-     * @throws ModbusIOException if an error occurs
-     */
-    public ModbusRequest readRequest() throws ModbusIOException {
+    @Override
+    public ModbusRequest readRequest(AbstractModbusListener listener) throws ModbusIOException {
         open();
         notifyListenersBeforeRequest();
-        ModbusRequest req = readRequestIn();
+        ModbusRequest req = readRequestIn(listener);
         notifyListenersAfterRequest(req);
         return req;
     }
 
-    /**
-     * <code>readResponse</code> reads a response message from the slave
-     * responding to a master writeMessage request.
-     *
-     * @return a <code>ModbusResponse</code> value
-     *
-     * @throws ModbusIOException if an error occurs
-     */
+    @Override
     public ModbusResponse readResponse() throws ModbusIOException {
         notifyListenersBeforeResponse();
         ModbusResponse res = readResponseIn();
@@ -127,14 +123,18 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     }
 
     /**
-     * Opens the port if it isn't alredy open
-     * @throws ModbusIOException
+     * Opens the port if it isn't already open
+     *
+     * @throws ModbusIOException If a problem with the port
      */
     private void open() throws ModbusIOException {
         if (commPort != null && !commPort.isOpen()) {
             setTimeout(timeout);
-            if (!commPort.openPort()) {
-                throw new ModbusIOException(String.format("Cannot open port %s", commPort.getDescriptivePortName()));
+            try {
+                commPort.open();
+            }
+            catch (IOException e) {
+                throw new ModbusIOException(String.format("Cannot open port %s - %s", commPort.getDescriptivePortName(), e.getMessage()));
             }
         }
     }
@@ -142,7 +142,9 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     @Override
     public void setTimeout(int time) {
         super.setTimeout(time);
-        commPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, timeout, 0);
+        if (commPort != null) {
+            commPort.setComPortTimeouts(AbstractSerialConnection.TIMEOUT_READ_BLOCKING, timeout, timeout);
+        }
     }
 
     /**
@@ -150,7 +152,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * its serial output stream to a specified slave unit ID.
      *
      * @param msg a <code>ModbusMessage</code> value
-     *
      * @throws ModbusIOException if an error occurs
      */
     abstract protected void writeMessageOut(ModbusMessage msg) throws ModbusIOException;
@@ -158,13 +159,14 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     /**
      * The <code>readRequest</code> method listens continuously on the serial
      * input stream for master request messages and replies if the request slave
-     * ID matches its own set in ModbusCoupler.getUnitID().
+     * ID matches its own set in process image
      *
+     * @param listener Listener that received this request
      * @return a <code>ModbusRequest</code> value
      *
      * @throws ModbusIOException if an error occurs
      */
-    abstract protected ModbusRequest readRequestIn() throws ModbusIOException;
+    abstract protected ModbusRequest readRequestIn(AbstractModbusListener listener) throws ModbusIOException;
 
     /**
      * <code>readResponse</code> reads a response message from the slave
@@ -284,11 +286,11 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * and output streams to be used for reading from and writing to.
      *
      * @param cp the comm port to read from/write to.
-     *
      * @throws IOException if an I/O related error occurs.
      */
-    public void setCommPort(SerialPort cp) throws IOException {
+    public void setCommPort(AbstractSerialConnection cp) throws IOException {
         commPort = cp;
+        setTimeout(timeout);
     }
 
     /**
@@ -325,13 +327,14 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @param len is the length of the echo to read.  Timeout will occur if the
      *            echo is not received in the time specified in the SerialConnection.
-     *
      * @throws IOException if a I/O error occurred.
      */
-    protected void readEcho(int len) throws IOException {
+    void readEcho(int len) throws IOException {
         byte echoBuf[] = new byte[len];
         int echoLen = commPort.readBytes(echoBuf, len);
-        logger.debug("Echo: {}", ModbusUtil.toHex(echoBuf, 0, echoLen));
+        if (logger.isDebugEnabled()) {
+            logger.debug("Echo: {}", ModbusUtil.toHex(echoBuf, 0, echoLen));
+        }
         if (echoLen != len) {
             logger.debug("Error: Transmit echo not received");
             throw new IOException("Echo not received");
@@ -366,10 +369,9 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @param buffer      Buffer to put data into
      * @param bytesToRead Number of bytes to read
-     *
      * @throws IOException If the port is invalid or if the number of bytes returned is not equal to that asked for
      */
-    protected void readBytes(byte[] buffer, long bytesToRead) throws IOException {
+    void readBytes(byte[] buffer, long bytesToRead) throws IOException {
         if (commPort != null && commPort.isOpen()) {
             int cnt = commPort.readBytes(buffer, bytesToRead);
             if (cnt != bytesToRead) {
@@ -386,10 +388,11 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @param buffer       Buffer to write
      * @param bytesToWrite Number of bytes to write
-     *
      * @return Number of bytes written
+     *
+     * @throws java.io.IOException if writing to invalid port
      */
-    protected final int writeBytes(byte[] buffer, long bytesToWrite) throws IOException {
+    final int writeBytes(byte[] buffer, long bytesToWrite) throws IOException {
         if (commPort != null && commPort.isOpen()) {
             return commPort.writeBytes(buffer, bytesToWrite);
         }
@@ -404,9 +407,9 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @return Byte value of the next ASCII couplet
      *
-     * @throws IOException
+     * @throws IOException If a problem with the port
      */
-    protected int readAsciiByte() throws IOException {
+    int readAsciiByte() throws IOException {
         if (commPort != null && commPort.isOpen()) {
             byte[] buffer = new byte[1];
             int cnt = commPort.readBytes(buffer, 1);
@@ -416,7 +419,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             else if (buffer[0] == ':') {
                 return ModbusASCIITransport.FRAME_START;
             }
-            else if (buffer[0] == '\r') {
+            else if (buffer[0] == '\r' || buffer[0] == '\n') {
                 return ModbusASCIITransport.FRAME_END;
             }
             else {
@@ -445,12 +448,11 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * allowance is made for these
      *
      * @param value Value to write
-     *
      * @return Number of bytes written
      *
-     * @throws IOException
+     * @throws IOException If a problem with the port
      */
-    protected final int writeAsciiByte(int value) throws IOException {
+    final int writeAsciiByte(int value) throws IOException {
         if (commPort != null && commPort.isOpen()) {
             byte[] buffer;
 
@@ -464,9 +466,16 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             }
             else {
                 buffer = ModbusUtil.toHex(value);
-                logger.debug("Wrote byte {}={}", value, ModbusUtil.toHex(value));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Wrote byte {}={}", value, ModbusUtil.toHex(value));
+                }
             }
-            return commPort.writeBytes(buffer, buffer.length);
+            if (buffer != null) {
+                return commPort.writeBytes(buffer, buffer.length);
+            }
+            else {
+                throw new IOException("Message to send is empty");
+            }
         }
         else {
             throw new IOException("Comm port is not valid or not open");
@@ -478,12 +487,11 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @param buffer       Buffer of bytes to write
      * @param bytesToWrite Number of characters to write
-     *
      * @return Number of bytes written
      *
-     * @throws IOException
+     * @throws IOException If a problem with the port
      */
-    protected int writeAsciiBytes(byte[] buffer, long bytesToWrite) throws IOException {
+    int writeAsciiBytes(byte[] buffer, long bytesToWrite) throws IOException {
         if (commPort != null && commPort.isOpen()) {
             int cnt = 0;
             for (int i = 0; i < bytesToWrite; i++) {
@@ -502,24 +510,26 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     /**
      * clearInput - Clear the input if characters are found in the input stream.
      *
-     * @throws IOException
+     * @throws IOException If a problem with the port
      */
-    public void clearInput() throws IOException {
+    void clearInput() throws IOException {
         if (commPort.bytesAvailable() > 0) {
             int len = commPort.bytesAvailable();
             byte buf[] = new byte[len];
             readBytes(buf, len);
-            logger.debug("Clear input: {}", ModbusUtil.toHex(buf, 0, len));
+            if (logger.isDebugEnabled()) {
+                logger.debug("Clear input: {}", ModbusUtil.toHex(buf, 0, len));
+            }
         }
     }
 
     /**
      * Closes the comms port and any streams associated with it
      *
-     * @throws IOException
+     * @throws IOException Comm port close failed
      */
     public void close() throws IOException {
-        commPort.closePort();
+        commPort.close();
     }
 
 }

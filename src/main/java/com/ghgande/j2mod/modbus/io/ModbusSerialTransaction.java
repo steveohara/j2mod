@@ -21,7 +21,8 @@ import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.ModbusSlaveException;
 import com.ghgande.j2mod.modbus.msg.ExceptionResponse;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
-import com.ghgande.j2mod.modbus.net.SerialConnection;
+import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
+import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,22 +65,20 @@ public class ModbusSerialTransaction extends ModbusTransaction {
      * Constructs a new <tt>ModbusSerialTransaction</tt>
      * instance with a given <tt>ModbusRequest</tt> to
      * be send when the transaction is executed.
-     * <p>
      *
      * @param con a <tt>TCPMasterConnection</tt> instance.
      */
-    public ModbusSerialTransaction(SerialConnection con) {
+    public ModbusSerialTransaction(AbstractSerialConnection con) {
         setSerialConnection(con);
     }
 
     /**
      * Sets the port on which this <tt>ModbusTransaction</tt>
-     * should be executed.<p>
-     * <p>
+     * should be executed.
      *
      * @param con a <tt>SerialConnection</tt>.
      */
-    public void setSerialConnection(SerialConnection con) {
+    public void setSerialConnection(AbstractSerialConnection con) {
         synchronized (MUTEX) {
             transport = con.getModbusTransport();
         }
@@ -133,12 +132,7 @@ public class ModbusSerialTransaction extends ModbusTransaction {
         do {
             try {
                 if (transDelayMS > 0) {
-                    try {
-                        Thread.sleep(transDelayMS);
-                    }
-                    catch (InterruptedException ex) {
-                        logger.debug("InterruptedException: {}", ex.getMessage());
-                    }
+                    ModbusUtil.sleep(transDelayMS);
                 }
                 synchronized (MUTEX) {
                     //write request message
@@ -152,14 +146,14 @@ public class ModbusSerialTransaction extends ModbusTransaction {
                 if (++tries >= retries) {
                     throw e;
                 }
+                ModbusUtil.sleep(getRandomSleepTime(tries));
                 logger.debug("Execute try {} error: {}", tries, e.getMessage());
             }
         } while (!finished);
 
         //4. deal with exceptions
         if (response instanceof ExceptionResponse) {
-            throw new ModbusSlaveException(((ExceptionResponse)response).getExceptionCode()
-            );
+            throw new ModbusSlaveException(((ExceptionResponse) response).getExceptionCode());
         }
 
         if (isCheckingValidity()) {

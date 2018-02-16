@@ -97,7 +97,7 @@ public class ModbusUDPListener extends AbstractModbusListener {
         listening = true;
         try {
             while (listening) {
-                handleRequest(transport);
+                handleRequest(transport, this);
             }
         }
         catch (ModbusIOException ex1) {

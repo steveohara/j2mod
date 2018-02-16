@@ -33,6 +33,7 @@ public class TCPConnectionHandler implements Runnable {
 
     private TCPSlaveConnection connection;
     private AbstractModbusTransport transport;
+    private AbstractModbusListener listener;
 
     /**
      * Constructs a new <tt>TCPConnectionHandler</tt> instance.
@@ -42,28 +43,20 @@ public class TCPConnectionHandler implements Runnable {
      * and a <tt>ProcessImage</tt> which provides the interface between the
      * slave implementation and the <tt>TCPSlaveConnection</tt>.
      *
-     * @param con an incoming connection.
+     * @param listener the listener that handled the incoming request
+     * @param connection an incoming connection.
      */
-    public TCPConnectionHandler(TCPSlaveConnection con) {
-        setConnection(con);
-    }
-
-    /**
-     * Sets a connection to be handled by this <tt>
-     * TCPConnectionHandler</tt>.
-     *
-     * @param con a <tt>TCPSlaveConnection</tt>.
-     */
-    public void setConnection(TCPSlaveConnection con) {
-        connection = con;
-        transport = connection.getModbusTransport();
+    public TCPConnectionHandler(AbstractModbusListener listener, TCPSlaveConnection connection) {
+        this.listener = listener;
+        this.connection = connection;
+        transport = this.connection.getModbusTransport();
     }
 
     @Override
     public void run() {
         try {
             do {
-                AbstractModbusListener.handleRequest(transport);
+                listener.handleRequest(transport, listener);
             } while (!Thread.currentThread().isInterrupted());
         }
         catch (ModbusIOException ex) {

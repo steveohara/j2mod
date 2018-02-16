@@ -16,7 +16,7 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.IllegalAddressException;
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
@@ -84,12 +84,13 @@ public final class ReadInputRegistersRequest extends ModbusRequest {
         return response;
     }
 
-    public ModbusResponse createResponse() {
+    @Override
+    public ModbusResponse createResponse(AbstractModbusListener listener) {
         ReadInputRegistersResponse response;
         InputRegister[] inpregs;
 
         // 1. get process image
-        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage(getUnitID());
+        ProcessImage procimg = listener.getProcessImage(getUnitID());
         // 2. get input registers range
         try {
             inpregs = procimg.getInputRegisterRange(getReference(), getWordCount());

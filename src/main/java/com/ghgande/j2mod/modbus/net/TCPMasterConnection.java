@@ -17,12 +17,15 @@ package com.ghgande.j2mod.modbus.net;
 
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
+import com.ghgande.j2mod.modbus.io.ModbusRTUTCPTransport;
 import com.ghgande.j2mod.modbus.io.ModbusTCPTransport;
+import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
@@ -67,15 +70,28 @@ public class TCPMasterConnection {
      * Prepares the associated <tt>ModbusTransport</tt> of this
      * <tt>TCPMasterConnection</tt> for use.
      *
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     *
      * @throws IOException if an I/O related error occurs.
      */
-    private void prepareTransport() throws IOException {
+    private void prepareTransport(boolean useRtuOverTcp) throws IOException {
         if (transport == null) {
-            transport = new ModbusTCPTransport(socket);
+            if (useRtuOverTcp) {
+                logger.trace("prepareTransport() -> using RTU over TCP transport.");
+                transport = new ModbusRTUTCPTransport(socket);
+                transport.setMaster(this);
+            }
+            else {
+                logger.trace("prepareTransport() -> using standard TCP transport.");
+                transport = new ModbusTCPTransport(socket);
+                transport.setMaster(this);
+            }
         }
         else {
+            logger.trace("prepareTransport() -> using custom transport: {}", transport.getClass().getSimpleName());
             transport.setSocket(socket);
         }
+        transport.setTimeout(timeout);
     }
 
     /**
@@ -84,17 +100,35 @@ public class TCPMasterConnection {
      * @throws Exception if there is a network failure.
      */
     public synchronized void connect() throws Exception {
+        connect(false);
+    }
+
+    /**
+     * Opens this <tt>TCPMasterConnection</tt>.
+     *
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     *
+     * @throws Exception if there is a network failure.
+     */
+    public synchronized void connect(boolean useRtuOverTcp) throws Exception {
         if (!isConnected()) {
             logger.debug("connect()");
 
-            socket = new Socket(address, port);
+            // Create a socket without auto-connecting
+
+            socket = new Socket();
             socket.setReuseAddress(true);
             socket.setSoLinger(true, 1);
             socket.setKeepAlive(true);
-
             setTimeout(timeout);
-            prepareTransport();
 
+            // Connect - only wait for the timeout number of milliseconds
+
+            socket.connect(new InetSocketAddress(address, port), timeout);
+
+            // Prepare the transport
+
+            prepareTransport(useRtuOverTcp);
             connected = true;
         }
     }
@@ -106,16 +140,16 @@ public class TCPMasterConnection {
      */
     public synchronized boolean isConnected() {
         if (connected && socket != null) {
-            if (!socket.isConnected() || socket.isClosed()
-                    || socket.isInputShutdown()
-                    || socket.isOutputShutdown()) {
+            if (!socket.isConnected() || socket.isClosed() || socket.isInputShutdown() || socket.isOutputShutdown()) {
                 try {
                     socket.close();
                 }
                 catch (IOException e) {
-                    // Blah.
+                    logger.error("Socket exception", e);
                 }
-                connected = false;
+                finally {
+                    connected = false;
+                }
             }
             else {
                 /*
@@ -130,14 +164,7 @@ public class TCPMasterConnection {
                 if (m_useUrgentData) {
                     try {
                         socket.sendUrgentData(0);
-                        try {
-                            // Snooze briefly so the urgent byte isn't
-                            // merged with the next packet.
-                            Thread.sleep(5);
-                        }
-                        catch (InterruptedException e) {
-                            // Do nothing.
-                        }
+                        ModbusUtil.sleep(5);
                     }
                     catch (IOException e) {
                         connected = false;
@@ -163,10 +190,15 @@ public class TCPMasterConnection {
                 transport.close();
             }
             catch (IOException ex) {
-                logger.debug("close()");
+                logger.debug("close()", ex);
             }
-            connected = false;
+            finally {
+                connected = false;
+            }
         }
+
+        // Just in case users open it with a different protocol second time round (RTU over TCP)
+        transport = null;
     }
 
     /**
@@ -182,13 +214,14 @@ public class TCPMasterConnection {
     /**
      * Set the <tt>ModbusTransport</tt> associated with this
      * <tt>TCPMasterConnection</tt>
+     * @param trans associated transport
      */
     public void setModbusTransport(ModbusTCPTransport trans) {
         transport = trans;
     }
 
     /**
-     * Returns the timeout for this <tt>TCPMasterConnection</tt>.
+     * Returns the timeout (msec) for this <tt>TCPMasterConnection</tt>.
      *
      * @return the timeout as <tt>int</tt>.
      */
@@ -197,10 +230,10 @@ public class TCPMasterConnection {
     }
 
     /**
-     * Sets the timeout for this <tt>TCPMasterConnection</tt>.
+     * Sets the timeout (msec) for this <tt>TCPMasterConnection</tt>. This is both the
+     * connection timeout and the transaction timeout
      *
-     * @param timeout -
-     *                the timeout in milliseconds as an <tt>int</tt>.
+     * @param timeout - the timeout in milliseconds as an <tt>int</tt>.
      */
     public synchronized void setTimeout(int timeout) {
         try {

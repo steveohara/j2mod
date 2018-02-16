@@ -37,6 +37,7 @@ public class IllegalFunctionExceptionResponse extends ExceptionResponse {
 
     /**
      *
+     * @param fc
      */
     public void setFunctionCode(int fc) {
         super.setFunctionCode(fc | Modbus.EXCEPTION_OFFSET);

@@ -15,7 +15,7 @@
  */
 package com.ghgande.j2mod.modbus.utils;
 
-import com.fazecast.jSerialComm.SerialPort;
+import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
@@ -27,8 +27,6 @@ import java.io.*;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -71,9 +69,9 @@ public class TestUtils {
 
         // Copy the native modpoll library to a temporary directory in the build workspace to facilitate
         // execution on some platforms.
-        File tmpDir = Files.createTempDirectory(Paths.get("."), "modpoll-").toFile();
+        File tmpDir = new File(new File("").getAbsolutePath(), "modpoll-" + System.currentTimeMillis());
+        tmpDir.mkdirs();
         tmpDir.deleteOnExit();
-
         File nativeFile = new File(tmpDir, exeName);
 
         // Copy the library to the temporary folder
@@ -82,7 +80,7 @@ public class TestUtils {
         String resourceName = String.format("/com/ghgande/j2mod/modbus/native/%s/%s", osName, exeName);
 
         try {
-            in = SerialPort.class.getResourceAsStream(resourceName);
+            in = AbstractSerialConnection.class.getResourceAsStream(resourceName);
             if (in == null) {
                 throw new Exception(String.format("Cannot find resource [%s]", resourceName));
             }

@@ -16,7 +16,7 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
+import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.IllegalAddressException;
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
@@ -68,6 +68,7 @@ public final class ReadFIFOQueueRequest extends ModbusRequest {
 
     /**
      * getResponse -- create an empty response for this request.
+     * @return A suitable response object
      */
     public ModbusResponse getResponse() {
         ReadFIFOQueueResponse response;
@@ -88,15 +89,13 @@ public final class ReadFIFOQueueRequest extends ModbusRequest {
         return response;
     }
 
-    /**
-     * Create a response using the named register as the queue length count.
-     */
-    public ModbusResponse createResponse() {
+    @Override
+    public ModbusResponse createResponse(AbstractModbusListener listener) {
         ReadFIFOQueueResponse response;
         InputRegister[] registers;
 
         // Get the process image.
-        ProcessImage procimg = ModbusCoupler.getReference().getProcessImage(getUnitID());
+        ProcessImage procimg = listener.getProcessImage(getUnitID());
 
         try {
             // Get the FIFO queue location and read the count of available
@@ -120,6 +119,7 @@ public final class ReadFIFOQueueRequest extends ModbusRequest {
 
     /**
      * writeData -- output this Modbus message to dout.
+     * @throws java.io.IOException If cannot write
      */
     public void writeData(DataOutput dout) throws IOException {
         dout.write(getMessage());
@@ -127,13 +127,15 @@ public final class ReadFIFOQueueRequest extends ModbusRequest {
 
     /**
      * readData -- read the reference word.
+     * @throws java.io.IOException If cannot read
      */
     public void readData(DataInput din) throws IOException {
         reference = din.readUnsignedShort();
     }
 
     /**
-     * getMessage -- return an empty array as there is no data for this request.
+     * getMessage
+     * @return an empty array as there is no data for this request
      */
     public byte[] getMessage() {
         byte results[] = new byte[2];

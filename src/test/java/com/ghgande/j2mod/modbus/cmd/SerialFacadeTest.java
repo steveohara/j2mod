@@ -82,12 +82,7 @@ public class SerialFacadeTest {
 
         try {
             System.out.printf("Sending test messages to slave: %s", slaveId);
-            System.out.printf("Hit enter to start and <s enter> to terminate the test");
-            inChar = System.in.read();
-            if ((inChar == 's') || (inChar == 'S')) {
-                System.out.printf("Exiting");
-                System.exit(0);
-            }
+            System.out.printf("Hit <s enter> to terminate the test");
 
             // 2. Setup serial parameters
             SerialParameters params = new SerialParameters();
@@ -200,7 +195,7 @@ public class SerialFacadeTest {
             } while (!finished);
         }
         catch (Exception e) {
-            System.out.printf("SerialFacadeTest driver: %s", e);
+            System.out.printf("SerialFacadeTest driver: %s\n", e);
             e.printStackTrace();
         }
         if (msm != null) {

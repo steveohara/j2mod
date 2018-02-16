@@ -18,7 +18,6 @@ package com.ghgande.j2mod.modbus.util;
 /**
  * A cleanroom implementation of the Observer interface
  * for the Observable design pattern.
- * <p/>
  *
  * @author Dieter Wimberger (wimpi)
  * @author Steve O'Hara (4energy)

@@ -22,8 +22,8 @@ import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse;
 import com.ghgande.j2mod.modbus.utils.AbstractTestModbusTCPMaster;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static junit.framework.TestCase.assertFalse;
+import static org.junit.Assert.*;
 
 /**
  * This class tests the TCP master read features of the library
@@ -34,8 +34,8 @@ public class TestModbusTCPRead extends AbstractTestModbusTCPMaster {
     @Test
     public void testReadCoils() {
         ReadCoilsResponse res = (ReadCoilsResponse)readRequest(Modbus.READ_COILS, 0, 1);
-        assertEquals("Incorrect status for coil 0", true, res.getCoilStatus(0));
-        assertEquals("Incorrect status for coil 1", false, res.getCoilStatus(1));
+        assertTrue("Incorrect status for coil 0", res.getCoilStatus(0));
+        assertFalse("Incorrect status for coil 1", res.getCoilStatus(1));
     }
 
     @Test
@@ -46,8 +46,8 @@ public class TestModbusTCPRead extends AbstractTestModbusTCPMaster {
     @Test
     public void testReadDiscretes() {
         ReadInputDiscretesResponse res = (ReadInputDiscretesResponse)readRequest(Modbus.READ_INPUT_DISCRETES, 0, 2);
-        assertEquals("Incorrect status for discrete 1", false, res.getDiscreteStatus(0));
-        assertEquals("Incorrect status for discrete 2", true, res.getDiscreteStatus(1));
+        assertFalse("Incorrect status for discrete 1", res.getDiscreteStatus(0));
+        assertTrue("Incorrect status for discrete 2", res.getDiscreteStatus(1));
     }
 
     @Test

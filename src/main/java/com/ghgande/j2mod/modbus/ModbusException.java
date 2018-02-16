@@ -53,6 +53,7 @@ public class ModbusException extends Exception {
      * <p>
      *
      * @param message the message describing this <tt>ModbusException</tt>.
+     * @param values optional values of the exception
      */
     public ModbusException(String message, Object... values) {
         super(String.format(message, values));

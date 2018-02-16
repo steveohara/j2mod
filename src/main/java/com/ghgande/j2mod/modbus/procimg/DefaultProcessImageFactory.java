@@ -131,6 +131,7 @@ public class DefaultProcessImageFactory implements ProcessImageFactory {
     /**
      * Creates a new SimpleRegister instance.
      *
+     * @param value initial value of the register
      * @return a SimpleRegister instance.
      */
     public Register createRegister(int value) {

@@ -15,31 +15,34 @@
  */
 package com.ghgande.j2mod.modbus.cmd;
 
-import com.fazecast.jSerialComm.SerialPort;
-import com.ghgande.j2mod.modbus.ModbusException;
-import com.ghgande.j2mod.modbus.io.*;
-import com.ghgande.j2mod.modbus.msg.*;
-import com.ghgande.j2mod.modbus.net.ModbusMasterFactory;
+import com.ghgande.j2mod.modbus.Modbus;
+import com.ghgande.j2mod.modbus.facade.ModbusSerialMaster;
+import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
+import com.ghgande.j2mod.modbus.io.AbstractSerialTransportListener;
+import com.ghgande.j2mod.modbus.io.ModbusSerialTransport;
+import com.ghgande.j2mod.modbus.io.ModbusTransaction;
+import com.ghgande.j2mod.modbus.msg.ModbusMessage;
+import com.ghgande.j2mod.modbus.msg.ModbusRequest;
+import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
+import com.ghgande.j2mod.modbus.util.SerialParameters;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.wiringpi.Gpio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
  * Class that implements a simple command line tool for writing to an analog
  * output over a Modbus/TCP connection.
- *
+ * <p>
  * <p>
  * Note that if you write to a remote I/O with a Modbus protocol stack, it will
  * most likely expect that the communication is <i>kept alive</i> after the
  * first write message.
- *
+ * <p>
  * <p>
  * This can be achieved either by sending any kind of message, or by repeating
  * the write message within a given period of time.
- *
+ * <p>
  * <p>
  * If the time period is exceeded, then the device might react by turning off
  * all signals of the I/O modules. After this timeout, the device might require
@@ -68,144 +71,60 @@ public class ReadInputRegistersWithCallbackTest {
         int repeat = 1;
         int unit = 0;
 
-        // 1. Setup parameters
-        if (args.length < 3) {
-            printUsage();
-            System.exit(1);
-        }
-
         GpioFactory.getInstance();
         Gpio.pinMode(RTS_PIN, Gpio.OUTPUT);
 
+        SerialParameters params = new SerialParameters();
+        params.setPortName("/dev/ttyAMA0");
+        params.setBaudRate(9600);
+        params.setDatabits(8);
+        params.setParity("none");
+        params.setStopbits(1);
+        params.setEncoding(Modbus.SERIAL_ENCODING_RTU);
+        params.setEcho(false);
+        ModbusSerialMaster master = null;
         try {
-            try {
-                // 2. Open the connection.
-                transport = ModbusMasterFactory.createModbusMaster(args[0]);
-
-                if (transport == null) {
-                    System.out.printf("Cannot open %s", args[0]);
-                    System.exit(1);
-                }
-
-                if (transport instanceof ModbusSerialTransport) {
-                    transport.setTimeout(500);
-                    ((ModbusSerialTransport)transport).addListener(new EventListener());
-                    if (System.getProperty("com.ghgande.j2mod.modbus.baud") != null) {
-                        ((ModbusSerialTransport)transport).setBaudRate(Integer.parseInt(System.getProperty("com.ghgande.j2mod.modbus.baud")));
-                    }
-                    else {
-                        ((ModbusSerialTransport)transport).setBaudRate(9600);
-                    }
-                }
-
-                // There are a number of devices which won't initialize immediately
-                // after being opened.  Take a moment to let them come up.
-                Thread.sleep(100);
-
-                ref = Integer.parseInt(args[1]);
-                count = Integer.parseInt(args[2]);
-
-                if (args.length == 4) {
-                    repeat = Integer.parseInt(args[3]);
-                }
-
-                if (transport instanceof ModbusTCPTransport) {
-                    String parts[] = args[0].split(" *: *");
-                    if (parts.length >= 4) {
-                        unit = Integer.parseInt(parts[3]);
-                    }
-                }
-                else if (transport instanceof ModbusRTUTransport) {
-                    String parts[] = args[0].split(" *: *");
-                    if (parts.length >= 3) {
-                        unit = Integer.parseInt(parts[2]);
-                    }
-
-                    String baud = System.getProperty("com.ghgande.j2mod.modbus.baud");
-                    if (baud != null) {
-                        ((ModbusRTUTransport)transport).setBaudRate(Integer.parseInt(baud));
-                    }
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-                printUsage();
-                System.exit(1);
-            }
-
-            // 3. Create the command.
-            req = new ReadInputRegistersRequest(ref, count);
-            req.setUnitID(unit);
-
-            // 4. Prepare the transaction
-            trans = transport.createTransaction();
-            trans.setRequest(req);
-            req.setHeadless(trans instanceof ModbusSerialTransaction);
-
-            System.out.printf("Request is: %s\n", req.getHexMessage());
-
-            // 5. Execute the transaction repeat times
-
-            for (int i = 0; i < repeat; i++) {
+            master = new ModbusSerialMaster(params, 500);
+            master.connect();
+            ((ModbusSerialTransport) master.getTransport()).addListener(new EventListener());
+            for (int i = 0; i < 100; i++) {
                 try {
-                    trans.execute();
-//                    Thread.sleep(200);
+                    Integer value = master.readInputRegisters(49, 1, 1)[0].getValue();
+                    //                System.out.printf("Data: %3.1f\n", (value / 5.0) - 50.0);
+                    System.out.printf("Data: %3.1f\n", value / 10.0);
                 }
-                catch (ModbusException x) {
-                    System.out.printf(x.getMessage());
-                    continue;
-                }
-                ModbusResponse res = trans.getResponse();
-                if (res == null) {
-                    System.out.printf("No response to READ HOLDING request");
-                }
-                else {
-                    System.out.printf("Response: %s ", res.getHexMessage());
-                    if (res instanceof ExceptionResponse) {
-                        ExceptionResponse exception = (ExceptionResponse)res;
-                        System.out.printf(exception.toString());
-                    }
-                    else if (res instanceof ReadInputRegistersResponse) {
-                        ReadInputRegistersResponse data = (ReadInputRegistersResponse)res;
-                        System.out.printf("Data: %3.1f\n", data.getRegister(0).toShort() / 10.0);
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
+                catch (Exception e) {
 
-        try {
-            // 6. Close the connection
-            if (transport != null) {
-                transport.close();
+                }
             }
         }
-        catch (IOException e) {
-            // Do nothing.
+        catch (Throwable e) {
+            logger.error("Modbus problem connecting to {}", e.getMessage());
+        }
+        finally {
+            if (master != null) {
+                master.disconnect();
+            }
         }
         System.exit(0);
     }
 
     private static class EventListener extends AbstractSerialTransportListener {
+
         @Override
-        public void beforeMessageWrite(SerialPort port, ModbusMessage msg) {
+        public void beforeMessageWrite(AbstractSerialConnection port, ModbusMessage msg) {
             Gpio.digitalWrite(RTS_PIN, true);
-        }
-
-        @Override
-        public void afterMessageWrite(SerialPort port, ModbusMessage msg) {
-            Gpio.digitalWrite(RTS_PIN, false);
-
-            // Slug the response so that we don't overwhelm the temp sensor
-
             try {
-                Thread.sleep(50);
+//                Thread.sleep(30);
             }
             catch (Exception e) {
                 logger.debug("nothing to do");
             }
+        }
+
+        @Override
+        public void afterMessageWrite(AbstractSerialConnection port, ModbusMessage msg) {
+            Gpio.digitalWrite(RTS_PIN, false);
         }
     }
 }
