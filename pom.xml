@@ -11,7 +11,7 @@
     <version>2.3.9-SNAPSHOT</version>
     <description>A fork of the j2mod library to support the jSerialComm connector</description>
 
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -149,6 +149,18 @@
                         </manifestEntries>
                     </archive>
                 </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.5.0</version>
+            	 <extensions>true</extensions>
+            	 <configuration>
+            	     <instructions>
+            		<Import-Package>*jSerialComm*, org.slf4j;version="[1.6,2)"</Import-Package>
+            	     </instructions>
+                 </configuration>
             </plugin>
 
             <plugin>
