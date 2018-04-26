@@ -166,17 +166,28 @@ public abstract class AbstractModbusListener implements Runnable {
         ProcessImage spi = getProcessImage(request.getUnitID());
         if (spi == null || (spi.getUnitID() != 0 && request.getUnitID() != spi.getUnitID())) {
             response = request.createExceptionResponse(Modbus.ILLEGAL_ADDRESS_EXCEPTION);
-        }
-        else {
-            response = request.createResponse(this);
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Request:{}", request.getHexMessage());
-            logger.debug("Response:{}", response.getHexMessage());
-        }
 
-        // Write the response
-        transport.writeMessage(response);
+            // The message is not for us. Read the expected response.
+            if (logger.isDebugEnabled()) {
+                logger.debug("Message not for us! Request: {}", request.getHexMessage());
+            }
+
+            ModbusResponse resp = transport.readResponse();
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Read slave! Response: {}", resp.getHexMessage());
+            }
+        } else {
+            response = request.createResponse(this);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Request:{}", request.getHexMessage());
+                logger.debug("Response:{}", response.getHexMessage());
+            }
+
+            // Write the response
+            transport.writeMessage(response);
+        }
     }
 
     /**
