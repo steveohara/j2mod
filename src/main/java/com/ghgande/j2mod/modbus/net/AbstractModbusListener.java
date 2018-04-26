@@ -161,22 +161,31 @@ public abstract class AbstractModbusListener implements Runnable {
             throw new ModbusIOException("Request for transport %s is invalid (null)", transport.getClass().getSimpleName());
         }
         ModbusResponse response;
-
+        
         // Test if Process image exists and has a correct unit ID
         ProcessImage spi = getProcessImage(request.getUnitID());
         if (spi == null || (spi.getUnitID() != 0 && request.getUnitID() != spi.getUnitID())) {
-            response = request.createExceptionResponse(Modbus.ILLEGAL_ADDRESS_EXCEPTION);
-        }
-        else {
-            response = request.createResponse(this);
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Request:{}", request.getHexMessage());
-            logger.debug("Response:{}", response.getHexMessage());
-        }
+            // The message is not for us. Read the expected response.
+            if (logger.isDebugEnabled()) {
+                logger.debug("Message not for us! Request: {}", request.getHexMessage());
+            }
 
-        // Write the response
-        transport.writeMessage(response);
+            ModbusResponse resp = transport.readResponse();
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Read slave! Response: {}", resp.getHexMessage());
+            }
+        } else {
+            response = request.createResponse(this);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Request:{}", request.getHexMessage());
+                logger.debug("Response:{}", response.getHexMessage());
+            }
+
+            // Write the response
+            transport.writeMessage(response);
+        }
     }
 
     /**
@@ -197,6 +206,5 @@ public abstract class AbstractModbusListener implements Runnable {
 
             return ModbusCoupler.getReference().getProcessImage(unitId);
         }
-    }
-
+    }	
 }
