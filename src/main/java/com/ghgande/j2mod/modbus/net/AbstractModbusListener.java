@@ -161,12 +161,10 @@ public abstract class AbstractModbusListener implements Runnable {
             throw new ModbusIOException("Request for transport %s is invalid (null)", transport.getClass().getSimpleName());
         }
         ModbusResponse response;
-
+        
         // Test if Process image exists and has a correct unit ID
         ProcessImage spi = getProcessImage(request.getUnitID());
         if (spi == null || (spi.getUnitID() != 0 && request.getUnitID() != spi.getUnitID())) {
-            response = request.createExceptionResponse(Modbus.ILLEGAL_ADDRESS_EXCEPTION);
-
             // The message is not for us. Read the expected response.
             if (logger.isDebugEnabled()) {
                 logger.debug("Message not for us! Request: {}", request.getHexMessage());
@@ -208,6 +206,5 @@ public abstract class AbstractModbusListener implements Runnable {
 
             return ModbusCoupler.getReference().getProcessImage(unitId);
         }
-    }
-
+    }	
 }
