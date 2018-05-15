@@ -416,6 +416,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
             return response;
         }
         catch (IOException ex) {
+        	// FIXME: This printout is wrong when reading response from other slave
             throw new ModbusIOException("I/O exception - failed to read response for request [%s] - %s", ModbusUtil.toHex(lastRequest), ex.getMessage());
         }
     }

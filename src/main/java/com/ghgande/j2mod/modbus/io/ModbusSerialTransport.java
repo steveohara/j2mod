@@ -75,6 +75,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             logger.debug("Ignoring response not meant for us");
             
             try {
+            	// FIXME: Here there could be an incoming response or the master could be resending the request!!!
             	ModbusResponse response = readResponseIn();
             	
             	if (logger.isDebugEnabled()) {
