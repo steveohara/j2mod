@@ -315,13 +315,15 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                         if (logger.isDebugEnabled()) {
                             logger.debug("Request: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, dlength + 2));
                         }
-
+                        
                         byteInputStream.reset(inBuffer, dlength);
 
                         // check CRC
                         int[] crc = ModbusUtil.calculateCRC(inBuffer, 0, dlength); // does not include CRC
                         if (ModbusUtil.unsignedByteToInt(inBuffer[dlength]) != crc[0] || ModbusUtil.unsignedByteToInt(inBuffer[dlength + 1]) != crc[1]) {
-                            logger.debug("CRC should be {}, {}", Integer.toHexString(crc[0]), Integer.toHexString(crc[1]));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("CRC should be {}, {}", Integer.toHexString(crc[0]), Integer.toHexString(crc[1]));
+                            }
                             
                             // Drain the input in case the frame was misread and more
                             // was to follow.
@@ -343,7 +345,9 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                             boolean bytesAvailable = availableBytes() > 0;
                             if (bytesAvailable == false) {
                                 // Sleep the 1.5t to see if there will be more data
-                                logger.debug("Waiting for {} microsec", getMaxCharDelay());
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Waiting for {} microsec", getMaxCharDelay());
+                                }
                                 bytesAvailable = ModbusUtil.spinCondition(getMaxCharDelay(), () -> availableBytes() > 0);
                             }
                             
@@ -360,13 +364,19 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                         
                         // Wait for 2t to complete the 3.5t wait
                         // Is there is data available the interval was not respected, we should discard the message
-                        logger.debug("Waiting for {} microsec", getCharIntervalMicro(2));
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Waiting for {} microsec", getCharIntervalMicro(2));
+                        }
                         if (ModbusUtil.spinCondition(getCharIntervalMicro(2), () -> availableBytes() > 0)) {
                             // Discard the message
-                            logger.debug("Discarding message (More than 1.5t between characters!) - {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Discarding message (More than 1.5t between characters!) - {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
+                            }
                         } else {
                             // This message is complete
-                            logger.debug("Read message not meant for us: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Read message not meant for us: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
+                            }
                         }
                     }
                 }
