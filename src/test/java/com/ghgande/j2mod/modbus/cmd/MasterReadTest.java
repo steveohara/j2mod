@@ -15,9 +15,9 @@ import com.ghgande.j2mod.modbus.procimg.Register;
 public class MasterReadTest {
 
     public static void main(String[] args) {
-        ModbusTCPMaster master = new ModbusTCPMaster("localhost", 502, 1000, true);
+        ModbusTCPMaster master = new ModbusTCPMaster("localhost", 502, 1000, true, true);
         try {
-            master.connect(true);
+            master.connect();
             for (int i = 0; i < 10; i++) {
                 int ref = 100;
                 Register[] regs = master.readMultipleRegisters(1, ref, 10);

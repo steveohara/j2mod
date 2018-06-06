@@ -164,7 +164,7 @@ public class SerialConnection extends AbstractSerialConnection {
 
     @Override
     public boolean isOpen() {
-        return serialPort != null;
+        return serialPort != null && serialPort.isOpen();
     }
 
     @Override

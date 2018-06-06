@@ -17,6 +17,7 @@ package com.ghgande.j2mod.modbus.facade;
 
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
+import com.ghgande.j2mod.modbus.io.ModbusSerialTransaction;
 import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 import com.ghgande.j2mod.modbus.net.SerialConnection;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
@@ -35,6 +36,7 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
 
     private static final Logger logger = LoggerFactory.getLogger(ModbusSerialMaster.class);
     private AbstractSerialConnection connection;
+    private int transDelay = Modbus.DEFAULT_TRANSMIT_DELAY;
 
     /**
      * Constructs a new master facade instance for communication
@@ -44,7 +46,7 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
      *              to communicate with the slave device network.
      */
     public ModbusSerialMaster(SerialParameters param) {
-        this(param, Modbus.DEFAULT_TIMEOUT);
+        this(param, Modbus.DEFAULT_TIMEOUT, Modbus.DEFAULT_TRANSMIT_DELAY);
     }
 
     /**
@@ -56,7 +58,21 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
      * @param timeout Receive timeout in milliseconds
      */
     public ModbusSerialMaster(SerialParameters param, int timeout) {
+        this(param, timeout, Modbus.DEFAULT_TRANSMIT_DELAY);
+    }
+
+    /**
+     * Constructs a new master facade instance for communication
+     * with a given slave.
+     *
+     * @param param      SerialParameters specifies the serial port parameters to use
+     *                   to communicate with the slave device network.
+     * @param timeout    Receive timeout in milliseconds
+     * @param transDelay The transmission delay to use between frames (milliseconds)
+     */
+    public ModbusSerialMaster(SerialParameters param, int timeout, int transDelay) {
         try {
+            this.transDelay = transDelay > -1 ? transDelay : Modbus.DEFAULT_TRANSMIT_DELAY;
             connection = new SerialConnection(param);
             connection.setTimeout(timeout);
             this.timeout = timeout;
@@ -79,6 +95,7 @@ public class ModbusSerialMaster extends AbstractModbusMaster {
         if (connection != null && !connection.isOpen()) {
             connection.open();
             transaction = connection.getModbusTransport().createTransaction();
+            ((ModbusSerialTransaction) transaction).setTransDelayMS(transDelay);
             setTransaction(transaction);
         }
     }

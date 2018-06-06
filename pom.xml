@@ -8,8 +8,8 @@
     <artifactId>j2mod</artifactId>
     <name>j2mod</name>
     <url>https://github.com/steveohara/j2mod</url>
-    <version>2.5.0-SNAPSHOT</version>
-    <description>A fork of the j2mod library to support the jSerialComm connector</description>
+    <version>2.5.1-SNAPSHOT</version>
+    <description>A Modbus TCP/UDP/Serial Master and Slave implementation</description>
 
     <packaging>jar</packaging>
     <properties>

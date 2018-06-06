@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
@@ -81,6 +82,10 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             logger.debug("Ignoring response not meant for us");
         }
         else {
+            // We need to pause before sending the response
+            waitBetweenFrames();
+
+            // Send the response
             writeMessage(msg);
         }
     }
@@ -318,6 +323,15 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     public void setCommPort(AbstractSerialConnection cp) throws IOException {
         commPort = cp;
         setTimeout(timeout);
+    }
+
+    /**
+     * Returns the comms port being used for this transport
+     *
+     * @return Comms port
+     */
+    public AbstractSerialConnection getCommPort() {
+        return commPort;
     }
 
     /**

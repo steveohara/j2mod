@@ -52,7 +52,6 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
 
     @Override
     protected void writeMessageOut(ModbusMessage msg) throws ModbusIOException {
-
         try {
             synchronized (byteOutputStream) {
                 //write message to byte out

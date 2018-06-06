@@ -34,6 +34,7 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
 
     private TCPMasterConnection connection;
     private boolean reconnecting = false;
+    private boolean useRtuOverTcp = false;
 
     /**
      * Constructs a new master facade instance for communication
@@ -43,7 +44,19 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      *             specifying the slave to communicate with.
      */
     public ModbusTCPMaster(String addr) {
-        this(addr, Modbus.DEFAULT_PORT);
+        this(addr, Modbus.DEFAULT_PORT, Modbus.DEFAULT_TIMEOUT, false, false);
+    }
+
+    /**
+     * Constructs a new master facade instance for communication
+     * with a given slave.
+     *
+     * @param addr an internet address as resolvable IP name or IP number,
+     *             specifying the slave to communicate with.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     */
+    public ModbusTCPMaster(String addr, boolean useRtuOverTcp) {
+        this(addr, Modbus.DEFAULT_PORT, Modbus.DEFAULT_TIMEOUT, false, useRtuOverTcp);
     }
 
     /**
@@ -55,7 +68,34 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      * @param port the port the slave is listening to.
      */
     public ModbusTCPMaster(String addr, int port) {
-        this(addr, port, Modbus.DEFAULT_TIMEOUT, false);
+        this(addr, port, Modbus.DEFAULT_TIMEOUT, false, false);
+    }
+
+    /**
+     * Constructs a new master facade instance for communication
+     * with a given slave.
+     *
+     * @param addr an internet address as resolvable IP name or IP number,
+     *             specifying the slave to communicate with.
+     * @param port the port the slave is listening to.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     */
+    public ModbusTCPMaster(String addr, int port, boolean useRtuOverTcp) {
+        this(addr, port, Modbus.DEFAULT_TIMEOUT, false, useRtuOverTcp);
+    }
+
+    /**
+     * Constructs a new master facade instance for communication
+     * with a given slave.
+     *
+     * @param addr      an internet address as resolvable IP name or IP number,
+     *                  specifying the slave to communicate with.
+     * @param port      the port the slave is listening to.
+     * @param timeout   Socket timeout in milliseconds
+     * @param reconnect True if the socket should reconnect if it detects a connection failure
+     */
+    public ModbusTCPMaster(String addr, int port, int timeout, boolean reconnect) {
+        this(addr, port, timeout, reconnect, false);
     }
 
     /**
@@ -67,9 +107,11 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      * @param port      the port the slave is listening to.
      * @param timeout   Socket timeout in milliseconds
      * @param reconnect True if the socket should reconnect if it detcts a connection failure
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
-    public ModbusTCPMaster(String addr, int port, int timeout, boolean reconnect) {
+    public ModbusTCPMaster(String addr, int port, int timeout, boolean reconnect, boolean useRtuOverTcp) {
         super();
+        this.useRtuOverTcp = useRtuOverTcp;
         try {
             InetAddress slaveAddress = InetAddress.getByName(addr);
             connection = new TCPMasterConnection(slaveAddress);
@@ -89,17 +131,6 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      * @throws Exception if the connection cannot be established.
      */
     public synchronized void connect() throws Exception {
-        connect(false);
-    }
-
-    /**
-     * Connects this <tt>ModbusTCPMaster</tt> with the slave.
-     *
-     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
-     *
-     * @throws Exception if the connection cannot be established.
-     */
-    public synchronized void connect(boolean useRtuOverTcp) throws Exception {
         if (connection != null && !connection.isConnected()) {
             connection.connect(useRtuOverTcp);
             transaction = connection.getModbusTransport().createTransaction();
