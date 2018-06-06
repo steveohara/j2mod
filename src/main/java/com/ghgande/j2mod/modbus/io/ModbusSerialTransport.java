@@ -15,22 +15,22 @@
  */
 package com.ghgande.j2mod.modbus.io;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fazecast.jSerialComm.SerialPort;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
-import com.ghgande.j2mod.modbus.msg.ModbusMessageImpl;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 import com.ghgande.j2mod.modbus.util.ModbusUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Abstract base class for serial <tt>ModbusTransport</tt>
@@ -53,7 +53,12 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * Defines a virtual number for the FRAME_END token (CR LF).
      */
     static final int FRAME_END = 2000;
-
+    
+    /**
+     * The number of nanoseconds there is in a millisecond
+     */
+    static final int NS_IN_A_MS = 1000000;
+    
     private AbstractSerialConnection commPort;
     boolean echo = false;     // require RS-485 echo processing
     private final Set<AbstractSerialTransportListener> listeners = Collections.synchronizedSet(new HashSet<AbstractSerialTransportListener>());
@@ -585,7 +590,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             int delay = getInterframeDelay() / 1000;
             
             // How long since the last message we received
-            long gapSinceLastMessage = (System.nanoTime() - lastTransactionTimestamp) / 1_000_000;
+            long gapSinceLastMessage = (System.nanoTime() - lastTransactionTimestamp) / NS_IN_A_MS;
             if (delay > gapSinceLastMessage) {
                 long sleepTime = delay - gapSinceLastMessage;
                 
@@ -642,7 +647,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     	// Make use we have a gap of 3.5 characters between adjacent requests
         // We have to do the calculations here because it is possible that the caller may have changed
         // the connection characteristics if they provided the connection instance
-        long delay = (long) chars * 1_000_000 * (1 + commPort.getNumDataBits() + commPort.getNumStopBits() + (commPort.getParity() == AbstractSerialConnection.NO_PARITY ? 0 : 1)) / commPort.getBaudRate();
+        long delay = (long) chars * NS_IN_A_MS * (1 + commPort.getNumDataBits() + commPort.getNumStopBits() + (commPort.getParity() == AbstractSerialConnection.NO_PARITY ? 0 : 1)) / commPort.getBaudRate();
         
         return delay;
     }

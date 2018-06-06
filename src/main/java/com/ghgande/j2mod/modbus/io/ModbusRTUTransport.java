@@ -16,6 +16,7 @@
 package com.ghgande.j2mod.modbus.io;
 
 import java.io.IOException;
+import java.util.function.BooleanSupplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,14 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
     private final BytesOutputStream byteInputOutputStream = new BytesOutputStream(inBuffer); // to buffer message to
     private final BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH); // write frames
     private byte[] lastRequest = null;
-
+    
+    private final BooleanSupplier availableBytesBooleanSupplier = new BooleanSupplier() {
+        @Override
+        public boolean getAsBoolean() {
+            return availableBytes() > 0;
+        }
+    };
+    
     /**
      * Read the data for a request of a given fixed size
      *
@@ -348,7 +356,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("Waiting for {} microsec", getMaxCharDelay());
                                 }
-                                bytesAvailable = ModbusUtil.spinCondition(getMaxCharDelay(), () -> availableBytes() > 0);
+                                bytesAvailable = ModbusUtil.spinCondition(getMaxCharDelay(), availableBytesBooleanSupplier);
                             }
                             
                             if (bytesAvailable) {
@@ -367,7 +375,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                         if (logger.isDebugEnabled()) {
                             logger.debug("Waiting for {} microsec", getCharIntervalMicro(2));
                         }
-                        if (ModbusUtil.spinCondition(getCharIntervalMicro(2), () -> availableBytes() > 0)) {
+                        if (ModbusUtil.spinCondition(getCharIntervalMicro(2), availableBytesBooleanSupplier)) {
                             // Discard the message
                             if (logger.isDebugEnabled()) {
                                 logger.debug("Discarding message (More than 1.5t between characters!) - {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
