@@ -291,13 +291,14 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                 // specific bytes
                 synchronized (byteInputStream) {
                     int uid = readByte();
+                    
                     if (uid != -1) {
                         int fc = readByte();
                         byteInputOutputStream.reset();
                         byteInputOutputStream.writeByte(uid);
                         byteInputOutputStream.writeByte(fc);
 
-                        // create response to acquire length of message
+                        // create request to acquire length of message
                         request = ModbusRequest.createModbusRequest(fc);
                         request.setHeadless();
 
@@ -312,7 +313,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                         getRequest(fc, byteInputOutputStream);
                         dlength = byteInputOutputStream.size() - 2; // less the crc
                         if (logger.isDebugEnabled()) {
-                            logger.debug("Response: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, dlength + 2));
+                            logger.debug("Request: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, dlength + 2));
                         }
 
                         byteInputStream.reset(inBuffer, dlength);
@@ -320,8 +321,8 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                         // check CRC
                         int[] crc = ModbusUtil.calculateCRC(inBuffer, 0, dlength); // does not include CRC
                         if (ModbusUtil.unsignedByteToInt(inBuffer[dlength]) != crc[0] || ModbusUtil.unsignedByteToInt(inBuffer[dlength + 1]) != crc[1]) {
-                            logger.debug("CRC should be {}, {}", crc[0], crc[1]);
-
+                            logger.debug("CRC should be {}, {}", Integer.toHexString(crc[0]), Integer.toHexString(crc[1]));
+                            
                             // Drain the input in case the frame was misread and more
                             // was to follow.
                             clearInput();
@@ -332,7 +333,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                         throw new IOException("Error reading response");
                     }
 
-                    // read response
+                    // read request
                     byteInputStream.reset(inBuffer, dlength);
                     request.readFrom(byteInputStream);
                     done = true;
@@ -343,6 +344,11 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
         catch (IOException ex) {
             // An exception mostly means there is no request. The master should
             // retry the request.
+        	
+        	if (logger.isDebugEnabled()) {
+        		logger.debug("Failed to read response! {}", ex.getMessage());
+        	}
+        	
             return null;
         }
     }
@@ -364,6 +370,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                 // specific bytes
                 synchronized (byteInputStream) {
                     int uid = readByte();
+                    
                     if (uid != -1) {
                         int fc = readByte();
                         byteInputOutputStream.reset();

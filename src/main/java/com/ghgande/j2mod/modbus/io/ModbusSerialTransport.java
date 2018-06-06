@@ -73,6 +73,16 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         // If this isn't a Slave ID missmatch message
         if (msg.getAuxiliaryType().equals(ModbusResponse.AuxiliaryMessageTypes.UNIT_ID_MISSMATCH)) {
             logger.debug("Ignoring response not meant for us");
+            
+            try {
+            	ModbusResponse response = readResponseIn();
+            	
+            	if (logger.isDebugEnabled()) {
+					logger.debug("Read response from other slave: {}", ModbusUtil.toHex(response));
+				}
+            } catch (ModbusIOException e) {
+				logger.debug("Could not read response from other slave: {}", e.getMessage());
+			}
         }
         else {
             writeMessage(msg);

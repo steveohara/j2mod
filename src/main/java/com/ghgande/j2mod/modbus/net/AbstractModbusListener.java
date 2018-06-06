@@ -18,8 +18,10 @@ package com.ghgande.j2mod.modbus.net;
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
+import com.ghgande.j2mod.modbus.io.ModbusRTUTransport;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
+import com.ghgande.j2mod.modbus.msg.ModbusResponse.AuxiliaryMessageTypes;
 import com.ghgande.j2mod.modbus.procimg.ProcessImage;
 import com.ghgande.j2mod.modbus.slave.ModbusSlave;
 import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
@@ -169,6 +171,16 @@ public abstract class AbstractModbusListener implements Runnable {
         }
         else {
             response = request.createResponse(this);
+        }
+        
+        if (logger.isDebugEnabled()) {
+            logger.debug("Request:{}", request.getHexMessage());
+            
+            if (transport instanceof ModbusRTUTransport && response.getAuxiliaryType() == AuxiliaryMessageTypes.UNIT_ID_MISSMATCH) {
+            	logger.debug("Not sending response because it was not meant for us.");
+            } else {
+            	logger.debug("Response:{}", response.getHexMessage());
+            }
         }
         
         // Write the response
