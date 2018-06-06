@@ -307,6 +307,24 @@ public interface Modbus {
     int DEFAULT_TRANSMIT_DELAY = 0;
 
     /**
+     * Defines the default number of msec to delay before transmission if not overridden by DEFAULT_TRANSMIT_DELAY
+     * (=<tt>2</tt>).
+     */
+    int MINIMUM_TRANSMIT_DELAY = 2;
+
+    /**
+     * The number of characters delay that must be maintained between adjacent requests on
+     * the same serial port (within the same transaction)
+     */
+    double INTER_MESSAGE_GAP = 4;
+
+    /**
+     * The number of characters delay that is the allowed maximum between characters on
+     * the same serial port (within the same transaction)
+     */
+    double INTER_CHARACTER_GAP = 1.5;
+    
+    /**
      * Defines the maximum value of the transaction identifier.
      *
      * <p><b>Note:</b> The standard requires that the server copy whatever

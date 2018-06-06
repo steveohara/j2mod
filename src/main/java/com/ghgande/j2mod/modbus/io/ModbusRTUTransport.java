@@ -15,6 +15,11 @@
  */
 package com.ghgande.j2mod.modbus.io;
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
@@ -22,10 +27,6 @@ import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.util.ModbusUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * Class that implements the ModbusRTU transport flavor.
@@ -281,23 +282,22 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
 
     @Override
     protected ModbusRequest readRequestIn(AbstractModbusListener listener) throws ModbusIOException {
-        boolean done;
-        ModbusRequest request;
-        int dlength;
-
+        ModbusRequest request = null;
+        
         try {
-            do {
-                // 1. read to function code, create request and read function
-                // specific bytes
+            while (request == null) {
                 synchronized (byteInputStream) {
                     int uid = readByte();
                     
-                    if (uid != -1) {
-                        int fc = readByte();
-                        byteInputOutputStream.reset();
-                        byteInputOutputStream.writeByte(uid);
-                        byteInputOutputStream.writeByte(fc);
+                    byteInputOutputStream.reset();
+                    byteInputOutputStream.writeByte(uid);
+                    
+                    if (listener.getProcessImage(uid) != null) {
+                        // Read a proper request
 
+                        int fc = readByte();
+                        byteInputOutputStream.writeByte(fc);
+                        
                         // create request to acquire length of message
                         request = ModbusRequest.createModbusRequest(fc);
                         request.setHeadless();
@@ -311,7 +311,7 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                          * specific parsing to read a response.
                          */
                         getRequest(fc, byteInputOutputStream);
-                        dlength = byteInputOutputStream.size() - 2; // less the crc
+                        int dlength = byteInputOutputStream.size() - 2; // less the crc
                         if (logger.isDebugEnabled()) {
                             logger.debug("Request: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, dlength + 2));
                         }
@@ -328,26 +328,60 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                             clearInput();
                             throw new IOException("CRC Error in received frame: " + dlength + " bytes: " + ModbusUtil.toHex(byteInputStream.getBuffer(), 0, dlength));
                         }
+                        
+                        // read request
+                        byteInputStream.reset(inBuffer, dlength);
+                        request.readFrom(byteInputStream);
+                        
+                        return request;
+                        
+                    } else {
+                        // This message is not for us, read and wait for the 3.5t delay
+                        
+                        // Wait for max 1.5t for data to be available
+                        while (true) {
+                            boolean bytesAvailable = availableBytes() > 0;
+                            if (bytesAvailable == false) {
+                                // Sleep the 1.5t to see if there will be more data
+                                logger.debug("Waiting for {} microsec", getMaxCharDelay());
+                                bytesAvailable = ModbusUtil.spinCondition(getMaxCharDelay(), () -> availableBytes() > 0);
+                            }
+                            
+                            if (bytesAvailable) {
+                                // Read the available data
+                                while (availableBytes() > 0) {
+                                    byteInputOutputStream.writeByte(readByte());
+                                }
+                            } else {
+                                // Transition to wait for the 3.5t interval
+                                break;
+                            }
+                        }
+                        
+                        // Wait for 2t to complete the 3.5t wait
+                        // Is there is data available the interval was not respected, we should discard the message
+                        logger.debug("Waiting for {} microsec", 1000);
+                        if (ModbusUtil.spinCondition(1000, () -> availableBytes() > 0)) {
+                            // Discard the message
+                            logger.debug("Discarding message (More than 1.5t between characters!) - {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
+                        } else {
+                            // This message is complete
+                            logger.debug("Read message not meant for us: {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
+                        }
                     }
-                    else {
-                        throw new IOException("Error reading response");
-                    }
-
-                    // read request
-                    byteInputStream.reset(inBuffer, dlength);
-                    request.readFrom(byteInputStream);
-                    done = true;
                 }
-            } while (!done);
-            return request;
+            }
+            
+            // We will never get here
+            return null;
         }
         catch (IOException ex) {
             // An exception mostly means there is no request. The master should
             // retry the request.
-        	
-        	if (logger.isDebugEnabled()) {
-        		logger.debug("Failed to read response! {}", ex.getMessage());
-        	}
+            
+            if (logger.isDebugEnabled()) {
+                logger.debug("Failed to read response! {}", ex.getMessage());
+            }
         	
             return null;
         }

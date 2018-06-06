@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
  * Helper class that provides utility methods.
@@ -530,5 +531,25 @@ public final class ModbusUtil {
         }
 
     }
-
+    
+    /**
+     * Spins until the timeout or the condition is met.
+     * This method will repeatedly poll the condition, so it should not have any side effects.
+     * 
+     * @param waitTimeMicroSec The time to wait for the condition to be true in microseconds
+     * @param condition The condition to wait for
+     * @return true if the condition ended the spin, false if the tim
+     */
+    public static boolean spinCondition(long waitTimeMicroSec, BooleanSupplier condition) {
+        long start = System.nanoTime();
+        
+        while (condition.getAsBoolean() == false) {
+            long delta = System.nanoTime() - start;
+            if (delta > waitTimeMicroSec * 1000) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
 }

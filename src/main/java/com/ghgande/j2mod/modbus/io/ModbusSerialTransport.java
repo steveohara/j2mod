@@ -18,6 +18,7 @@ package com.ghgande.j2mod.modbus.io;
 import com.fazecast.jSerialComm.SerialPort;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
+import com.ghgande.j2mod.modbus.msg.ModbusMessageImpl;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
@@ -73,17 +74,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         // If this isn't a Slave ID missmatch message
         if (msg.getAuxiliaryType().equals(ModbusResponse.AuxiliaryMessageTypes.UNIT_ID_MISSMATCH)) {
             logger.debug("Ignoring response not meant for us");
-            
-            try {
-            	// FIXME: Here there could be an incoming response or the master could be resending the request!!!
-            	ModbusResponse response = readResponseIn();
-            	
-            	if (logger.isDebugEnabled()) {
-					logger.debug("Read response from other slave: {}", ModbusUtil.toHex(response));
-				}
-            } catch (ModbusIOException e) {
-				logger.debug("Could not read response from other slave: {}", e.getMessage());
-			}
         }
         else {
             writeMessage(msg);
@@ -209,7 +199,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * @throws ModbusIOException if an error occurs
      */
     abstract protected ModbusResponse readResponseIn() throws ModbusIOException;
-
+    
     /**
      * Adds a listener to the transport to be called when an event occurs
      *
@@ -361,7 +351,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *            echo is not received in the time specified in the SerialConnection.
      * @throws IOException if a I/O error occurred.
      */
-    void readEcho(int len) throws IOException {
+    protected void readEcho(int len) throws IOException {
         byte echoBuf[] = new byte[len];
         int echoLen = commPort.readBytes(echoBuf, len);
         if (logger.isDebugEnabled()) {
@@ -372,7 +362,11 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             throw new IOException("Echo not received");
         }
     }
-
+    
+    protected int availableBytes() {
+    	return commPort.bytesAvailable();
+    }
+    
     /**
      * Reads a byte from the comms port
      *
@@ -414,7 +408,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             throw new IOException("Comm port is not valid or not open");
         }
     }
-
+    
     /**
      * Writes the bytes to the output stream
      *
@@ -564,4 +558,86 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         commPort.close();
     }
 
+    /**
+     * Injects a delay dependent on the baud rate
+     */
+    private void waitBetweenFrames() {
+        waitBetweenFrames(0, 0);
+    }
+
+    /**
+     * Injects a delay dependent on the last time we received a response or
+     * if a fixed delay has been specified
+     *
+     * @param transDelayMS             Fixed transaction delay (milliseconds)
+     * @param lastTransactionTimestamp Timestamp of last transaction
+     */
+    void waitBetweenFrames(int transDelayMS, long lastTransactionTimestamp) {
+
+        // If a fixed delay has been set
+        if (transDelayMS > 0) {
+            ModbusUtil.sleep(transDelayMS);
+        }
+        else {
+            // Make use we have a gap of 3.5 characters between adjacent requests
+            // We have to do the calculations here because it is possible that the caller may have changed
+            // the connection characteristics if they provided the connection instance
+            int delay = getInterframeDelay() / 1000;
+
+            // How long since the last message we received
+            long gapSinceLastMessage = System.currentTimeMillis() - lastTransactionTimestamp;
+            if (delay > gapSinceLastMessage) {
+                ModbusUtil.sleep(delay - gapSinceLastMessage);
+            }
+        }
+    }
+    
+    /**
+     * In microseconds
+     * @return
+     */
+    int getInterframeDelay() {
+        if (commPort.getBaudRate() > 19200) {
+            return 2750;
+        } else {
+            return Math.max(getCharInterval(Modbus.INTER_MESSAGE_GAP), Modbus.MINIMUM_TRANSMIT_DELAY);
+        }
+    }
+    
+    /**
+     * The maximum delay between characters in microseconds
+     * @return
+     */
+    long getMaxCharDelay() {
+        if (commPort.getBaudRate() > 19200) {
+            return 1750;
+        } else {
+            return getCharIntervalMicro(Modbus.INTER_CHARACTER_GAP);
+        }
+    }
+    
+    /**
+     * Calculates an interval based on a set number of characters.
+     * Used for message timings.
+     * @param chars
+     * @return char interval in milliseconds
+     */
+    int getCharInterval(double chars) {
+        return (int) (getCharIntervalMicro(chars) / 1000);
+    }
+    
+    /**
+     * Calculates an interval based on a set number of characters.
+     * Used for message timings.
+     * @param chars
+     * @return
+     */
+    long getCharIntervalMicro(double chars) {
+    	// Make use we have a gap of 3.5 characters between adjacent requests
+        // We have to do the calculations here because it is possible that the caller may have changed
+        // the connection characteristics if they provided the connection instance
+        long delay = (long) chars * 1_000_000 * (1 + commPort.getNumDataBits() + commPort.getNumStopBits() + (commPort.getParity() == AbstractSerialConnection.NO_PARITY ? 0 : 1)) / commPort.getBaudRate();
+        
+        return delay;
+    }
 }
