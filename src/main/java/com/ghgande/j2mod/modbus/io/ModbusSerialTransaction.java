@@ -161,6 +161,9 @@ public class ModbusSerialTransaction extends ModbusTransaction {
         }
         //toggle the id
         toggleTransactionID();
+
+        // Set the last transaction timestamp
+        lastTransactionTimestamp = System.nanoTime();
     }
 
     /**

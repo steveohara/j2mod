@@ -360,8 +360,8 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                         
                         // Wait for 2t to complete the 3.5t wait
                         // Is there is data available the interval was not respected, we should discard the message
-                        logger.debug("Waiting for {} microsec", 1000);
-                        if (ModbusUtil.spinCondition(1000, () -> availableBytes() > 0)) {
+                        logger.debug("Waiting for {} microsec", getCharIntervalMicro(2));
+                        if (ModbusUtil.spinCondition(getCharIntervalMicro(2), () -> availableBytes() > 0)) {
                             // Discard the message
                             logger.debug("Discarding message (More than 1.5t between characters!) - {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
                         } else {

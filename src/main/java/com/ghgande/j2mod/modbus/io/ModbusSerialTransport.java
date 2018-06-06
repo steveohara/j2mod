@@ -583,11 +583,17 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             // We have to do the calculations here because it is possible that the caller may have changed
             // the connection characteristics if they provided the connection instance
             int delay = getInterframeDelay() / 1000;
-
+            
             // How long since the last message we received
-            long gapSinceLastMessage = System.currentTimeMillis() - lastTransactionTimestamp;
+            long gapSinceLastMessage = (System.nanoTime() - lastTransactionTimestamp) / 1_000_000;
             if (delay > gapSinceLastMessage) {
-                ModbusUtil.sleep(delay - gapSinceLastMessage);
+                long sleepTime = delay - gapSinceLastMessage;
+                
+                ModbusUtil.sleep(sleepTime);
+                
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Waited between frames for {} ms", sleepTime);
+                }
             }
         }
     }
@@ -598,7 +604,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      */
     int getInterframeDelay() {
         if (commPort.getBaudRate() > 19200) {
-            return 2750;
+            return 1750;
         } else {
             return Math.max(getCharInterval(Modbus.INTER_MESSAGE_GAP), Modbus.MINIMUM_TRANSMIT_DELAY);
         }
