@@ -30,7 +30,9 @@ import java.io.IOException;
  * @author Dieter Wimberger
  * @author Steve O'Hara (4NG)
  * @version 2.0 (March 2016)
+ * @deprecated In the interests of keeping the library simple, this will be removed in a future release
  */
+@Deprecated
 public interface NonWordDataHandler {
 
     /**

@@ -16,14 +16,11 @@
 package com.ghgande.j2mod.modbus.cmd;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
-import com.ghgande.j2mod.modbus.net.ModbusTCPListener;
 import com.ghgande.j2mod.modbus.procimg.*;
+import com.ghgande.j2mod.modbus.slave.ModbusSlave;
+import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.Inet4Address;
 
 /**
  * Class implementing a simple Modbus/TCP slave. A simple process image is
@@ -39,7 +36,6 @@ public class TCPSlaveTest {
 
     public static void main(String[] args) {
 
-        ModbusTCPListener listener;
         SimpleProcessImage spi;
         int port = Modbus.DEFAULT_PORT;
         int unit = 0;
@@ -104,22 +100,10 @@ public class TCPSlaveTest {
             spi.addRegister(new SimpleRegister(251));
             spi.addInputRegister(new SimpleInputRegister(45));
 
-            // 2. create the coupler holding the image
-            ModbusCoupler.getReference().setProcessImage(spi);
-            ModbusCoupler.getReference().setMaster(false);
-
-            // 3. create a listener with 3 threads in pool
-            listener = new ModbusTCPListener(3, Inet4Address.getByName("0.0.0.0"));
-            listener.setPort(port);
-            new Thread(listener).start();
-            System.out.printf("Listening..");
-
-            // Check to see if it started OK
-
-            Thread.sleep(100);
-            if (!listener.isListening()) {
-                throw new IOException(String.format("Cannot start Listener %s", listener.getError()));
-            }
+            // 2. Setup and start slave
+            ModbusSlave slave = ModbusSlaveFactory.createTCPSlave(port, 5);
+            slave.addProcessImage(unit, spi);
+            slave.open();
         }
         catch (Exception ex) {
             ex.printStackTrace();

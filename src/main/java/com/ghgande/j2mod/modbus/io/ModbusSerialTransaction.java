@@ -136,7 +136,7 @@ public class ModbusSerialTransaction extends ModbusTransaction {
                 }
                 synchronized (MUTEX) {
                     //write request message
-                    transport.writeMessage(request);
+                    transport.writeRequest(request);
                     //read response message
                     response = transport.readResponse();
                     finished = true;

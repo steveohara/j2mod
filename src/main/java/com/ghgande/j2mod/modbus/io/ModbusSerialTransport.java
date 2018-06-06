@@ -69,7 +69,28 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     }
 
     @Override
-    public void writeMessage(ModbusMessage msg) throws ModbusIOException {
+    public void writeResponse(ModbusResponse msg) throws ModbusIOException {
+        // If this isn't a Slave ID missmatch message
+        if (msg.getAuxiliaryType().equals(ModbusResponse.AuxiliaryMessageTypes.UNIT_ID_MISSMATCH)) {
+            logger.debug("Ignoring response not meant for us");
+        }
+        else {
+            writeMessage(msg);
+        }
+    }
+
+    @Override
+    public void writeRequest(ModbusRequest msg) throws ModbusIOException {
+        writeMessage(msg);
+    }
+
+    /**
+     * Writes the request/response message to the port
+     *
+     * @param msg Message to write
+     * @throws ModbusIOException If the port throws an error
+     */
+    private void writeMessage(ModbusMessage msg) throws ModbusIOException {
         open();
         notifyListenersBeforeWrite(msg);
         writeMessageOut(msg);
@@ -148,7 +169,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     }
 
     /**
-     * The <code>writeMessage</code> method writes a modbus serial message to
+     * The <code>writeRequest</code> method writes a modbus serial message to
      * its serial output stream to a specified slave unit ID.
      *
      * @param msg a <code>ModbusMessage</code> value
@@ -170,7 +191,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
 
     /**
      * <code>readResponse</code> reads a response message from the slave
-     * responding to a master writeMessage request.
+     * responding to a master writeRequest request.
      *
      * @return a <code>ModbusResponse</code> value
      *

@@ -43,13 +43,13 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
     private static final Logger logger = LoggerFactory.getLogger(ModbusTCPTransport.class);
 
     // instance attributes
-    protected DataInputStream dataInputStream; // input stream
-    protected DataOutputStream dataOutputStream; // output stream
-    protected final BytesInputStream byteInputStream = new BytesInputStream(Modbus.MAX_MESSAGE_LENGTH + 6);
-    protected final BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH + 6); // write frames
+    private DataInputStream dataInputStream; // input stream
+    private DataOutputStream dataOutputStream; // output stream
+    private final BytesInputStream byteInputStream = new BytesInputStream(Modbus.MAX_MESSAGE_LENGTH + 6);
+    private final BytesOutputStream byteOutputStream = new BytesOutputStream(Modbus.MAX_MESSAGE_LENGTH + 6); // write frames
     protected Socket socket = null;
     protected TCPMasterConnection master = null;
-    protected boolean headless = false; // Some TCP implementations are.
+    private boolean headless = false; // Some TCP implementations are.
 
     /**
      * Default constructor
@@ -110,6 +110,15 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
         this.headless = headless;
     }
 
+    /**
+     * Sets the master connection for the transport to use
+     *
+     * @param master Master
+     */
+    public void setMaster(TCPMasterConnection master) {
+        this.master = master;
+    }
+
     @Override
     public void setTimeout(int time) {
         super.setTimeout(time);
@@ -121,10 +130,6 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
                 logger.warn("Socket exception occurred while setting timeout to " + time, e);
             }
         }
-    }
-
-    public void setMaster(TCPMasterConnection master) {
-        this.master = master;
     }
 
     @Override
@@ -145,83 +150,17 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
     }
 
     @Override
-    public void writeMessage(ModbusMessage msg) throws ModbusIOException {
+    public void writeResponse(ModbusResponse msg) throws ModbusIOException {
         writeMessage(msg, false);
     }
 
-    /**
-     * Writes a <tt>ModbusMessage</tt> to the
-     * output stream of this <tt>ModbusTransport</tt>.
-     * <p>
-     *
-     * @param msg           a <tt>ModbusMessage</tt>.
-     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
-     *
-     * @throws ModbusIOException data cannot be
-     *                           written properly to the raw output stream of
-     *                           this <tt>ModbusTransport</tt>.
-     */
-    protected void writeMessage(ModbusMessage msg, boolean useRtuOverTcp) throws ModbusIOException {
-        try {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Sending: {}", msg.getHexMessage());
-            }
-            byte message[] = msg.getMessage();
-
-            byteOutputStream.reset();
-            if (!headless) {
-                byteOutputStream.writeShort(msg.getTransactionID());
-                byteOutputStream.writeShort(msg.getProtocolID());
-                byteOutputStream.writeShort((message != null ? message.length : 0) + 2);
-            }
-            byteOutputStream.writeByte(msg.getUnitID());
-            byteOutputStream.writeByte(msg.getFunctionCode());
-            if (message != null && message.length > 0) {
-                byteOutputStream.write(message);
-            }
-
-            // Add CRC for RTU over TCP
-            if (useRtuOverTcp) {
-                int len = byteOutputStream.size();
-                int[] crc = ModbusUtil.calculateCRC(byteOutputStream.getBuffer(), 0, len);
-                byteOutputStream.writeByte(crc[0]);
-                byteOutputStream.writeByte(crc[1]);
-            }
-
-            dataOutputStream.write(byteOutputStream.toByteArray());
-            dataOutputStream.flush();
-            if (logger.isDebugEnabled()) {
-                logger.debug("Successfully sent: {}", ModbusUtil.toHex(byteOutputStream.toByteArray()));
-            }
-            // write more sophisticated exception handling
-        }
-        catch (SocketException ex1) {
-            if (master != null && !master.isConnected()) {
-                try {
-                    master.connect(useRtuOverTcp);
-                }
-                catch (Exception e) {
-                    // Do nothing.
-                }
-            }
-            throw new ModbusIOException("I/O socket exception - failed to write - %s", ex1.getMessage());
-        }
-        catch (Exception ex2) {
-            throw new ModbusIOException("General exception - failed to write - %s", ex2.getMessage());
-        }
+    @Override
+    public void writeRequest(ModbusRequest msg) throws ModbusIOException {
+        writeMessage(msg, false);
     }
 
-    /**
-     * readRequest -- Read a Modbus TCP encoded request. The packet has a 6 byte
-     * header containing the protocol, transaction ID and length.
-     *
-     * @return response for message
-     *
-     * @throws ModbusIOException If the request cannot be read from the socket/port
-     */
     @Override
     public ModbusRequest readRequest(AbstractModbusListener listener) throws ModbusIOException {
-
         ModbusRequest req;
         try {
             byteInputStream.reset();
@@ -301,9 +240,7 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
 
     @Override
     public ModbusResponse readResponse() throws ModbusIOException {
-
         try {
-
             ModbusResponse response;
 
             synchronized (byteInputStream) {
@@ -404,4 +341,67 @@ public class ModbusTCPTransport extends AbstractModbusTransport {
         dataInputStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
         dataOutputStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
     }
+
+    /**
+     * Writes a <tt>ModbusMessage</tt> to the
+     * output stream of this <tt>ModbusTransport</tt>.
+     * <p>
+     *
+     * @param msg           a <tt>ModbusMessage</tt>.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     *
+     * @throws ModbusIOException data cannot be
+     *                           written properly to the raw output stream of
+     *                           this <tt>ModbusTransport</tt>.
+     */
+    void writeMessage(ModbusMessage msg, boolean useRtuOverTcp) throws ModbusIOException {
+        try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Sending: {}", msg.getHexMessage());
+            }
+            byte message[] = msg.getMessage();
+
+            byteOutputStream.reset();
+            if (!headless) {
+                byteOutputStream.writeShort(msg.getTransactionID());
+                byteOutputStream.writeShort(msg.getProtocolID());
+                byteOutputStream.writeShort((message != null ? message.length : 0) + 2);
+            }
+            byteOutputStream.writeByte(msg.getUnitID());
+            byteOutputStream.writeByte(msg.getFunctionCode());
+            if (message != null && message.length > 0) {
+                byteOutputStream.write(message);
+            }
+
+            // Add CRC for RTU over TCP
+            if (useRtuOverTcp) {
+                int len = byteOutputStream.size();
+                int[] crc = ModbusUtil.calculateCRC(byteOutputStream.getBuffer(), 0, len);
+                byteOutputStream.writeByte(crc[0]);
+                byteOutputStream.writeByte(crc[1]);
+            }
+
+            dataOutputStream.write(byteOutputStream.toByteArray());
+            dataOutputStream.flush();
+            if (logger.isDebugEnabled()) {
+                logger.debug("Successfully sent: {}", ModbusUtil.toHex(byteOutputStream.toByteArray()));
+            }
+            // write more sophisticated exception handling
+        }
+        catch (SocketException ex1) {
+            if (master != null && !master.isConnected()) {
+                try {
+                    master.connect(useRtuOverTcp);
+                }
+                catch (Exception e) {
+                    // Do nothing.
+                }
+            }
+            throw new ModbusIOException("I/O socket exception - failed to write - %s", ex1.getMessage());
+        }
+        catch (Exception ex2) {
+            throw new ModbusIOException("General exception - failed to write - %s", ex2.getMessage());
+        }
+    }
+
 }

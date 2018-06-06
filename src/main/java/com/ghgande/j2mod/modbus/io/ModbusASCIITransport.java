@@ -21,7 +21,6 @@ import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
-import com.ghgande.j2mod.modbus.procimg.ProcessImage;
 import com.ghgande.j2mod.modbus.util.ModbusUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,10 +85,8 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
 
     @Override
     public ModbusRequest readRequestIn(AbstractModbusListener listener) throws ModbusIOException {
-
         boolean done = false;
         ModbusRequest request = null;
-
         int in;
 
         try {
@@ -115,14 +112,6 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
                     byteInputStream.reset(inBuffer, byteInputOutputStream.size());
                     int unitID = byteInputStream.readUnsignedByte();
 
-                    //check message with this slave unit identifier
-                    ProcessImage spi = listener.getProcessImage(unitID);
-                    if (spi == null) {
-                        continue;
-                    }
-                    if (unitID != spi.getUnitID()) {
-                        continue;
-                    }
                     int functionCode = byteInputStream.readUnsignedByte();
                     //create request
                     request = ModbusRequest.createModbusRequest(functionCode);
@@ -144,7 +133,6 @@ public class ModbusASCIITransport extends ModbusSerialTransport {
 
     @Override
     protected ModbusResponse readResponseIn() throws ModbusIOException {
-
         boolean done = false;
         ModbusResponse response = null;
         int in;

@@ -15,7 +15,9 @@
  */
 package com.ghgande.j2mod.modbus.msg;
 
-import com.ghgande.j2mod.modbus.io.Transportable;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 /**
  * Interface defining a ModbusMessage.
@@ -24,7 +26,7 @@ import com.ghgande.j2mod.modbus.io.Transportable;
  * @author Steve O'Hara (4NG)
  * @version 2.0 (March 2016)
  */
-public interface ModbusMessage extends Transportable {
+public interface ModbusMessage {
 
     /**
      * Check the flag which indicates that this <tt>ModbusMessage</tt> is for a
@@ -118,4 +120,35 @@ public interface ModbusMessage extends Transportable {
      * hexadecimal series of bytes.
      */
     String getHexMessage();
+
+    /**
+     * Returns the number of bytes that will
+     * be written by {@link #writeTo(DataOutput)}.
+     *
+     * @return the number of bytes that will be written as <tt>int</tt>.
+     */
+    int getOutputLength();
+
+    /**
+     * Writes this <tt>Transportable</tt> to the
+     * given <tt>DataOutput</tt>.
+     *
+     * @param dout the <tt>DataOutput</tt> to write to.
+     *
+     * @throws java.io.IOException if an I/O error occurs.
+     */
+    void writeTo(DataOutput dout) throws IOException;
+
+    /**
+     * Reads this <tt>Transportable</tt> from the given
+     * <tt>DataInput</tt>.
+     *
+     * @param din the <tt>DataInput</tt> to read from.
+     *
+     * @throws java.io.IOException if an I/O error occurs or the data
+     *                             is invalid.
+     */
+    void readFrom(DataInput din) throws IOException;
+
+
 }

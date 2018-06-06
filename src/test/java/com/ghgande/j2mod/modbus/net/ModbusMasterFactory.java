@@ -50,7 +50,7 @@ public class ModbusMasterFactory {
     private static AbstractModbusTransport createCustomModbusMaster(String address, AbstractSerialConnection serialConnection) {
         String parts[] = address.split(" *: *");
         if (parts.length < 2) {
-            throw new IllegalArgumentException("missing connection information");
+            throw new IllegalArgumentException("missing connect+ion information");
         }
 
         if (parts[0].equalsIgnoreCase("device")) {

@@ -38,24 +38,19 @@ public abstract class ModbusMessageImpl implements ModbusMessage {
     private int dataLength;
     private int unitID = Modbus.DEFAULT_UNIT_ID;
     private int functionCode;
-    private boolean headless = false; // flag for headerless (serial)
-    // transport
+    private boolean headless = false; // flag for header-less (serial)
 
-    /*** Header ******************************************/
-
-    /**
-     * Tests if this message instance is headless.
-     *
-     * @return true if headless, false otherwise.
-     */
+    @Override
     public boolean isHeadless() {
         return headless;
     }
 
+    @Override
     public void setHeadless() {
         headless = true;
     }
 
+    @Override
     public int getTransactionID() {
         return transactionID & 0x0000FFFF;
     }
@@ -73,6 +68,7 @@ public abstract class ModbusMessageImpl implements ModbusMessage {
         transactionID = tid & 0x0000FFFF;
     }
 
+    @Override
     public int getProtocolID() {
         return protocolID;
     }
@@ -90,6 +86,7 @@ public abstract class ModbusMessageImpl implements ModbusMessage {
         protocolID = pid;
     }
 
+    @Override
     public int getDataLength() {
         return dataLength;
     }
@@ -117,6 +114,7 @@ public abstract class ModbusMessageImpl implements ModbusMessage {
         dataLength = length + 2;
     }
 
+    @Override
     public int getUnitID() {
         return unitID;
     }
@@ -132,6 +130,7 @@ public abstract class ModbusMessageImpl implements ModbusMessage {
         unitID = num;
     }
 
+    @Override
     public int getFunctionCode() {
         return functionCode;
     }
@@ -151,11 +150,7 @@ public abstract class ModbusMessageImpl implements ModbusMessage {
         functionCode = code;
     }
 
-    /**
-     * Returns the this message as hexadecimal string.
-     *
-     * @return the message as hex encoded string.
-     */
+    @Override
     public String getHexMessage() {
         return ModbusUtil.toHex(this);
     }
@@ -167,6 +162,41 @@ public abstract class ModbusMessageImpl implements ModbusMessage {
      */
     public void setHeadless(boolean b) {
         headless = b;
+    }
+
+    @Override
+    public int getOutputLength() {
+        int l = 2 + getDataLength();
+        if (!isHeadless()) {
+            l = l + 4;
+        }
+        return l;
+    }
+
+    @Override
+    public void writeTo(DataOutput dout) throws IOException {
+
+        if (!isHeadless()) {
+            dout.writeShort(getTransactionID());
+            dout.writeShort(getProtocolID());
+            dout.writeShort(getDataLength());
+        }
+        dout.writeByte(getUnitID());
+        dout.writeByte(getFunctionCode());
+
+        writeData(dout);
+    }
+
+    @Override
+    public void readFrom(DataInput din) throws IOException {
+        if (!isHeadless()) {
+            setTransactionID(din.readUnsignedShort());
+            setProtocolID(din.readUnsignedShort());
+            dataLength = din.readUnsignedShort();
+        }
+        setUnitID(din.readUnsignedByte());
+        setFunctionCode(din.readUnsignedByte());
+        readData(din);
     }
 
     /**
@@ -186,61 +216,5 @@ public abstract class ModbusMessageImpl implements ModbusMessage {
      * @throws IOException if an I/O related error occurs.
      */
     public abstract void readData(DataInput din) throws IOException;
-
-    /**
-     * The actual packet size, plus any CRC or header, will be returned.
-     * 
-     * @return the actual packet size in bytes
-     */
-    public int getOutputLength() {
-        int l = 2 + getDataLength();
-        if (!isHeadless()) {
-            l = l + 4;
-        }
-        return l;
-    }
-
-    /**
-     * Writes this message to the given <tt>DataOutput</tt>.
-     *
-     * <p>
-     * This method must be overridden for any message type which doesn't follow
-     * this simple structure.
-     *
-     * @param dout a <tt>DataOutput</tt> instance.
-     *
-     * @throws IOException if an I/O related error occurs.
-     */
-    public void writeTo(DataOutput dout) throws IOException {
-
-        if (!isHeadless()) {
-            dout.writeShort(getTransactionID());
-            dout.writeShort(getProtocolID());
-            dout.writeShort(getDataLength());
-        }
-        dout.writeByte(getUnitID());
-        dout.writeByte(getFunctionCode());
-
-        writeData(dout);
-    }
-
-    /*** END Transportable *******************************/
-
-    /**
-     * readFrom -- Read the headers and data for a message.  The sub-classes
-     * readData() method will then read in the rest of the message.
-     *
-     * @param din -- Input source
-     */
-    public void readFrom(DataInput din) throws IOException {
-        if (!isHeadless()) {
-            setTransactionID(din.readUnsignedShort());
-            setProtocolID(din.readUnsignedShort());
-            dataLength = din.readUnsignedShort();
-        }
-        setUnitID(din.readUnsignedByte());
-        setFunctionCode(din.readUnsignedByte());
-        readData(din);
-    }
 
 }

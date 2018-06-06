@@ -142,7 +142,7 @@ public class ModbusTCPTransaction extends ModbusTransaction {
 
                 // Write the message to the endpoint
                 logger.debug("Writing request: {} (try: {}) request transaction ID = {} to {}:{}", request.getHexMessage(), retryCounter, request.getTransactionID(), connection.getAddress().toString(), connection.getPort());
-                transport.writeMessage(request);
+                transport.writeRequest(request);
 
                 // Read the response
                 response = transport.readResponse();

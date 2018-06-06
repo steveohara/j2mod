@@ -231,6 +231,15 @@ public class ModbusSlave {
     }
 
     /**
+     * Returns the last error accrued by the listener
+     *
+     * @return Error if there is one
+     */
+    public String getError() {
+        return listener != null ? listener.getError() : null;
+    }
+
+    /**
      * Returns the listener used for this port
      *
      * @return Listener
@@ -242,7 +251,8 @@ public class ModbusSlave {
     /**
      * Closes the listener of this slave
      */
-    protected void closeListener() {
+    @SuppressWarnings("deprecation")
+    void closeListener() {
         if (listener != null && listener.isListening()) {
             listener.stop();
 

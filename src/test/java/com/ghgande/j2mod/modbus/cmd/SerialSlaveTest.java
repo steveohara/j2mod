@@ -15,9 +15,10 @@
  */
 package com.ghgande.j2mod.modbus.cmd;
 
-import com.ghgande.j2mod.modbus.ModbusCoupler;
 import com.ghgande.j2mod.modbus.net.ModbusSerialListener;
 import com.ghgande.j2mod.modbus.procimg.*;
+import com.ghgande.j2mod.modbus.slave.ModbusSlave;
+import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
 import com.ghgande.j2mod.modbus.util.SerialParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,13 +132,8 @@ public class SerialSlaveTest {
                 spi.addInputRegister(new SimpleInputRegister(45));
             }
 
-            // 2. Create the coupler and set the slave identity
-            ModbusCoupler.getReference().setProcessImage(spi);
-            ModbusCoupler.getReference().setMaster(false);
-
-            // 3. Set up serial parameters
+            // 2. Set up serial parameters
             SerialParameters params = new SerialParameters();
-
             params.setPortName(portname);
             params.setBaudRate(19200);
             params.setDatabits(8);
@@ -147,12 +143,11 @@ public class SerialSlaveTest {
             params.setEcho(false);
             System.out.printf("Encoding [%s]", params.getEncoding());
 
-            // 4. Set up serial listener
-            listener = new ModbusSerialListener(params);
-            listener.setListening(true);
+            // 3. Setup and start slave
+            ModbusSlave slave = ModbusSlaveFactory.createSerialSlave(params);
+            slave.addProcessImage(unit, spi);
+            slave.open();
 
-            // 5. Start the listener thread.
-            new Thread(listener).start();
         }
         catch (Exception ex) {
             ex.printStackTrace();

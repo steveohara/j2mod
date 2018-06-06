@@ -16,9 +16,8 @@
 package com.ghgande.j2mod.modbus.io;
 
 import com.ghgande.j2mod.modbus.ModbusIOException;
-import com.ghgande.j2mod.modbus.msg.ModbusMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.ghgande.j2mod.modbus.msg.ModbusRequest;
+import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 
 import java.net.Socket;
 
@@ -26,11 +25,10 @@ import java.net.Socket;
  * Class that implements the ModbusRTU over tCP transport flavor.
  *
  * @author axuan
+ * @author Steve O'Hara (4NG)
  * @version 2.0 (March 2016)
  */
 public class ModbusRTUTCPTransport extends ModbusTCPTransport {
-
-    private static final Logger logger = LoggerFactory.getLogger(ModbusRTUTCPTransport.class);
 
     /**
      * Default constructor
@@ -54,7 +52,12 @@ public class ModbusRTUTCPTransport extends ModbusTCPTransport {
     }
 
     @Override
-    public void writeMessage(ModbusMessage msg) throws ModbusIOException {
+    public void writeResponse(ModbusResponse msg) throws ModbusIOException {
+        writeMessage(msg, true);
+    }
+
+    @Override
+    public void writeRequest(ModbusRequest msg) throws ModbusIOException {
         writeMessage(msg, true);
     }
 }

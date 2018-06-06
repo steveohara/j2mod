@@ -39,7 +39,7 @@ class UDPMasterTerminal extends AbstractUDPTerminal {
      *
      * @param addr Remote address to connect to
      */
-    protected UDPMasterTerminal(InetAddress addr) {
+    UDPMasterTerminal(InetAddress addr) {
         address = addr;
     }
 

@@ -143,7 +143,6 @@ public class ModbusTCPListener extends AbstractModbusListener {
 
             // Infinite loop, taking care of resources in case of a lot of
             // parallel logins
-            listening = true;
             while (listening) {
                 Socket incoming;
                 try {

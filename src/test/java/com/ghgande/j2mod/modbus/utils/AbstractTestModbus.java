@@ -15,9 +15,8 @@
  */
 package com.ghgande.j2mod.modbus.utils;
 
-import com.ghgande.j2mod.modbus.ModbusCoupler;
-import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
 import com.ghgande.j2mod.modbus.procimg.*;
+import com.ghgande.j2mod.modbus.slave.ModbusSlave;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ import org.slf4j.LoggerFactory;
 public class AbstractTestModbus {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractTestModbus.class);
-    public static AbstractModbusListener listener = null;
+    public static ModbusSlave slave = null;
     public static final int UNIT_ID = 15;
     public static final int PORT = 1502;
     public static final String LOCALHOST = "localhost";
@@ -114,10 +113,6 @@ public class AbstractTestModbus {
         spi.addInputRegister(new SimpleInputRegister(8888));
         spi.addInputRegister(new SimpleInputRegister(7777));
         spi.addInputRegister(new SimpleInputRegister(6666));
-
-        // Create the coupler holding the image
-        ModbusCoupler.getReference().setProcessImage(spi);
-        ModbusCoupler.getReference().setMaster(false);
 
         return spi;
     }

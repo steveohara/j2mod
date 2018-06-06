@@ -31,3 +31,5 @@ multi-register request by working out the 'distance' between registers and creat
 # Known Issues
 
 * There are no unit tests for the RTU over TCP transport
+* There is no way of adding `AbstractSerialTransportListener` to a `ModbusSlave` which means you cannot get informed of when the library is switching between send and receive
+* A refactor is due to hide more of the package components to encourage best practise usage patterns

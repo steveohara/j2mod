@@ -15,7 +15,7 @@
  */
 package com.ghgande.j2mod.modbus.utils;
 
-import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
+import com.ghgande.j2mod.modbus.slave.ModbusSlave;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ import static org.junit.Assume.assumeTrue;
 public class AbstractTestModbusTCPSlave extends AbstractTestModbusTCPMaster {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractTestModbusTCPSlave.class);
-    private static AbstractModbusListener listener = null;
+    private static ModbusSlave slave = null;
     protected static File modPollTool;
     protected static int port = PORT;
 
@@ -46,7 +46,7 @@ public class AbstractTestModbusTCPSlave extends AbstractTestModbusTCPMaster {
         try {
             port = PORT;
             modPollTool = TestUtils.loadModPollTool();
-            listener = createTCPSlave();
+            slave = createTCPSlave();
         }
         catch (Exception e) {
             fail(String.format("Cannot initialise tests - %s", e.getMessage()));
@@ -55,8 +55,8 @@ public class AbstractTestModbusTCPSlave extends AbstractTestModbusTCPMaster {
 
     @AfterClass
     public static void tearDownSlave() {
-        if (listener != null && listener.isListening()) {
-            listener.stop();
+        if (slave != null) {
+            slave.close();
         }
     }
 

@@ -15,7 +15,14 @@
  */
 package com.ghgande.j2mod.modbus;
 
+import com.ghgande.j2mod.modbus.io.AbstractSerialTransportListener;
+import com.ghgande.j2mod.modbus.io.ModbusSerialTransport;
+import com.ghgande.j2mod.modbus.msg.ModbusMessage;
+import com.ghgande.j2mod.modbus.msg.ModbusRequest;
+import com.ghgande.j2mod.modbus.msg.ModbusResponse;
+import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 import com.ghgande.j2mod.modbus.procimg.InputRegister;
+import com.ghgande.j2mod.modbus.procimg.SimpleInputRegister;
 import com.ghgande.j2mod.modbus.utils.AbstractTestModbusSerialASCIIMaster;
 import com.ghgande.j2mod.modbus.utils.AbstractTestModbusTCPMaster;
 import org.junit.Test;
@@ -169,6 +176,67 @@ public class TestModbusSerialASCIIMasterRead extends AbstractTestModbusSerialASC
         }
         catch (Exception e) {
             logger.info("Got expected error response (testBadUnitIdRequest) - {}", e.getMessage());
+        }
+    }
+
+
+    @Test
+    public void testCallback() {
+        EventListener eventListener = new EventListener();
+        ((ModbusSerialTransport) master.getTransport()).addListener(eventListener);
+        try {
+            eventListener.step = 0;
+            int before = master.readInputRegisters(UNIT_ID, 1, 1)[0].getValue();
+            eventListener.step = 0;
+            master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(9999));
+            eventListener.step = 0;
+            master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(before));
+        }
+        catch (Exception e) {
+            fail(String.format("Cannot read - %s", e.getMessage()));
+        }
+        ((ModbusSerialTransport) master.getTransport()).removeListener(eventListener);
+    }
+
+    private class EventListener extends AbstractSerialTransportListener {
+        int step;
+
+        EventListener() {
+            step = 0;
+        }
+
+        @Override
+        public void beforeMessageWrite(AbstractSerialConnection port, ModbusMessage msg) {
+            assertEquals("Before message is written to port", 0, step);
+            step++;
+        }
+
+        @Override
+        public void afterMessageWrite(AbstractSerialConnection port, ModbusMessage msg) {
+            assertEquals("After message has been written to port", 1, step);
+            step++;
+        }
+
+        @Override
+        public void beforeRequestRead(AbstractSerialConnection port) {
+            fail("Should only be called for slaves");
+        }
+
+        @Override
+        public void afterRequestRead(AbstractSerialConnection port, ModbusRequest req) {
+            fail("Should only be called for slaves");
+        }
+
+        @Override
+        public void beforeResponseRead(AbstractSerialConnection port) {
+            assertEquals("Before response message is read from port", 2, step);
+            step++;
+        }
+
+        @Override
+        public void afterResponseRead(AbstractSerialConnection port, ModbusResponse res) {
+            assertEquals("After response message has been read from port", 3, step);
+            step++;
         }
     }
 

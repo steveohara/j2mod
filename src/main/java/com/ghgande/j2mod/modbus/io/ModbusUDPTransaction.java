@@ -125,7 +125,7 @@ public class ModbusUDPTransaction extends ModbusTransaction {
                 //   while holding the lock on the IO object
                 synchronized (MUTEX) {
                     //write request message
-                    transport.writeMessage(request);
+                    transport.writeRequest(request);
                     //read response message
                     response = transport.readResponse();
                     break;

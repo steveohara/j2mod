@@ -19,9 +19,10 @@ import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.facade.ModbusUDPMaster;
 import com.ghgande.j2mod.modbus.io.ModbusUDPTransaction;
 import com.ghgande.j2mod.modbus.msg.*;
-import com.ghgande.j2mod.modbus.net.ModbusUDPListener;
 import com.ghgande.j2mod.modbus.net.UDPMasterConnection;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
+import com.ghgande.j2mod.modbus.slave.ModbusSlave;
+import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
@@ -47,7 +48,7 @@ public class AbstractTestModbusUDPMaster extends AbstractTestModbus {
     @BeforeClass
     public static void setUpSlave() {
         try {
-            listener = createUDPSlave();
+            slave = createUDPSlave();
             master = new ModbusUDPMaster(TestUtils.getFirstIp4Address(), PORT);
             master.connect();
         }
@@ -62,8 +63,8 @@ public class AbstractTestModbusUDPMaster extends AbstractTestModbus {
         if (master != null) {
             master.disconnect();
         }
-        if (listener != null && listener.isListening()) {
-            listener.stop();
+        if (slave != null) {
+            slave.close();
         }
     }
 
@@ -74,32 +75,18 @@ public class AbstractTestModbusUDPMaster extends AbstractTestModbus {
      *
      * @throws IOException If slave cannot be created
      */
-    public static ModbusUDPListener createUDPSlave() throws Exception {
-        ModbusUDPListener listener = null;
+    public static ModbusSlave createUDPSlave() throws Exception {
+        ModbusSlave slave;
         try {
-            // Create the test data
-            getSimpleProcessImage();
-
-            // Create a UDP listener on the 'all interfaces' address 0.0.0.0
-            listener = new ModbusUDPListener();
-            listener.setListening(true);
-            listener.setPort(PORT);
-            listener.setTimeout(5000);
-            new Thread(listener).start();
-
-            // Wait here a moment and then check to see if the listener actually started
-            Thread.sleep(100);
-            if (!listener.isListening()) {
-                throw new Exception(listener.getError());
-            }
+            // Create a UDP slave on the 'all interfaces' address 0.0.0.0
+            slave = ModbusSlaveFactory.createUDPSlave(PORT);
+            slave.addProcessImage(UNIT_ID, getSimpleProcessImage());
+            slave.open();
         }
         catch (Exception x) {
-            if (listener != null) {
-                listener.stop();
-            }
             throw new Exception(x.getMessage());
         }
-        return listener;
+        return slave;
     }
 
     /**

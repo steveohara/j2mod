@@ -16,10 +16,14 @@
 package com.ghgande.j2mod.modbus.msg;
 
 import com.ghgande.j2mod.modbus.Modbus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+
+import static com.ghgande.j2mod.modbus.msg.ModbusResponse.AuxiliaryMessageTypes.NONE;
 
 /**
  * Abstract class implementing a <tt>ModbusResponse</tt>. This class provides
@@ -31,6 +35,13 @@ import java.io.IOException;
  * @version 2.0 (March 2016)
  */
 public abstract class ModbusResponse extends ModbusMessageImpl {
+
+    private static final Logger logger = LoggerFactory.getLogger(ModbusResponse.class);
+
+    public enum AuxiliaryMessageTypes {
+        NONE, UNIT_ID_MISSMATCH
+    }
+    private AuxiliaryMessageTypes auxiliaryType = NONE;
 
     /**
      * Factory method creating the required specialized <tt>ModbusResponse</tt>
@@ -126,7 +137,26 @@ public abstract class ModbusResponse extends ModbusMessageImpl {
             readData(new DataInputStream(new ByteArrayInputStream(msg)));
         }
         catch (IOException ex) {
-
+            logger.error("Problem setting response message - {}", ex.getMessage());
         }
+    }
+
+    /**
+     * Returns the auxiliary type of this response message
+     * Useful for adding extra information to the message that can be used by downstream processing
+     *
+     * @return Auxiliary type
+     */
+    public AuxiliaryMessageTypes getAuxiliaryType() {
+        return auxiliaryType;
+    }
+
+    /**
+     * Sets the auxiliary type of this response
+     *
+     * @param auxiliaryType Type
+     */
+    public void setAuxiliaryType(AuxiliaryMessageTypes auxiliaryType) {
+        this.auxiliaryType = auxiliaryType;
     }
 }

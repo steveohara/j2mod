@@ -16,13 +16,11 @@
 package com.ghgande.j2mod.modbus.cmd;
 
 import com.ghgande.j2mod.modbus.Modbus;
-import com.ghgande.j2mod.modbus.ModbusCoupler;
-import com.ghgande.j2mod.modbus.net.ModbusUDPListener;
 import com.ghgande.j2mod.modbus.procimg.*;
+import com.ghgande.j2mod.modbus.slave.ModbusSlave;
+import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * Class implementing a simple Modbus/UDP slave. A simple process image is
@@ -39,7 +37,6 @@ public class UDPSlaveTest {
 
     public static void main(String[] args) {
 
-        ModbusUDPListener listener;
         SimpleProcessImage spi;
         int port = Modbus.DEFAULT_PORT;
 
@@ -73,20 +70,10 @@ public class UDPSlaveTest {
             spi.addRegister(new SimpleRegister(251));
             spi.addInputRegister(new SimpleInputRegister(45));
 
-            ModbusCoupler.getReference().setProcessImage(spi);
-            ModbusCoupler.getReference().setMaster(false);
-
-            // 2. Setup and start listener
-            listener = new ModbusUDPListener();
-            listener.setPort(port);
-            new Thread(listener).start();
-
-            // Check to see if it started OK
-
-            Thread.sleep(100);
-            if (!listener.isListening()) {
-                throw new IOException(String.format("Cannot start UPD Listener %s", listener.getError()));
-            }
+            // 2. Setup and start slave
+            ModbusSlave slave = ModbusSlaveFactory.createUDPSlave(port);
+            slave.addProcessImage(1, spi);
+            slave.open();
         }
         catch (Exception ex) {
             ex.printStackTrace();

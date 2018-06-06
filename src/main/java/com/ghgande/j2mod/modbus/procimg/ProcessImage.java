@@ -28,13 +28,6 @@ package com.ghgande.j2mod.modbus.procimg;
 public interface ProcessImage {
 
     /**
-     * Returns the unit number of this process number.
-     *
-     * @return int
-     */
-    int getUnitID();
-
-    /**
      * Returns a range of <tt>DigitalOut</tt> instances.
      *
      * @param offset the start offset.

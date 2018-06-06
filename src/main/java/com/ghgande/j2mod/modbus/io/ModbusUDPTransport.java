@@ -30,8 +30,7 @@ import java.io.InterruptedIOException;
 import java.util.Arrays;
 
 /**
- * Class that implements the Modbus UDP transport
- * flavor.
+ * Class that implements the Modbus UDP transport flavor.
  *
  * @author Dieter Wimberger
  * @author Steve O'Hara (4NG)
@@ -67,7 +66,6 @@ public class ModbusUDPTransport extends AbstractModbusTransport {
 
     @Override
     public void close() throws IOException {
-        //?
     }
 
     @Override
@@ -78,20 +76,13 @@ public class ModbusUDPTransport extends AbstractModbusTransport {
     }
 
     @Override
-    public void writeMessage(ModbusMessage msg) throws ModbusIOException {
-        try {
-            synchronized (byteOutputStream) {
-                int len = msg.getOutputLength();
-                byteOutputStream.reset();
-                msg.writeTo(byteOutputStream);
-                byte data[] = byteOutputStream.getBuffer();
-                data = Arrays.copyOf(data, len);
-                terminal.sendMessage(data);
-            }
-        }
-        catch (Exception ex) {
-            throw new ModbusIOException("I/O exception - failed to write", ex);
-        }
+    public void writeResponse(ModbusResponse msg) throws ModbusIOException {
+        writeMessage(msg);
+    }
+
+    @Override
+    public void writeRequest(ModbusRequest msg) throws ModbusIOException {
+        writeMessage(msg);
     }
 
     @Override
@@ -134,6 +125,27 @@ public class ModbusUDPTransport extends AbstractModbusTransport {
         catch (Exception ex) {
             logger.debug("I/O exception while reading modbus response.", ex);
             throw new ModbusIOException("I/O exception - failed to read - %s", ex.getMessage());
+        }
+    }
+
+    /**
+     * Writes the request/response message to the port
+     * @param msg Message to write
+     * @throws ModbusIOException If the port cannot be written to
+     */
+    private void writeMessage(ModbusMessage msg) throws ModbusIOException {
+        try {
+            synchronized (byteOutputStream) {
+                int len = msg.getOutputLength();
+                byteOutputStream.reset();
+                msg.writeTo(byteOutputStream);
+                byte data[] = byteOutputStream.getBuffer();
+                data = Arrays.copyOf(data, len);
+                terminal.sendMessage(data);
+            }
+        }
+        catch (Exception ex) {
+            throw new ModbusIOException("I/O exception - failed to write", ex);
         }
     }
 

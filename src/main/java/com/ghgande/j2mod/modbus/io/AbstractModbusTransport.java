@@ -17,7 +17,6 @@ package com.ghgande.j2mod.modbus.io;
 
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.ModbusIOException;
-import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.net.AbstractModbusListener;
@@ -73,7 +72,20 @@ public abstract class AbstractModbusTransport {
      *                           written properly to the raw output stream of
      *                           this <tt>ModbusTransport</tt>.
      */
-    public abstract void writeMessage(ModbusMessage msg) throws ModbusIOException;
+    public abstract void writeRequest(ModbusRequest msg) throws ModbusIOException;
+
+    /**
+     * Writes a <tt>ModbusResponseMessage</tt> to the
+     * output stream of this <tt>ModbusTransport</tt>.
+     * <p>
+     *
+     * @param msg a <tt>ModbusMessage</tt>.
+     *
+     * @throws ModbusIOException data cannot be
+     *                           written properly to the raw output stream of
+     *                           this <tt>ModbusTransport</tt>.
+     */
+    public abstract void writeResponse(ModbusResponse msg) throws ModbusIOException;
 
     /**
      * Reads a <tt>ModbusRequest</tt> from the

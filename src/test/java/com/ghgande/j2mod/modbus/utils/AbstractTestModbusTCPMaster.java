@@ -20,9 +20,10 @@ import com.ghgande.j2mod.modbus.facade.ModbusTCPMaster;
 import com.ghgande.j2mod.modbus.io.ModbusTCPTransaction;
 import com.ghgande.j2mod.modbus.io.ModbusTCPTransport;
 import com.ghgande.j2mod.modbus.msg.*;
-import com.ghgande.j2mod.modbus.net.ModbusTCPListener;
 import com.ghgande.j2mod.modbus.procimg.Register;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
+import com.ghgande.j2mod.modbus.slave.ModbusSlave;
+import com.ghgande.j2mod.modbus.slave.ModbusSlaveFactory;
 import com.ghgande.j2mod.modbus.util.BitVector;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -49,7 +50,7 @@ public class AbstractTestModbusTCPMaster extends AbstractTestModbus {
     @BeforeClass
     public static void setUpSlave() {
         try {
-            listener = createTCPSlave();
+            slave = createTCPSlave();
             master = new ModbusTCPMaster(LOCALHOST, PORT);
             master.connect();
         }
@@ -64,8 +65,8 @@ public class AbstractTestModbusTCPMaster extends AbstractTestModbus {
         if (master != null) {
             master.disconnect();
         }
-        if (listener != null && listener.isListening()) {
-            listener.stop();
+        if (slave != null) {
+            slave.close();
         }
     }
 
@@ -76,25 +77,18 @@ public class AbstractTestModbusTCPMaster extends AbstractTestModbus {
      *
      * @throws IOException If slave cannot be created
      */
-    public static ModbusTCPListener createTCPSlave() throws Exception {
-        ModbusTCPListener listener = null;
+    public static ModbusSlave createTCPSlave() throws Exception {
+        ModbusSlave slave;
         try {
-            // Create the test data
-            getSimpleProcessImage();
-
-            // Create a TCP listener with 5 threads in pool, default address
-            listener = new ModbusTCPListener(5);
-            listener.setListening(true);
-            listener.setPort(PORT);
-            new Thread(listener).start();
+            // Create a TCP slave on the 'all interfaces' address 0.0.0.0
+            slave = ModbusSlaveFactory.createTCPSlave(PORT, 5);
+            slave.addProcessImage(UNIT_ID, getSimpleProcessImage());
+            slave.open();
         }
         catch (Exception x) {
-            if (listener != null) {
-                listener.stop();
-            }
             throw new Exception(x.getMessage());
         }
-        return listener;
+        return slave;
     }
 
     /**
