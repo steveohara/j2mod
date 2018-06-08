@@ -109,10 +109,9 @@ public class AbstractTestModbus  implements Observer{
         spi.addRegister(40000, new SimpleRegister(1234));
         spi.addRegister(40001, new SimpleRegister(2345));
         spi.addRegister(40002, new SimpleRegister(3456));
-
         // Some holding registers
         ObservableRegister or = new ObservableRegister();
-        or.setValue(45);
+        or.setValue(251);
         or.addObserver(new Observer()
         {
             public void update(Observable o1,Object o2)
@@ -120,9 +119,9 @@ public class AbstractTestModbus  implements Observer{
                 updateCalled = true;
             }
         });
-        spi.addInputRegister(or);
+        spi.addRegister(or);
         or = new ObservableRegister();          
-        or.setValue(9999);
+        or.setValue(1111);
         or.addObserver(new Observer()
         {
             public void update(Observable o1,Object o2)
@@ -130,9 +129,9 @@ public class AbstractTestModbus  implements Observer{
                 updateCalled = true;
             }
         });
-        spi.addInputRegister(or);
+        spi.addRegister(or);
         or = new ObservableRegister();        
-        or.setValue(8888);
+        or.setValue(2222);
         or.addObserver(new Observer()
         {
             public void update(Observable o1,Object o2)
@@ -140,9 +139,9 @@ public class AbstractTestModbus  implements Observer{
                 updateCalled = true;
             }
         });
-        spi.addInputRegister(or);
+        spi.addRegister(or);
         or = new ObservableRegister();
-        or.setValue(7777);
+        or.setValue(3333);
         or.addObserver(new Observer()
         {
             public void update(Observable o1,Object o2)
@@ -150,9 +149,9 @@ public class AbstractTestModbus  implements Observer{
                 updateCalled = true;
             }
         });
-        spi.addInputRegister(or);  
+        spi.addRegister(or);  
         or = new ObservableRegister();
-        or.setValue(6666);
+        or.setValue(4444);
         or.addObserver(new Observer()
         {
             public void update(Observable o1,Object o2)
@@ -160,8 +159,45 @@ public class AbstractTestModbus  implements Observer{
                 updateCalled = true;
             }
         });
-        spi.addInputRegister(or);
+        spi.addRegister(or);
 
+        or.setValue(1234);
+        or.addObserver(new Observer()
+        {
+            public void update(Observable o1,Object o2)
+            {
+                updateCalled = true;
+            }
+        });
+        spi.addRegister(40000,or);
+        or = new ObservableRegister();          
+        or.setValue(2345);
+        or.addObserver(new Observer()
+        {
+            public void update(Observable o1,Object o2)
+            {
+                updateCalled = true;
+            }
+        });
+        spi.addRegister(40001,or);
+        or = new ObservableRegister();        
+        or.setValue(3456);
+        or.addObserver(new Observer()
+        {
+            public void update(Observable o1,Object o2)
+            {
+                updateCalled = true;
+            }
+        });
+        spi.addRegister(40002,or);
+       
+        // Some holding registers
+        spi.addInputRegister(new SimpleInputRegister(45));
+        spi.addInputRegister(new SimpleInputRegister(9999));
+        spi.addInputRegister(new SimpleInputRegister(8888));
+        spi.addInputRegister(new SimpleInputRegister(7777));
+        spi.addInputRegister(new SimpleInputRegister(6666));
+        
         return spi;
     }
     
