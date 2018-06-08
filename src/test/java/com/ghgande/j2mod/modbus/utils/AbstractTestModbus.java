@@ -17,6 +17,8 @@ package com.ghgande.j2mod.modbus.utils;
 
 import com.ghgande.j2mod.modbus.procimg.*;
 import com.ghgande.j2mod.modbus.slave.ModbusSlave;
+import com.ghgande.j2mod.modbus.util.Observable;
+import com.ghgande.j2mod.modbus.util.Observer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,14 +29,15 @@ import org.slf4j.LoggerFactory;
  * @author Steve O'Hara (4NG)
  * @version 2.0 (March 2016)
  */
-public class AbstractTestModbus {
-
+public class AbstractTestModbus  implements Observer{
     private static final Logger logger = LoggerFactory.getLogger(AbstractTestModbus.class);
     public static ModbusSlave slave = null;
     public static final int UNIT_ID = 15;
     public static final int PORT = 1502;
     public static final String LOCALHOST = "localhost";
 
+    protected static boolean updateCalled = false;
+    
     /**
      * Creates a process image to use for slave testing
      *
@@ -108,14 +111,66 @@ public class AbstractTestModbus {
         spi.addRegister(40002, new SimpleRegister(3456));
 
         // Some holding registers
-        spi.addInputRegister(new SimpleInputRegister(45));
-        spi.addInputRegister(new SimpleInputRegister(9999));
-        spi.addInputRegister(new SimpleInputRegister(8888));
-        spi.addInputRegister(new SimpleInputRegister(7777));
-        spi.addInputRegister(new SimpleInputRegister(6666));
+        ObservableRegister or = new ObservableRegister();
+        or.setValue(45);
+        or.addObserver(new Observer()
+        {
+            public void update(Observable o1,Object o2)
+            {
+                updateCalled = true;
+            }
+        });
+        spi.addInputRegister(or);
+        or = new ObservableRegister();          
+        or.setValue(9999);
+        or.addObserver(new Observer()
+        {
+            public void update(Observable o1,Object o2)
+            {
+                updateCalled = true;
+            }
+        });
+        spi.addInputRegister(or);
+        or = new ObservableRegister();        
+        or.setValue(8888);
+        or.addObserver(new Observer()
+        {
+            public void update(Observable o1,Object o2)
+            {
+                updateCalled = true;
+            }
+        });
+        spi.addInputRegister(or);
+        or = new ObservableRegister();
+        or.setValue(7777);
+        or.addObserver(new Observer()
+        {
+            public void update(Observable o1,Object o2)
+            {
+                updateCalled = true;
+            }
+        });
+        spi.addInputRegister(or);  
+        or = new ObservableRegister();
+        or.setValue(6666);
+        or.addObserver(new Observer()
+        {
+            public void update(Observable o1,Object o2)
+            {
+                updateCalled = true;
+            }
+        });
+        spi.addInputRegister(or);
 
         return spi;
     }
+    
+    
+    public void update(Observable o1,Object o2)
+    {
+        updateCalled = true;
+    }
+
 
     /**
      * Returns true if the OS is windows

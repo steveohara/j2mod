@@ -42,5 +42,13 @@ public class TestModbusTCPExternalWriteSlave extends AbstractTestModbusTCPSlaveN
         assertTrue("Incorrect write status for holding register 1", writeModPoll(1, 4, 5555, "Written 1 reference"));
         assertTrue("Incorrect value for holding register 1", readModPoll(1, 4, "[1]: 5555"));
     }
+    
+        @Test
+    public void testObservableRegister() {
+        assertTrue("Incorrect write status for holding register 1", writeModPoll(1, 4, 5555, "Written 1 reference"));
+        assertTrue("Incorrect value for holding register 1", readModPoll(1, 4, "[1]: 5555"));
+        assertTrue("Update method never called on observable holding register",updateCalled);
+    }
+    
 
 }
