@@ -101,15 +101,6 @@ public class AbstractTestModbus  implements Observer{
                 .setRecord(19, new Record(19, 20)));
 
         // Some input registers
-        spi.addRegister(new SimpleRegister(251));
-        spi.addRegister(new SimpleRegister(1111));
-        spi.addRegister(new SimpleRegister(2222));
-        spi.addRegister(new SimpleRegister(3333));
-        spi.addRegister(new SimpleRegister(4444));
-        spi.addRegister(40000, new SimpleRegister(1234));
-        spi.addRegister(40001, new SimpleRegister(2345));
-        spi.addRegister(40002, new SimpleRegister(3456));
-        // Some holding registers
         ObservableRegister or = new ObservableRegister();
         or.setValue(251);
         or.addObserver(new Observer()
