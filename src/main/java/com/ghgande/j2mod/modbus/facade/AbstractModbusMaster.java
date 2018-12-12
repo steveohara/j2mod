@@ -245,10 +245,12 @@ abstract public class AbstractModbusMaster {
      * @param register a <tt>Register</tt> holding the value of the register
      *                 to be written.
      *
+     * @return the value of the register as returned from the slave.
+     *
      * @throws ModbusException if an I/O error, a slave exception or
      *                         a transaction error occurs.
      */
-    public void writeSingleRegister(int unitId, int ref, Register register) throws ModbusException {
+    public int writeSingleRegister(int unitId, int ref, Register register) throws ModbusException {
         checkTransaction();
         if (writeSingleRegisterRequest == null) {
             writeSingleRegisterRequest = new WriteSingleRegisterRequest();
@@ -258,6 +260,7 @@ abstract public class AbstractModbusMaster {
         writeSingleRegisterRequest.setRegister(register);
         transaction.setRequest(writeSingleRegisterRequest);
         transaction.execute();
+        return ((WriteSingleRegisterResponse) getAndCheckResponse()).getRegisterValue();
     }
 
     /**
@@ -395,11 +398,13 @@ abstract public class AbstractModbusMaster {
      * @param register a <tt>Register</tt> holding the value of the register
      *                 to be written.
      *
+     * @return the value of the register as returned from the slave.
+     *
      * @throws ModbusException if an I/O error, a slave exception or
      *                         a transaction error occurs.
      */
-    public void writeSingleRegister(int ref, Register register) throws ModbusException {
-        writeSingleRegister(DEFAULT_UNIT_ID, ref, register);
+    public int writeSingleRegister(int ref, Register register) throws ModbusException {
+        return writeSingleRegister(DEFAULT_UNIT_ID, ref, register);
     }
 
     /**
