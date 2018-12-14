@@ -46,6 +46,7 @@ abstract public class AbstractModbusMaster {
     private ReadMultipleRegistersRequest readMultipleRegistersRequest;
     private WriteSingleRegisterRequest writeSingleRegisterRequest;
     private WriteMultipleRegistersRequest writeMultipleRegistersRequest;
+    private MaskWriteRegisterRequest maskWriteRegisterRequest;
     protected int timeout = Modbus.DEFAULT_TIMEOUT;
 
     /**
@@ -284,6 +285,37 @@ abstract public class AbstractModbusMaster {
     }
 
     /**
+     * Mask write a single register to the slave.
+     *
+     * @param unitId    the slave unit id.
+     * @param ref       the offset of the register to start writing to.
+     * @param andMask   AND mask.
+     * @param orMask    OR mask.
+     *
+     * @return true if success, i.e. response data equals to request data, false otherwise.
+     *
+     * @throws ModbusException if an I/O error, a slave exception or
+     *                         a transaction error occurs.
+     */
+    public boolean maskWriteRegister(int unitId, int ref, int andMask, int orMask) throws ModbusException {
+        checkTransaction();
+        if (maskWriteRegisterRequest == null) {
+            maskWriteRegisterRequest = new MaskWriteRegisterRequest();
+        }
+        maskWriteRegisterRequest.setUnitID(unitId);
+        maskWriteRegisterRequest.setReference(ref);
+        maskWriteRegisterRequest.setAndMask(andMask);
+        maskWriteRegisterRequest.setOrMask(orMask);
+        transaction.setRequest(maskWriteRegisterRequest);
+        transaction.execute();
+
+        MaskWriteRegisterResponse response = (MaskWriteRegisterResponse) getAndCheckResponse();
+        return response.getReference() == maskWriteRegisterRequest.getReference() &&
+               response.getAndMask() == maskWriteRegisterRequest.getAndMask() &&
+               response.getOrMask() == maskWriteRegisterRequest.getOrMask();
+    }
+
+    /**
      * Reads a given number of coil states from the slave.
      *
      * Note that the number of bits in the bit vector will be
@@ -414,6 +446,22 @@ abstract public class AbstractModbusMaster {
      */
     public void writeMultipleRegisters(int ref, Register[] registers) throws ModbusException {
         writeMultipleRegisters(DEFAULT_UNIT_ID, ref, registers);
+    }
+
+    /**
+     * Mask write a single register to the slave.
+     *
+     * @param ref       the offset of the register to start writing to.
+     * @param andMask   AND mask.
+     * @param orMask    OR mask.
+     *
+     * @return true if success, i.e. response data equals to request data, false otherwise.
+     *
+     * @throws ModbusException if an I/O error, a slave exception or
+     *                         a transaction error occurs.
+     */
+    public boolean maskWriteRegister(int ref, int andMask, int orMask) throws ModbusException {
+        return maskWriteRegister(DEFAULT_UNIT_ID, ref, andMask, orMask);
     }
 
     /**

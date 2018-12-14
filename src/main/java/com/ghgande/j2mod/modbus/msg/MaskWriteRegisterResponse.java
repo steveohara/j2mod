@@ -45,6 +45,7 @@ public class MaskWriteRegisterResponse
     public MaskWriteRegisterResponse() {
         super();
         setFunctionCode(Modbus.MASK_WRITE_REGISTER);
+        setDataLength(6);
     }
 
     /**
