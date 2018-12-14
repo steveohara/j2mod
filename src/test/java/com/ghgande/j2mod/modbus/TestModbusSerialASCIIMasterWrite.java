@@ -50,9 +50,14 @@ public class TestModbusSerialASCIIMasterWrite extends AbstractTestModbusSerialAS
     public void testWriteHoldingRegisters() {
         try {
             int before = master.readInputRegisters(UNIT_ID, 1, 1)[0].getValue();
-            master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(9999));
-            assertEquals("Incorrect status for register 1", 9999, master.readInputRegisters(UNIT_ID, 1, 1)[0].getValue());
-            master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(before));
+            int newValue = 9999;
+
+            assertEquals("Incorrect status after write new value for register 1", newValue,
+                    master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(newValue)));
+            assertEquals("Incorrect status after read new value for register 1", newValue,
+                    master.readInputRegisters(UNIT_ID, 1, 1)[0].getValue());
+            assertEquals("Incorrect status after write previous value for register 1", before,
+                    master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(before)));
         }
         catch (Exception e) {
             fail(String.format("Cannot write to register 1 - %s", e.getMessage()));
