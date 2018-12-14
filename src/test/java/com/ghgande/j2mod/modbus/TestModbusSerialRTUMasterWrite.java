@@ -21,7 +21,9 @@ import com.ghgande.j2mod.modbus.msg.ModbusMessage;
 import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
+import com.ghgande.j2mod.modbus.procimg.Register;
 import com.ghgande.j2mod.modbus.procimg.SimpleInputRegister;
+import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
 import com.ghgande.j2mod.modbus.utils.AbstractTestModbusSerialRTUMaster;
 import org.junit.Test;
 
@@ -56,6 +58,34 @@ public class TestModbusSerialRTUMasterWrite extends AbstractTestModbusSerialRTUM
         }
         catch (Exception e) {
             fail(String.format("Cannot write to register 1 - %s", e.getMessage()));
+        }
+    }
+
+    @Test
+    public void testWriteMultipleRegisters() {
+        try {
+            int registerCount = 3;
+            Register[] beforeRegisters = master.readMultipleRegisters(UNIT_ID, 1, registerCount);
+
+            Register[] writeRegisters = new Register[registerCount];
+            for (int i = 0; i < registerCount; ++i) {
+                writeRegisters[i] = new SimpleRegister(Double.valueOf(Math.random()).intValue());
+            }
+
+            assertEquals("Incorrect status for register",
+                    registerCount, master.writeMultipleRegisters(UNIT_ID, 1, writeRegisters));
+
+            Register[] afterRegisters = master.readMultipleRegisters(UNIT_ID, 1, registerCount);
+
+            for (int i = 0; i < registerCount; ++i) {
+                assertEquals("Incorrect status for register",
+                        writeRegisters[i].getValue(), afterRegisters[i].getValue());
+            }
+
+            master.writeMultipleRegisters(UNIT_ID, 1, beforeRegisters);
+        }
+        catch (Exception e) {
+            fail(String.format("Cannot write to registers - %s", e.getMessage()));
         }
     }
 

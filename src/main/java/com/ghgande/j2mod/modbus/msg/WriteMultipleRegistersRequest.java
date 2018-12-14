@@ -57,6 +57,7 @@ public class WriteMultipleRegistersRequest extends ModbusRequest {
 
         setReference(first);
         setRegisters(registers);
+        setDataLength(5 + registers.length * 2);
     }
 
     /**
@@ -64,6 +65,7 @@ public class WriteMultipleRegistersRequest extends ModbusRequest {
      */
     public WriteMultipleRegistersRequest() {
         setFunctionCode(Modbus.WRITE_MULTIPLE_REGISTERS);
+        setDataLength(5);
     }
 
     @Override
@@ -172,7 +174,13 @@ public class WriteMultipleRegistersRequest extends ModbusRequest {
      * @param registers the registers to be written as <tt>Register[]</tt>.
      */
     public void setRegisters(Register[] registers) {
-        this.registers = registers == null ? null : Arrays.copyOf(registers, registers.length);
+        if (registers == null) {
+            this.registers = null;
+            setDataLength(5);
+        } else {
+            this.registers = Arrays.copyOf(registers, registers.length);
+            setDataLength(5 + registers.length * 2);
+        }
     }
 
     /**

@@ -23,7 +23,7 @@ import java.io.IOException;
 
 /**
  * Class implementing a <tt>WriteMultipleRegistersResponse</tt>. The
- * implementation directly correlates with the class 0 function <i>read multiple
+ * implementation directly correlates with the class 0 function <i>preset multiple
  * registers (FC 16)</i>. It encapsulates the corresponding response message.
  *
  * @author Dieter Wimberger
@@ -48,8 +48,8 @@ public class WriteMultipleRegistersResponse extends ModbusResponse {
     /**
      * Constructs a new <tt>WriteMultipleRegistersResponse</tt> instance.
      *
-     * @param reference the offset to start reading from.
-     * @param wordCount the number of words (registers) to be read.
+     * @param reference the offset to start writing from.
+     * @param wordCount the number of words (registers) to be written.
      */
     public WriteMultipleRegistersResponse(int reference, int wordCount) {
         super();
@@ -88,18 +88,18 @@ public class WriteMultipleRegistersResponse extends ModbusResponse {
     /**
      * Returns the number of bytes that have been written.
      *
-     * @return the number of bytes that have been read as <tt>int</tt>.
+     * @return the number of bytes that have been written as <tt>int</tt>.
      */
     public int getByteCount() {
         return wordCount * 2;
     }
 
     /**
-     * Returns the number of words that have been read. The returned value
+     * Returns the number of words that have been written. The returned value
      * should be half of the byte count of the response.
      * <p>
      *
-     * @return the number of words that have been read as <tt>int</tt>.
+     * @return the number of words that have been written as <tt>int</tt>.
      */
     public int getWordCount() {
         return wordCount;

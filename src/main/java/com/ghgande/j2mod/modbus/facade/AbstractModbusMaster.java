@@ -268,10 +268,12 @@ abstract public class AbstractModbusMaster {
      * @param registers a <tt>Register[]</tt> holding the values of
      *                  the registers to be written.
      *
+     * @return the number of registers that have been written.
+     *
      * @throws ModbusException if an I/O error, a slave exception or
      *                         a transaction error occurs.
      */
-    public void writeMultipleRegisters(int unitId, int ref, Register[] registers) throws ModbusException {
+    public int writeMultipleRegisters(int unitId, int ref, Register[] registers) throws ModbusException {
         checkTransaction();
         if (writeMultipleRegistersRequest == null) {
             writeMultipleRegistersRequest = new WriteMultipleRegistersRequest();
@@ -281,6 +283,7 @@ abstract public class AbstractModbusMaster {
         writeMultipleRegistersRequest.setRegisters(registers);
         transaction.setRequest(writeMultipleRegistersRequest);
         transaction.execute();
+        return ((WriteMultipleRegistersResponse) transaction.getResponse()).getWordCount();
     }
 
     /**
@@ -409,11 +412,13 @@ abstract public class AbstractModbusMaster {
      * @param registers a <tt>Register[]</tt> holding the values of
      *                  the registers to be written.
      *
+     * @return the number of registers that have been written.
+     *
      * @throws ModbusException if an I/O error, a slave exception or
      *                         a transaction error occurs.
      */
-    public void writeMultipleRegisters(int ref, Register[] registers) throws ModbusException {
-        writeMultipleRegisters(DEFAULT_UNIT_ID, ref, registers);
+    public int writeMultipleRegisters(int ref, Register[] registers) throws ModbusException {
+        return writeMultipleRegisters(DEFAULT_UNIT_ID, ref, registers);
     }
 
     /**
