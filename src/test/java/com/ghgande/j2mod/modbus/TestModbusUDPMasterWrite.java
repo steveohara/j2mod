@@ -18,7 +18,6 @@ package com.ghgande.j2mod.modbus;
 import com.ghgande.j2mod.modbus.procimg.Register;
 import com.ghgande.j2mod.modbus.procimg.SimpleInputRegister;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
-import com.ghgande.j2mod.modbus.utils.AbstractTestModbus;
 import com.ghgande.j2mod.modbus.utils.AbstractTestModbusUDPMaster;
 import org.junit.Test;
 
@@ -47,9 +46,14 @@ public class TestModbusUDPMasterWrite extends AbstractTestModbusUDPMaster {
     public void testWriteHoldingRegisters() {
         try {
             int before = master.readInputRegisters(UNIT_ID, 1, 1)[0].getValue();
-            master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(9999));
-            assertEquals("Incorrect status for register 1", 9999, master.readInputRegisters(UNIT_ID, 1, 1)[0].getValue());
-            master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(before));
+            int newValue = 9999;
+
+            assertEquals("Incorrect status after write new value for register 1", newValue,
+                    master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(newValue)));
+            assertEquals("Incorrect status after read new value for register 1", newValue,
+                    master.readInputRegisters(UNIT_ID, 1, 1)[0].getValue());
+            assertEquals("Incorrect status after write previous value for register 1", before,
+                    master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(before)));
         }
         catch (Exception e) {
             fail(String.format("Cannot write to register 1 - %s", e.getMessage()));
@@ -84,4 +88,20 @@ public class TestModbusUDPMasterWrite extends AbstractTestModbusUDPMaster {
         }
     }
 
+    @Test
+    public void testMaskWriteRegister() {
+        try {
+            int before = master.readMultipleRegisters(UNIT_ID, 1, 1)[0].getValue();
+            int andMask = 0xABCD;
+            int orMask = 0xBCDA;
+            int newValue = (before & andMask) | (orMask & ~andMask);
+
+            assertTrue("Incorrect mask write status for register 1", master.maskWriteRegister(UNIT_ID, 1, andMask, orMask));
+            assertEquals("Incorrect status for register 1", newValue, master.readMultipleRegisters(UNIT_ID, 1, 1)[0].getValue());
+            master.writeSingleRegister(UNIT_ID, 1, new SimpleInputRegister(before));
+        }
+        catch (Exception e) {
+            fail(String.format("Cannot mask write to register 1 - %s", e.getMessage()));
+        }
+    }
 }
