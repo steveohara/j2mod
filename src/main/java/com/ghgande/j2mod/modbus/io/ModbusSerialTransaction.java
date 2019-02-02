@@ -42,6 +42,7 @@ public class ModbusSerialTransaction extends ModbusTransaction {
     private int transDelayMS = Modbus.DEFAULT_TRANSMIT_DELAY;
     private final Object MUTEX = new Object();
     private long lastTransactionTimestamp = 0;
+    private int delayReadResponse = 0;
 
     /**
      * Constructs a new <tt>ModbusSerialTransaction</tt>
@@ -71,6 +72,14 @@ public class ModbusSerialTransaction extends ModbusTransaction {
      */
     public ModbusSerialTransaction(AbstractSerialConnection con) {
         setSerialConnection(con);
+    }
+
+    public int getDelayReadResponse() {
+        return delayReadResponse;
+    }
+
+    public void setDelayReadResponse(int delayReadResponse) {
+        this.delayReadResponse = delayReadResponse;
     }
 
     /**
@@ -138,7 +147,9 @@ public class ModbusSerialTransaction extends ModbusTransaction {
                 synchronized (MUTEX) {
                     //write request message
                     transport.writeRequest(request);
-                    //read response message
+                    //Delay before read response
+                    Thread.sleep(delayReadResponse);
+                    //read Delay before reading reply message
                     response = transport.readResponse();
                     finished = true;
                 }
@@ -149,6 +160,8 @@ public class ModbusSerialTransaction extends ModbusTransaction {
                 }
                 ModbusUtil.sleep(getRandomSleepTime(tries));
                 logger.debug("Execute try {} error: {}", tries, e.getMessage());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         } while (!finished);
 
