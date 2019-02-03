@@ -149,7 +149,7 @@ public class ModbusSerialTransaction extends ModbusTransaction {
                     transport.writeRequest(request);
                     //Delay before read response
                     Thread.sleep(delayReadResponse);
-                    //read Delay before reading reply message
+                    //read response message
                     response = transport.readResponse();
                     finished = true;
                 }
