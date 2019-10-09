@@ -149,6 +149,13 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
             setTransaction(null);
         }
     }
+    
+    /**
+     * Check if connected or not
+     */
+    public boolean isConnected(){
+        return m_Connection.isConnected();
+    }
 
     /**
      * Tests if a constant connection is maintained or if a new
