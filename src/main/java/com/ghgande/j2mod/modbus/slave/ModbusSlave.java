@@ -58,7 +58,7 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(int port, int poolSize, boolean useRtuOverTcp) throws ModbusException {
-        this(ModbusSlaveType.TCP, null, port, poolSize, null, useRtuOverTcp);
+        this(ModbusSlaveType.TCP, null, port, poolSize, null, useRtuOverTcp, 0);
     }
 
     /**
@@ -70,8 +70,8 @@ public class ModbusSlave {
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
-    protected ModbusSlave(InetAddress address, int port, int poolSize, boolean useRtuOverTcp) throws ModbusException {
-        this(ModbusSlaveType.TCP, address, port, poolSize, null, useRtuOverTcp);
+    protected ModbusSlave(InetAddress address, int port, int poolSize, boolean useRtuOverTcp, int maxIdleSeconds) throws ModbusException {
+        this(ModbusSlaveType.TCP, address, port, poolSize, null, useRtuOverTcp, maxIdleSeconds);
     }
 
     /**
@@ -82,7 +82,7 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(int port, boolean useRtuOverTcp) throws ModbusException {
-        this(ModbusSlaveType.UDP, null, port, 0, null, useRtuOverTcp);
+        this(ModbusSlaveType.UDP, null, port, 0, null, useRtuOverTcp, 0);
     }
 
     /**
@@ -94,7 +94,7 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(InetAddress address, int port, boolean useRtuOverTcp) throws ModbusException {
-        this(ModbusSlaveType.UDP, address, port, 0, null, useRtuOverTcp);
+        this(ModbusSlaveType.UDP, address, port, 0, null, useRtuOverTcp, 0);
     }
 
     /**
@@ -104,20 +104,21 @@ public class ModbusSlave {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     protected ModbusSlave(SerialParameters serialParams) throws ModbusException {
-        this(ModbusSlaveType.SERIAL, null, 0, 0, serialParams, false);
+        this(ModbusSlaveType.SERIAL, null, 0, 0, serialParams, false, 0);
     }
 
     /**
      * Creates an appropriate type of listener
      *
-     * @param type          Type of slave to create
-     * @param address       IP address to listen on
-     * @param port          Port to listen on if IP type
-     * @param poolSize      Pool size for TCP slaves
-     * @param serialParams  Serial parameters for serial type slaves
-     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     * @param type              Type of slave to create
+     * @param address           IP address to listen on
+     * @param port              Port to listen on if IP type
+     * @param poolSize          Pool size for TCP slaves
+     * @param serialParams      Serial parameters for serial type slaves
+     * @param useRtuOverTcp     True if the RTU protocol should be used over TCP
+     * @param maxIdleSeconds    Maximum idle seconds for TCP connection
      */
-    private ModbusSlave(ModbusSlaveType type, InetAddress address, int port, int poolSize, SerialParameters serialParams, boolean useRtuOverTcp) {
+    private ModbusSlave(ModbusSlaveType type, InetAddress address, int port, int poolSize, SerialParameters serialParams, boolean useRtuOverTcp, int maxIdleSeconds) {
         this.type = type == null ? ModbusSlaveType.TCP : type;
         this.port = port;
         this.serialParams = serialParams;
@@ -129,7 +130,9 @@ public class ModbusSlave {
             listener = new ModbusUDPListener();
         }
         else if (this.type.is(ModbusSlaveType.TCP)) {
-            listener = new ModbusTCPListener(poolSize, useRtuOverTcp);
+            ModbusTCPListener tcpListener = new ModbusTCPListener(poolSize, useRtuOverTcp);
+            tcpListener.setMaxIdleSeconds(maxIdleSeconds);            
+            listener = tcpListener;            
         }
         else {
             listener = new ModbusSerialListener(serialParams);

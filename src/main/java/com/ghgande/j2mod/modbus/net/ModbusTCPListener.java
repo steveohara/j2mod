@@ -41,6 +41,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
     private final ThreadPool threadPool;
     private Thread listener;
     private final boolean useRtuOverTcp;
+    private int maxIdleSeconds;
 
     /**
      * Constructs a ModbusTCPListener instance.<br>
@@ -65,6 +66,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
         threadPool = new ThreadPool(poolsize);
         address = addr;
         this.useRtuOverTcp = useRtuOverTcp;
+        maxIdleSeconds = 0;
     }
 
     /**
@@ -99,6 +101,32 @@ public class ModbusTCPListener extends AbstractModbusListener {
             // Can't happen -- size is fixed.
         }
         this.useRtuOverTcp = useRtuOverTcp;
+        maxIdleSeconds = 0;
+    }
+
+    /**
+     * Sets a maximum time a connection can be idle, i.e. has no input/output.
+     * This is important for detecting "hanging" slave connection.
+     * 
+     * Details: TCP connection is "immortal" in established state (problems will 
+     * only be detected when any data are being actively sent in any direction).
+     * When a slave is performing socket.read() to get the next request it may not
+     * (and often won't) receive any notification that a peer host is down (powered
+     * off, for example) and hang forever.
+     * Such a connection will occupy thread in a thread pool and eventually the
+     * pool will be exhausted
+     * 
+     * Settings this option will force closing the connection after 
+     * <code>maxIdleSeconds</code> of total silence.
+     * This option is disabled by default (maxIdleSeconds == 0)
+     * 
+     * @param maxIdleSeconds    0 to disable watchdog, or a positive number to set it.
+     */
+    public void setMaxIdleSeconds(int maxIdleSeconds) {
+        if(maxIdleSeconds < 0) {
+            throw new IllegalArgumentException("maxIdleSeconds must be >= 0: " + maxIdleSeconds);
+        }
+        this.maxIdleSeconds = maxIdleSeconds;
     }
 
     @Override
@@ -165,7 +193,7 @@ public class ModbusTCPListener extends AbstractModbusListener {
                 if (listening) {
                     TCPSlaveConnection slave = new TCPSlaveConnection(incoming, useRtuOverTcp);
                     slave.setTimeout(timeout);
-                    threadPool.execute(new TCPConnectionHandler(this, slave));
+                    threadPool.execute(new TCPConnectionHandler(this, slave, maxIdleSeconds));
                 }
                 else {
                     incoming.close();

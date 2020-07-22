@@ -81,12 +81,28 @@ public class ModbusSlaveFactory {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     public static synchronized ModbusSlave createTCPSlave(InetAddress address, int port, int poolSize, boolean useRtuOverTcp) throws ModbusException {
+        return ModbusSlaveFactory.createTCPSlave(address, port, poolSize, useRtuOverTcp, 0);
+    }
+
+    /**
+     * Creates a TCP modbus slave or returns the one already allocated to this port
+     *
+     * @param address           IP address to listen on
+     * @param port              Port to listen on
+     * @param poolSize          Pool size of listener threads
+     * @param useRtuOverTcp     True if the RTU protocol should be used over TCP
+     * @param maxIdleSeconds    Maximum idle seconds for TCP connection
+     * @return new or existing TCP modbus slave associated with the port
+     *
+     * @throws ModbusException If a problem occurs e.g. port already in use
+     */
+    public static synchronized ModbusSlave createTCPSlave(InetAddress address, int port, int poolSize, boolean useRtuOverTcp, int maxIdleSeconds) throws ModbusException {
         String key = ModbusSlaveType.TCP.getKey(port);
         if (slaves.containsKey(key)) {
             return slaves.get(key);
         }
         else {
-            ModbusSlave slave = new ModbusSlave(address, port, poolSize, useRtuOverTcp);
+            ModbusSlave slave = new ModbusSlave(address, port, poolSize, useRtuOverTcp, maxIdleSeconds);
             slaves.put(key, slave);
             return slave;
         }

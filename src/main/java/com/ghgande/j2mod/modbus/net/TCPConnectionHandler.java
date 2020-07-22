@@ -17,6 +17,8 @@ package com.ghgande.j2mod.modbus.net;
 
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,10 +32,14 @@ import org.slf4j.LoggerFactory;
 public class TCPConnectionHandler implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(TCPConnectionHandler.class);
+    private static final long watchDogResolution = 5000L; // Check connection status every 5 seconds
+    private static final long nanosPerSecond = 1000L * 1000L * 1000L;
 
     private final TCPSlaveConnection connection;
     private final AbstractModbusTransport transport;
     private final AbstractModbusListener listener;
+    
+    private final Timer watchDog;
 
     /**
      * Constructs a new <tt>TCPConnectionHandler</tt> instance.
@@ -45,11 +51,35 @@ public class TCPConnectionHandler implements Runnable {
      *
      * @param listener the listener that handled the incoming request
      * @param connection an incoming connection.
+     * @param maxIdleSeconds 0 or maximum inactivity time for the connection
      */
-    public TCPConnectionHandler(AbstractModbusListener listener, TCPSlaveConnection connection) {
+    public TCPConnectionHandler(AbstractModbusListener listener, TCPSlaveConnection connection, final int maxIdleSeconds) {
         this.listener = listener;
         this.connection = connection;
         transport = this.connection.getModbusTransport();
+        
+        if(maxIdleSeconds != 0) {
+            watchDog = new Timer();
+            long checkRate = Math.min(maxIdleSeconds * 1000L, watchDogResolution);
+            watchDog.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    long nanosIdle = System.nanoTime() - TCPConnectionHandler.this.connection.getLastActivityTs();
+                    if(nanosIdle > (maxIdleSeconds * nanosPerSecond)) {
+                        // Watchdog timer elapsed
+                        logger.warn("Watchdog expired: " + (nanosIdle / nanosPerSecond) + ", limit: " + maxIdleSeconds);
+                        
+                        // Socket.close() will cause read operation to fail
+                        TCPConnectionHandler.this.connection.close();
+                        
+                        // Stop the watchdog, it is not needed anymore
+                        watchDog.cancel();
+                    }
+                }
+            }, checkRate, checkRate);
+        } else {
+            watchDog = null;
+        }
     }
 
     @Override

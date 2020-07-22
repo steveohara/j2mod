@@ -97,6 +97,15 @@ public class TCPSlaveConnection {
         return transport;
     }
 
+    /** 
+     * @return last activity timestamp of a connection
+     * @see ModbusTCPTransport#getLastActivityTs() 
+     * @see System#nanoTime() 
+     */
+    public long getLastActivityTs() {
+        return transport.getLastActivityTs();
+    }
+    
     /**
      * Prepares the associated <tt>ModbusTransport</tt> of this
      * <tt>TCPMasterConnection</tt> for use.
