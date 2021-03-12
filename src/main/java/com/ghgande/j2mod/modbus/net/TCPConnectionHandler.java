@@ -20,8 +20,9 @@ import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class implementing a handler for incoming Modbus/TCP requests.
@@ -40,7 +41,7 @@ public class TCPConnectionHandler implements Runnable {
     private final AbstractModbusTransport transport;
     private final AbstractModbusListener listener;
 
-    private final Timer watchDog;
+    private final ScheduledExecutorService watchDog;
 
     /**
      * Constructs a new <tt>TCPConnectionHandler</tt> instance.
@@ -60,9 +61,9 @@ public class TCPConnectionHandler implements Runnable {
         transport = this.connection.getModbusTransport();
 
         if (maxIdleSeconds > 0) {
-            watchDog = new Timer();
+            watchDog = Executors.newSingleThreadScheduledExecutor();
             long checkRate = Math.min(maxIdleSeconds * 1000L, watchDogResolution);
-            watchDog.schedule(new TimerTask() {
+            watchDog.scheduleWithFixedDelay(new Runnable() {
                 @Override
                 public void run() {
                     long nanosIdle = System.nanoTime() - TCPConnectionHandler.this.connection.getLastActivityTimestamp();
@@ -74,10 +75,10 @@ public class TCPConnectionHandler implements Runnable {
                         TCPConnectionHandler.this.connection.close();
 
                         // Stop the watchdog, it is not needed anymore
-                        watchDog.cancel();
+                        watchDog.shutdown();
                     }
                 }
-            }, checkRate, checkRate);
+            }, checkRate, checkRate, TimeUnit.MILLISECONDS);
         }
         else {
             watchDog = null;
