@@ -148,6 +148,7 @@ public class SerialConnection extends AbstractSerialConnection {
         if (serialPort != null) {
             serialPort.setComPortParameters(parameters.getBaudRate(), parameters.getDatabits(), parameters.getStopbits(), parameters.getParity());
             serialPort.setFlowControl(parameters.getFlowControlIn() | parameters.getFlowControlOut());
+            serialPort.setRs485ModeParameters(parameters.getRs485Mode(), parameters.getRs485TxEnableActiveHigh(), parameters.getRs485DelayBeforeTxMicroseconds(), parameters.getRs485DelayAfterTxMicroseconds());
         }
     }
 
