@@ -30,6 +30,13 @@ import java.util.Properties;
  */
 public class SerialParameters {
 
+    private static final boolean DEFAULT_RS485_MODE = false;
+    private static final boolean DEFAULT_RS485_TX_ENABLE_ACTIVE_HIGH = true;
+    private static final boolean DEFAULT_RS485_ENABLE_TERMINATION = false;
+    private static final boolean DEFAULT_RS485_TX_DURING_RX = false;
+    private static final int DEFAULT_RS485_DELAY_BEFORE_TX_MICROSECONDS = 1000;
+    private static final int DEFAULT_RS485_DELAY_AFTER_TX_MICROSECONDS = 1000;
+
     //instance attributes
     private String portName;
     private int baudRate;
@@ -41,6 +48,12 @@ public class SerialParameters {
     private String encoding;
     private boolean echo;
     private int openDelay;
+    private boolean rs485Mode;
+    private boolean rs485TxEnableActiveHigh;
+    private boolean rs485EnableTermination;
+    private boolean rs485RxDuringTx;
+    private int rs485DelayBeforeTxMicroseconds;
+    private int rs485DelayAfterTxMicroseconds;;
 
     /**
      * Constructs a new <tt>SerialParameters</tt> instance with
@@ -54,14 +67,21 @@ public class SerialParameters {
         databits = 8;
         stopbits = AbstractSerialConnection.ONE_STOP_BIT;
         parity = AbstractSerialConnection.NO_PARITY;
-        encoding = Modbus.DEFAULT_SERIAL_ENCODING;
+        // Historically, the encoding has been null which got converted to RTU
+        // by SerialConnection.open(). Let's make it more explicit which serial
+        // protocol will be used by default.
+        encoding = Modbus.SERIAL_ENCODING_RTU;
         echo = false;
         openDelay = AbstractSerialConnection.OPEN_DELAY;
+        rs485Mode = DEFAULT_RS485_MODE;
+        rs485TxEnableActiveHigh = DEFAULT_RS485_TX_ENABLE_ACTIVE_HIGH;
+        rs485DelayBeforeTxMicroseconds = DEFAULT_RS485_DELAY_BEFORE_TX_MICROSECONDS;
+        rs485DelayAfterTxMicroseconds = DEFAULT_RS485_DELAY_AFTER_TX_MICROSECONDS;
     }
 
     /**
      * Constructs a new <tt>SerialParameters</tt> instance with
-     * given parameters.
+     * given parameters for a regular serial interface.
      *
      * @param portName       The name of the port.
      * @param baudRate       The baud rate.
@@ -79,6 +99,9 @@ public class SerialParameters {
                             int stopbits,
                             int parity,
                             boolean echo) {
+        // Perform default initialization and update fields of interest
+        // afterwards.
+        this();
         this.portName = portName;
         this.baudRate = baudRate;
         this.flowControlIn = flowControlIn;
@@ -87,6 +110,58 @@ public class SerialParameters {
         this.stopbits = stopbits;
         this.parity = parity;
         this.echo = echo;
+    }
+
+    /**
+     * Constructs a new <tt>SerialParameters</tt> instance with given
+     * parameters for a serial interface in RS-485 mode on Linux.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     * <p>
+     * There are interfaces operating in RS-485 mode by default and don't
+     * require explicitly configuring this mode.
+     *
+     *
+     * @param portName                       The name of the port.
+     * @param baudRate                       The baud rate.
+     * @param flowControlIn                  Type of flow control for receiving.
+     * @param flowControlOut                 Type of flow control for sending.
+     * @param databits                       The number of data bits.
+     * @param stopbits                       The number of stop bits.
+     * @param parity                         The type of parity.
+     * @param echo                           Flag for setting the RS485 echo mode.
+     * @param rs485Mode                      Whether to enable RS-485 mode
+     *                                       (transmitter control)
+     * @param rs485TxEnableActiveHigh        Whether the RS-485 transmitter is
+     *                                       enabled when the by a high or low logic level
+     * @param rs485DelayBeforeTxMicroseconds The length of the delay between
+     *                                       enabling the transmitter and the
+     *                                       actual start of sending data
+     * @param rs485DelayAfterTxMicroseconds  The length of the delay between
+     *                                       the end of a data transmission and
+     *                                       disabling the transmitter again
+     */
+    public SerialParameters(String portName, int baudRate,
+                            int flowControlIn,
+                            int flowControlOut,
+                            int databits,
+                            int stopbits,
+                            int parity,
+                            boolean echo,
+                            boolean rs485Mode,
+                            boolean rs485TxEnableActiveHigh,
+                            int rs485DelayBeforeTxMicroseconds,
+                            int rs485DelayAfterTxMicroseconds
+                            ) {
+        // Perform default non-RS-485 initialization and update fields of
+        // interest afterwards.
+        this(portName, baudRate, flowControlIn, flowControlOut, databits, stopbits, parity, echo);
+        this.rs485Mode = rs485Mode;
+        this.rs485TxEnableActiveHigh = rs485TxEnableActiveHigh;
+        this.rs485DelayBeforeTxMicroseconds = rs485DelayBeforeTxMicroseconds;
+        this.rs485DelayAfterTxMicroseconds = rs485DelayAfterTxMicroseconds;
     }
 
     /**
@@ -111,6 +186,11 @@ public class SerialParameters {
         setEncoding(props.getProperty(prefix + "encoding", Modbus.DEFAULT_SERIAL_ENCODING));
         setEcho("true".equals(props.getProperty(prefix + "echo")));
         setOpenDelay(props.getProperty(prefix + "openDelay", "" + AbstractSerialConnection.OPEN_DELAY));
+
+        setRs485Mode("true".equals(props.getProperty(prefix + "rs485Mode", Boolean.toString(DEFAULT_RS485_MODE))));
+        setRs485TxEnableActiveHigh("true".equals(props.getProperty(prefix + "rs485TxEnableActiveHigh", Boolean.toString(DEFAULT_RS485_TX_ENABLE_ACTIVE_HIGH))));
+        setRs485DelayBeforeTxMicroseconds(props.getProperty(prefix + "rs485DelayBeforeTxMicroseconds", Integer.toString(DEFAULT_RS485_DELAY_BEFORE_TX_MICROSECONDS)));
+        setRs485DelayAfterTxMicroseconds(props.getProperty(prefix + "rs485DelayAfterTxMicroseconds", Integer.toString(DEFAULT_RS485_DELAY_AFTER_TX_MICROSECONDS)));
     }
 
     /**
@@ -535,6 +615,237 @@ public class SerialParameters {
         this.openDelay = Integer.parseInt(openDelay);
     }
 
+    /**
+     * Returns whether RS-485 half-duplex mode is enabled.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     *
+     * @return Whether RS-485 mode is enabled
+     */
+    public boolean getRs485Mode() {
+        return rs485Mode;
+    }
+
+    /**
+     * Sets whether to configure the serial interface into RS-485 half-duplex
+     * mode.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     *
+     * @param enable Whether to enable RS-485 half-duplex mode
+     */
+    public void setRs485Mode(boolean enable) {
+        rs485Mode = enable;
+    }
+
+    /**
+     * Returns whether the RS-485 transmitter is enabled by a high or low
+     * control signal.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     *
+     * @return Wether the RS-485 transmitter is enabled by a high control
+     *         signal level. Otherwise it returns <tt>false</tt>.
+     */
+    public boolean getRs485TxEnableActiveHigh() {
+        return rs485TxEnableActiveHigh;
+    }
+
+    /**
+     * Sets whether the RS-485 transmitter is enabled by a high or low control
+     * signal.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     *
+     * @param activeHigh If <tt>true</tt>, the transmitter is activated by a
+     *                   high control signal level. Otherwise, it is activated
+     *                   by a low level.
+     */
+    public void setRs485TxEnableActiveHigh(boolean activeHigh) {
+        rs485TxEnableActiveHigh = activeHigh;
+    }
+
+    /**
+     * Returns whether the RS-485 interface shall enable internal bus
+     * termination.
+     * <p>
+     * This configuration option is only available under Linux and only if
+     * device driver and hardware support it.
+     *
+     * @return Whether the serial interface shall enable internal bus
+     *         termination.
+     */
+    public boolean getRs485EnableTermination() {
+        return rs485EnableTermination;
+    }
+
+    /**
+     * Sets whether the RS-485 interface shall enable internal bus termination.
+     * <p>
+     * This configuration option is only available under Linux and only if
+     * device driver and hardware support it.
+     *
+     * @param enable If <tt>true</tt>, the serial interface shall enable its
+     *               internal bus termination.
+     */
+    public void setRs485EnableTermination(boolean enable) {
+        rs485EnableTermination = enable;
+    }
+
+    /**
+     * Returns whether the RS-485 interface receives data it sends.
+     * <p>
+     * This configuration option is only available under Linux and only if
+     * device driver and hardware support it.
+     * <p>
+     * See {@link #setRs485RxDuringTx} for more details.
+     *
+     * @return Whether the serial interface shall receive the data it transmits
+     *         too.
+     */
+    public boolean getRs485RxDuringTx() {
+        return rs485RxDuringTx;
+    }
+
+    /**
+     * Sets whether the RS-485 interface receives the data its sends.
+     * <p>
+     * This configuration option is only available under Linux and only if
+     * device driver and hardware support it.
+     * <p>
+     * <b>BEWARE: For normal operation, j2mod expects this feature do be
+     * disable. This method is provided only for fixing the behaviour with
+     * certain device drivers which require this feature to be enabled for
+     * normal operation.</b>
+     *
+     * @param enable If <tt>true</tt>, the serial interface is expected to
+     *               receive the data it transmits itself too.
+     */
+    public void setRs485RxDuringTx(boolean enable) {
+        rs485RxDuringTx = enable;
+    }
+
+    /**
+     * Returns the delay between activating the RS-485 transmitter and actually
+     * sending data. There are devices in the field requiring such a delay for
+     * start bit detection.
+     * <p>
+     * Please note that the actual interface might not support a resolution
+     * down to microseconds and might require appropriately large values for
+     * actually generating a delay.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     *
+     * @return The configured delay in microseconds
+     */
+    public int getRs485DelayBeforeTxMicroseconds() {
+        return rs485DelayBeforeTxMicroseconds;
+    }
+
+    /**
+     * Sets the delay between activating the RS-485 transmitter and actually
+     * sending data. There are devices in the field requiring such a delay for
+     * start bit detection.
+     * <p>
+     * Please note that the actual interface might not support a resolution
+     * down to microseconds and might require appropriately large values for
+     * actually generating a delay.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     *
+     * @param microseconds The delay in microseconds
+     */
+    public void setRs485DelayBeforeTxMicroseconds(int microseconds) {
+        if (microseconds < 0) {
+            throw new IllegalArgumentException("Expecting non-negative delay.");
+        }
+
+        rs485DelayBeforeTxMicroseconds = microseconds;
+    }
+
+    /**
+     * Sets the delay between activating the RS-485 transmitter and actually
+     * sending data. There are devices in the field requiring such a delay for
+     * start bit detection.
+     * <p>
+     * This is a convenience wrapper around
+     * {@link #setRs485DelayBeforeTxMicroseconds(int)} which parses the delay
+     * from the supplied string. See the documentation of this method for more
+     * details.
+     *
+     * @param microseconds The string to parse the delay value from
+     */
+    public void setRs485DelayBeforeTxMicroseconds(String microseconds) {
+        setRs485DelayBeforeTxMicroseconds(Integer.parseInt(microseconds));
+    }
+
+    /**
+     * Returns the delay between the end of transmitting data and deactivating
+     * the RS-485 transmitter.
+     * <p>
+     * Please note that the actual interface might not support a resolution
+     * down to microseconds and might require appropriately large values for
+     * actually generating a delay.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     *
+     * @return The configured delay in microseconds
+     */
+    public int getRs485DelayAfterTxMicroseconds() {
+        return rs485DelayAfterTxMicroseconds;
+    }
+
+    /**
+     * Sets the delay between the end of transmitting data and deactivating the
+     * RS-485 transmitter.
+     * <p>
+     * Please note that the actual interface might not support a resolution
+     * down to microseconds and might require appropriately large values for
+     * actually generating a delay.
+     * <p>
+     * RS-485 half-duplex mode is only available on Linux and only if the
+     * device driver supports it. Its configuration parameters have no effect
+     * on other platforms.
+     *
+     * @param microseconds The delay in microseconds
+     */
+    public void setRs485DelayAfterTxMicroseconds(int microseconds) {
+        if (microseconds < 0) {
+            throw new IllegalArgumentException("Expecting non-negative delay.");
+        }
+
+        rs485DelayAfterTxMicroseconds = microseconds;
+    }
+
+    /**
+     * Sets the delay between end of transmitting data and deactivating the
+     * RS-458 transmitter.
+     * <p>
+     * This is a convenience wrapper around
+     * {@link #setRs485DelayAfterTxMicroseconds(int)} which parses the delay
+     * from the supplied string. See the documentation of this method for more
+     * details.
+     *
+     * @param microseconds The string to parse the delay value from
+     */
+    public void setRs485DelayAfterTxMicroseconds(String microseconds) {
+        setRs485DelayAfterTxMicroseconds(Integer.parseInt(microseconds));
+    }
+
     @Override
     public String toString() {
         return "SerialParameters{" +
@@ -548,6 +859,12 @@ public class SerialParameters {
                 ", encoding='" + encoding + '\'' +
                 ", echo=" + echo +
                 ", openDelay=" + openDelay +
+                ", rs485Mode=" + rs485Mode +
+                ", rs485TxEnableActiveHight=" + rs485TxEnableActiveHigh +
+                ", rs485EnableTermination=" + rs485EnableTermination +
+                ", rs485RxDuringTx" + rs485RxDuringTx +
+                ", rs485DelayBeforeTxMicroseconds=" + rs485DelayBeforeTxMicroseconds +
+                ", rs485DelayAfterTxMicroseconds=" + rs485DelayAfterTxMicroseconds +
                 '}';
     }
 }
