@@ -32,6 +32,8 @@ public class SerialParameters {
 
     private static final boolean DEFAULT_RS485_MODE = false;
     private static final boolean DEFAULT_RS485_TX_ENABLE_ACTIVE_HIGH = true;
+    private static final boolean DEFAULT_RS485_ENABLE_TERMINATION = false;
+    private static final boolean DEFAULT_RS485_TX_DURING_RX = false;
     private static final int DEFAULT_RS485_DELAY_BEFORE_TX_MICROSECONDS = 1000;
     private static final int DEFAULT_RS485_DELAY_AFTER_TX_MICROSECONDS = 1000;
 
@@ -48,6 +50,8 @@ public class SerialParameters {
     private int openDelay;
     private boolean rs485Mode;
     private boolean rs485TxEnableActiveHigh;
+    private boolean rs485EnableTermination;
+    private boolean rs485RxDuringTx;
     private int rs485DelayBeforeTxMicroseconds;
     private int rs485DelayAfterTxMicroseconds;;
 
@@ -670,6 +674,66 @@ public class SerialParameters {
     }
 
     /**
+     * Returns whether the RS-485 interface shall enable internal bus
+     * termination.
+     * <p>
+     * This configuration option is only available under Linux and only if
+     * device driver and hardware support it.
+     *
+     * @return Whether the serial interface shall enable internal bus
+     *         termination.
+     */
+    public boolean getRs485EnableTermination() {
+        return rs485EnableTermination;
+    }
+
+    /**
+     * Sets whether the RS-485 interface shall enable internal bus termination.
+     * <p>
+     * This configuration option is only available under Linux and only if
+     * device driver and hardware support it.
+     *
+     * @param enable If <tt>true</tt>, the serial interface shall enable its
+     *               internal bus termination.
+     */
+    public void setRs485EnableTermination(boolean enable) {
+        rs485EnableTermination = enable;
+    }
+
+    /**
+     * Returns whether the RS-485 interface receives data it sends.
+     * <p>
+     * This configuration option is only available under Linux and only if
+     * device driver and hardware support it.
+     * <p>
+     * See {@link #setRs485RxDuringTx} for more details.
+     *
+     * @return Whether the serial interface shall receive the data it transmits
+     *         too.
+     */
+    public boolean getRs485RxDuringTx() {
+        return rs485RxDuringTx;
+    }
+
+    /**
+     * Sets whether the RS-485 interface receives the data its sends.
+     * <p>
+     * This configuration option is only available under Linux and only if
+     * device driver and hardware support it.
+     * <p>
+     * <b>BEWARE: For normal operation, j2mod expects this feature do be
+     * disable. This method is provided only for fixing the behaviour with
+     * certain device drivers which require this feature to be enabled for
+     * normal operation.</b>
+     *
+     * @param enable If <tt>true</tt>, the serial interface is expected to
+     *               receive the data it transmits itself too.
+     */
+    public void setRs485RxDuringTx(boolean enable) {
+        rs485RxDuringTx = enable;
+    }
+
+    /**
      * Returns the delay between activating the RS-485 transmitter and actually
      * sending data. There are devices in the field requiring such a delay for
      * start bit detection.
@@ -797,6 +861,8 @@ public class SerialParameters {
                 ", openDelay=" + openDelay +
                 ", rs485Mode=" + rs485Mode +
                 ", rs485TxEnableActiveHight=" + rs485TxEnableActiveHigh +
+                ", rs485EnableTermination=" + rs485EnableTermination +
+                ", rs485RxDuringTx" + rs485RxDuringTx +
                 ", rs485DelayBeforeTxMicroseconds=" + rs485DelayBeforeTxMicroseconds +
                 ", rs485DelayAfterTxMicroseconds=" + rs485DelayAfterTxMicroseconds +
                 '}';

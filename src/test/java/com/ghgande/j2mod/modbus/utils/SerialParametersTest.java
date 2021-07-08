@@ -18,9 +18,13 @@ public class SerialParametersTest {
     }
 
     @Test
-    public void testConstructorsRs485Mode() {
+    public void testConstructorsRs485ModeAndParameters() {
         parameters = new SerialParameters();
+        // Check default values for parameter not passed through this
+        // constructor.
         assertEquals(false, parameters.getRs485Mode());
+        assertEquals(false, parameters.getRs485EnableTermination());
+        assertEquals(false, parameters.getRs485RxDuringTx());
 
         parameters = new SerialParameters(
             "foo",
@@ -32,6 +36,10 @@ public class SerialParametersTest {
             AbstractSerialConnection.EVEN_PARITY,
             false);
         assertEquals(false, parameters.getRs485Mode());
+        // Check default values for parameter not passed through this
+        // constructor.
+        assertEquals(false, parameters.getRs485EnableTermination());
+        assertEquals(false, parameters.getRs485RxDuringTx());
 
         parameters = new SerialParameters(
             "foo",
@@ -51,6 +59,10 @@ public class SerialParametersTest {
         assertEquals(false, parameters.getRs485TxEnableActiveHigh());
         assertEquals(1234, parameters.getRs485DelayBeforeTxMicroseconds());
         assertEquals(5678, parameters.getRs485DelayAfterTxMicroseconds());
+        // Check default values for parameter not passed through this
+        // constructor.
+        assertEquals(false, parameters.getRs485EnableTermination());
+        assertEquals(false, parameters.getRs485RxDuringTx());
     }
 
     @Test
@@ -69,6 +81,24 @@ public class SerialParametersTest {
 
         parameters.setRs485TxEnableActiveHigh(false);
         assertEquals(false, parameters.getRs485TxEnableActiveHigh());
+    }
+
+    @Test
+    public void testSetAndGetRs485EnableTermination() {
+        parameters.setRs485EnableTermination(true);
+        assertEquals(true, parameters.getRs485EnableTermination());
+
+        parameters.setRs485EnableTermination(false);
+        assertEquals(false, parameters.getRs485EnableTermination());
+    }
+
+    @Test
+    public void testSetAndGetRs485RxDuringTx() {
+        parameters.setRs485RxDuringTx(true);
+        assertEquals(true, parameters.getRs485RxDuringTx());
+
+        parameters.setRs485RxDuringTx(false);
+        assertEquals(false, parameters.getRs485RxDuringTx());
     }
 
     @Test
