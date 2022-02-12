@@ -21,6 +21,7 @@ import com.ghgande.j2mod.modbus.io.ModbusTCPTransaction;
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection;
 
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 /**
@@ -193,5 +194,33 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
     @Override
     public boolean isConnected() {
         return connection != null && connection.isConnected();
+    }
+
+    /**
+     * A {@link ModbusTCPMaster} is equal if the underlying {@link TCPMasterConnection} is equal. There can't be 2
+     * un-identical {@link ModbusTCPMaster}s with the same connection at the same time. One of the two, will raise a
+     * {@link SocketException} if you start both at the same time, since the socket is only usable by exactly on entity
+     *
+     * @param obj Entity to be checked for equality
+     * @return <code>true</code> if object is equal, <code>false</code> otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || ModbusTCPMaster.class != obj.getClass()) {
+            return false;
+        } else {
+            ModbusTCPMaster other = (ModbusTCPMaster) obj;
+            return this == obj || this.connection.equals(other.connection);
+        }
+    }
+
+    /**
+     * The unique value of the {@link ModbusTCPMaster} is calculated from the unique value of the {@link TCPMasterConnection}
+     *
+     * @return Unique integer hash code
+     */
+    @Override
+    public int hashCode() {
+        return connection.hashCode();
     }
 }

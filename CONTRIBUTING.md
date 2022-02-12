@@ -21,5 +21,5 @@ For the best chance of getting your changes incorporated into the code base, ple
 
 * Follow the coding style already established - same indentation, line spacing, naming convention etc.
 * ALWAYS provide JUnit tests for your changes - copy existing ones, modify the current versions but there must be supporting unit tests
-* Thorougly comment your code and provide proper JavaDoc headers, even for private methods
+* Thoroughly comment your code and provide proper JavaDoc headers, even for private methods
 

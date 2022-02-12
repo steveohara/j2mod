@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Objects;
 
 /**
  * Class that implements a TCPMasterConnection.
@@ -334,5 +335,34 @@ public class TCPMasterConnection {
         if (isConnected()) {
             prepareTransport(useRtuOverTcp);
         }
+    }
+
+    /**
+     * A {@link TCPMasterConnection} is equal if {@link InetAddress} &amp; port are equal. There is no way how two
+     * different {@link TCPMasterConnection}s can use the same {@link Socket} at the same time, therefore this is good
+     * enough for an equality test
+     *
+     * @param obj Entity to be checked for equality
+     * @return <code>true</code> if object is equal, <code>false</code> otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || TCPMasterConnection.class != obj.getClass()) {
+            return false;
+        } else {
+            TCPMasterConnection other = (TCPMasterConnection) obj;
+            return this == obj || this.address.equals(other.address) && this.port == other.port;
+        }
+    }
+
+    /**
+     * The unique value of the {@link TCPMasterConnection} is calculated from the unique values of the
+     * {@link InetAddress} &amp; port
+     *
+     * @return Unique integer hash code
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(address, port);
     }
 }
