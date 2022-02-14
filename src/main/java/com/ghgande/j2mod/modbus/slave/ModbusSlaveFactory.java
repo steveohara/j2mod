@@ -35,7 +35,7 @@ import java.util.Map;
  */
 public class ModbusSlaveFactory {
 
-    private static final Map<String, ModbusSlave> slaves = new HashMap<String, ModbusSlave>();
+    private static final Map<String, ModbusSlave> slaves = new HashMap<>();
 
     /**
      * Prevent instantiation
@@ -143,7 +143,7 @@ public class ModbusSlaveFactory {
      * @throws ModbusException If a problem occurs e.g. port already in use
      */
     public static synchronized ModbusSlave createSerialSlave(SerialParameters serialParams) throws ModbusException {
-        ModbusSlave slave = null;
+        ModbusSlave slave;
         if (serialParams == null) {
             throw new ModbusException("Serial parameters are null");
         }
@@ -152,9 +152,8 @@ public class ModbusSlaveFactory {
         }
 
         // If we have a slave already assigned to this port
-        if (slaves.containsKey(serialParams.getPortName())) {
-            slave = slaves.get(serialParams.getPortName());
-
+        slave = getSlave(ModbusSlaveType.SERIAL, serialParams.getPortName());
+        if (slave != null) {
             // Check if any of the parameters have changed
             if (!serialParams.toString().equals(slave.getSerialParams().toString())) {
                 close(slave);
@@ -165,8 +164,7 @@ public class ModbusSlaveFactory {
         // If we don;t have a slave, create one
         if (slave == null) {
             slave = new ModbusSlave(serialParams);
-            slaves.put(serialParams.getPortName(), slave);
-            return slave;
+            slaves.put(ModbusSlaveType.SERIAL.getKey(serialParams.getPortName()), slave);
         }
         return slave;
     }
@@ -176,40 +174,44 @@ public class ModbusSlaveFactory {
      *
      * @param slave Slave to remove
      */
-    public static void close(ModbusSlave slave) {
+    public static synchronized void close(ModbusSlave slave) {
         if (slave != null) {
             slave.closeListener();
-            slaves.remove(slave.getType().getKey(slave.getPort()));
+            if (slave.getType().is(ModbusSlaveType.SERIAL)) {
+                slaves.remove(slave.getType().getKey(slave.getSerialParams().getPortName()));
+            } else {
+                slaves.remove(slave.getType().getKey(slave.getPort()));
+            }
         }
     }
 
     /**
      * Closes all slaves and removes them from the running list
      */
-    public static void close() {
-        for (ModbusSlave slave : new ArrayList<ModbusSlave>(slaves.values())) {
+    public static synchronized void close() {
+        for (ModbusSlave slave : new ArrayList<>(slaves.values())) {
             slave.close();
         }
     }
 
     /**
-     * Returns the running slave listening on the given IP port
+     * Returns the running slave listening on the given port
      *
      * @param port Port to check for running slave
      * @return Null or ModbusSlave
      */
-    public static ModbusSlave getSlave(int port) {
-        return slaves.get(port + "");
+    public static synchronized ModbusSlave getSlave(ModbusSlaveType type, int port) {
+        return type == null ? null : slaves.get(type.getKey(port));
     }
 
     /**
-     * Returns the running slave listening on the given serial port
+     * Returns the running slave listening on the given port
      *
      * @param port Port to check for running slave
      * @return Null or ModbusSlave
      */
-    public static ModbusSlave getSlave(String port) {
-        return ModbusUtil.isBlank(port) ? null : slaves.get(port);
+    public static synchronized ModbusSlave getSlave(ModbusSlaveType type, String port) {
+        return type == null || ModbusUtil.isBlank(port) ? null : slaves.get(type.getKey(port));
     }
 
     /**
@@ -226,5 +228,4 @@ public class ModbusSlaveFactory {
         }
         return null;
     }
-
 }
