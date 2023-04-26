@@ -92,7 +92,8 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      *                  specifying the slave to communicate with.
      * @param port      the port the slave is listening to.
      * @param timeout   Socket timeout in milliseconds
-     * @param reconnect True if the socket should reconnect if it detects a connection failure
+     * @param reconnect true if a new connection should be established for each
+     *                  transaction, false otherwise.
      */
     public ModbusTCPMaster(String addr, int port, int timeout, boolean reconnect) {
         this(addr, port, timeout, reconnect, false);
@@ -106,7 +107,8 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      *                  specifying the slave to communicate with.
      * @param port      the port the slave is listening to.
      * @param timeout   Socket timeout in milliseconds
-     * @param reconnect True if the socket should reconnect if it detcts a connection failure
+     * @param reconnect true if a new connection should be established for each
+     *                  transaction, false otherwise.
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
     public ModbusTCPMaster(String addr, int port, int timeout, boolean reconnect, boolean useRtuOverTcp) {
