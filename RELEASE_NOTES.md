@@ -237,3 +237,11 @@ _(**NOT BACKWARDS COMPATIBLE**)_
 
 ## Version 3.1.1
 * Add remaining RS-485 configuration parameters for Linux #118
+
+## Version 3.2.0
+* Move parts of DEBUG logging to TRACE #126
+* Bump jSerialComm for fixed POSIX signal handling (#138)
+* ModbusTCPMaster: Fix incorrect reconnect parameter documentation (#137)
+* Added equals & hashcode method to ModbusTCPMaster & TCPMasterConnection (#127)
+* modbus slave factory getSlave fix
+* Bumped the version

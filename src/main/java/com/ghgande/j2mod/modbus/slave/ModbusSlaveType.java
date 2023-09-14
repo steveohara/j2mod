@@ -49,4 +49,17 @@ public enum ModbusSlaveType {
     public String getKey(int port) {
         return toString() + port;
     }
+
+    /**
+     * Returns a unique key for this port and type
+     *
+     * @param port Port number
+     * @return Unique key
+     */
+    public String getKey(String port) {
+        if (ModbusUtil.isBlank(port)) {
+            throw new IllegalArgumentException("Port must not be null or empty");
+        }
+        return this + port;
+    }
 }

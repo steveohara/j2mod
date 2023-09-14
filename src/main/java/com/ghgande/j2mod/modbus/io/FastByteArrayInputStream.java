@@ -69,20 +69,20 @@ public class FastByteArrayInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        logger.debug("read()");
-        logger.debug("count={} pos={}", count, pos);
+        logger.trace("read()");
+        logger.trace("count={} pos={}", count, pos);
         return (pos < count) ? (buf[pos++] & 0xff) : (-1);
     }
 
     @Override
     public int read(byte[] toBuf) throws IOException {
-        logger.debug("read(byte[])");
+        logger.trace("read(byte[])");
         return read(toBuf, 0, toBuf.length);
     }
 
     @Override
     public int read(byte[] toBuf, int offset, int length) throws IOException {
-        logger.debug("read(byte[],int,int)");
+        logger.trace("read(byte[],int,int)");
         int avail = count - pos;
         if (avail <= 0) {
             return -1;
@@ -117,16 +117,16 @@ public class FastByteArrayInputStream extends InputStream {
 
     @Override
     public synchronized void mark(int readlimit) {
-        logger.debug("mark()");
+        logger.trace("mark()");
         mark = pos;
-        logger.debug("mark={} pos={}", mark, pos);
+        logger.trace("mark={} pos={}", mark, pos);
     }
 
     @Override
     public synchronized void reset() {
-        logger.debug("reset()");
+        logger.trace("reset()");
         pos = mark;
-        logger.debug("mark={} pos={}", mark, pos);
+        logger.trace("mark={} pos={}", mark, pos);
     }
 
     @Override
