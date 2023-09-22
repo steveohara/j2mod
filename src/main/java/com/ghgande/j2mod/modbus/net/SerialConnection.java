@@ -190,12 +190,12 @@ public class SerialConnection extends AbstractSerialConnection {
     }
 
     @Override
-    public int readBytes(byte[] buffer, long bytesToRead) {
+    public int readBytes(byte[] buffer, int bytesToRead) {
         return serialPort == null ? 0 : serialPort.readBytes(buffer, bytesToRead);
     }
 
     @Override
-    public int writeBytes(byte[] buffer, long bytesToWrite) {
+    public int writeBytes(byte[] buffer, int bytesToWrite) {
         return serialPort == null ? 0 : serialPort.writeBytes(buffer, bytesToWrite);
     }
 

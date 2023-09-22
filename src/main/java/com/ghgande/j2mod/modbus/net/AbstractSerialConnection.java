@@ -77,7 +77,7 @@ public abstract class AbstractSerialConnection {
      * @param bytesToRead Number of bytes to read
      * @return number of currently bytes read
      */
-    public abstract int readBytes(byte[] buffer, long bytesToRead);
+    public abstract int readBytes(byte[] buffer, int bytesToRead);
 
     /**
      * Write a specified number of bytes to the serial port
@@ -86,7 +86,7 @@ public abstract class AbstractSerialConnection {
      * @param bytesToWrite How many bytes to send
      * @return number of currently bytes written
      */
-    public abstract int writeBytes(byte[] buffer, long bytesToWrite);
+    public abstract int writeBytes(byte[] buffer, int bytesToWrite);
 
     /**
      * Bytes available to read

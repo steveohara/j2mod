@@ -411,7 +411,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * @param bytesToRead Number of bytes to read
      * @throws IOException If the port is invalid or if the number of bytes returned is not equal to that asked for
      */
-    void readBytes(byte[] buffer, long bytesToRead) throws IOException {
+    void readBytes(byte[] buffer, int bytesToRead) throws IOException {
         if (commPort != null && commPort.isOpen()) {
             int cnt = commPort.readBytes(buffer, bytesToRead);
             if (cnt != bytesToRead) {
@@ -432,7 +432,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @throws java.io.IOException if writing to invalid port
      */
-    final int writeBytes(byte[] buffer, long bytesToWrite) throws IOException {
+    final int writeBytes(byte[] buffer, int bytesToWrite) throws IOException {
         if (commPort != null && commPort.isOpen()) {
             return commPort.writeBytes(buffer, bytesToWrite);
         }
