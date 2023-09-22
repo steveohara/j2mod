@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 package com.ghgande.j2mod.modbus.util;
+
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -53,7 +56,7 @@ public class SerialParameters {
     private boolean rs485EnableTermination;
     private boolean rs485RxDuringTx;
     private int rs485DelayBeforeTxMicroseconds;
-    private int rs485DelayAfterTxMicroseconds;;
+    private int rs485DelayAfterTxMicroseconds;
 
     /**
      * Constructs a new <tt>SerialParameters</tt> instance with
@@ -122,7 +125,6 @@ public class SerialParameters {
      * <p>
      * There are interfaces operating in RS-485 mode by default and don't
      * require explicitly configuring this mode.
-     *
      *
      * @param portName                       The name of the port.
      * @param baudRate                       The baud rate.
@@ -251,10 +253,15 @@ public class SerialParameters {
      * Sets the type of flow control for the input
      * as given by the passed in <tt>int</tt>.
      *
-     * @param flowcontrol the new flow control type.
+     * @param flowControl the new flow control type.
+     * @throws IllegalArgumentException on invalid flowControl
      */
-    public void setFlowControlIn(int flowcontrol) {
-        flowControlIn = flowcontrol;
+    public void setFlowControlIn(int flowControl) {
+        if (!this.isValidFlowControlInt(flowControl)) {
+            throw new IllegalArgumentException("Invalid flowControl passed in setFlowControlIn: " + flowControl +
+                    ". Valid values are: " + this.validFlowControls());
+        }
+        flowControlIn = flowControl;
     }
 
     /**
@@ -270,10 +277,11 @@ public class SerialParameters {
      * Sets the type of flow control for the input
      * as given by the passed in <tt>String</tt>.
      *
-     * @param flowcontrol the flow control for reading type.
+     * @param flowControl the flow control for reading type.
+     * @throws IllegalArgumentException on invalid flowControl
      */
-    public void setFlowControlIn(String flowcontrol) {
-        flowControlIn = stringToFlow(flowcontrol);
+    public void setFlowControlIn(String flowControl) {
+        flowControlIn = stringToFlow(flowControl);
     }
 
     /**
@@ -292,7 +300,36 @@ public class SerialParameters {
      * @param flowControlOut new output flow control type as <tt>int</tt>.
      */
     public void setFlowControlOut(int flowControlOut) {
+        if (!this.isValidFlowControlInt(flowControlOut)) {
+            throw new IllegalArgumentException("Invalid flowControl passed in setFlowControlOut: " + flowControlOut +
+                    ". Valid values are: " + this.validFlowControls());
+        }
         this.flowControlOut = flowControlOut;
+    }
+
+    /**
+     * Returns the list of valid flow controls IN or OUT
+     *
+     * @return List<Integer>
+     */
+    private List<Integer> validFlowControls() {
+        return Arrays.asList(AbstractSerialConnection.FLOW_CONTROL_DISABLED,
+                AbstractSerialConnection.FLOW_CONTROL_XONXOFF_OUT_ENABLED,
+                AbstractSerialConnection.FLOW_CONTROL_XONXOFF_IN_ENABLED,
+                AbstractSerialConnection.FLOW_CONTROL_CTS_ENABLED | AbstractSerialConnection.FLOW_CONTROL_RTS_ENABLED,
+                AbstractSerialConnection.FLOW_CONTROL_DSR_ENABLED | AbstractSerialConnection.FLOW_CONTROL_DTR_ENABLED);
+    }
+
+
+    /**
+     * +
+     * Returns whether an int is a valid flow control
+     *
+     * @param control the int to test
+     * @return control validity
+     */
+    private boolean isValidFlowControlInt(int control) {
+        return this.validFlowControls().contains(control);
     }
 
     /**
@@ -370,6 +407,9 @@ public class SerialParameters {
      * @param stopbits the new number of stop bits setting.
      */
     public void setStopbits(int stopbits) {
+        if (stopbits <0 || stopbits > 3) {
+            throw new IllegalArgumentException("Invalid parameter passed in setStobits. Valid values are: [1, 2, 3].");
+        }
         this.stopbits = stopbits;
     }
 
@@ -388,14 +428,17 @@ public class SerialParameters {
      * @param stopbits the number of stop bits as <tt>String</tt>.
      */
     public void setStopbits(String stopbits) {
-        if (ModbusUtil.isBlank(stopbits) || stopbits.equals("1")) {
+        if ("1".equals(stopbits)) {
             this.stopbits = AbstractSerialConnection.ONE_STOP_BIT;
         }
-        else if (stopbits.equals("1.5")) {
+        else if ("1.5".equals(stopbits)) {
             this.stopbits = AbstractSerialConnection.ONE_POINT_FIVE_STOP_BITS;
         }
-        else if (stopbits.equals("2")) {
+        else if ("2".equals(stopbits)) {
             this.stopbits = AbstractSerialConnection.TWO_STOP_BITS;
+        }
+        else {
+            throw new IllegalArgumentException("Invalid stopBit passed in setStopbits. Valid values are: [1, 1.5, 2]");
         }
     }
 
@@ -440,25 +483,26 @@ public class SerialParameters {
      * <tt>String</tt>.
      *
      * @param parity the new parity schema as <tt>String</tt>.
+     * @throws IllegalArgumentException on invalid parity
      */
     public void setParity(String parity) {
-        if (ModbusUtil.isBlank(parity) || parity.equalsIgnoreCase("none")) {
+        if ("none".equalsIgnoreCase(parity)) {
             this.parity = AbstractSerialConnection.NO_PARITY;
         }
-        else if (parity.equalsIgnoreCase("even")) {
+        else if ("even".equalsIgnoreCase(parity)) {
             this.parity = AbstractSerialConnection.EVEN_PARITY;
         }
-        else if (parity.equalsIgnoreCase("odd")) {
+        else if ("odd".equalsIgnoreCase(parity)) {
             this.parity = AbstractSerialConnection.ODD_PARITY;
         }
-        else if (parity.equalsIgnoreCase("mark")) {
+        else if ("mark".equalsIgnoreCase(parity)) {
             this.parity = AbstractSerialConnection.MARK_PARITY;
         }
-        else if (parity.equalsIgnoreCase("space")) {
+        else if ("space".equalsIgnoreCase(parity)) {
             this.parity = AbstractSerialConnection.SPACE_PARITY;
         }
         else {
-            this.parity = AbstractSerialConnection.NO_PARITY;
+            throw new IllegalArgumentException("Invalid value passed in setParity: " + parity + ". Valid values are [none, even, odd, mark, space]");
         }
     }
 
@@ -500,17 +544,20 @@ public class SerialParameters {
      * Sets the encoding to be used.
      *
      * @param enc the encoding as string.
+     * @throws IllegalArgumentException on invalid parity
      * @see Modbus#SERIAL_ENCODING_ASCII
      * @see Modbus#SERIAL_ENCODING_RTU
      */
     public void setEncoding(String enc) {
-        if (!ModbusUtil.isBlank(enc) &&
-                (enc.equalsIgnoreCase(Modbus.SERIAL_ENCODING_ASCII) || enc.equalsIgnoreCase(Modbus.SERIAL_ENCODING_RTU))) {
-            encoding = enc;
+        if (Modbus.SERIAL_ENCODING_ASCII.equalsIgnoreCase(enc)) {
+            this.encoding = Modbus.SERIAL_ENCODING_ASCII;
+        } else if (Modbus.SERIAL_ENCODING_RTU.equalsIgnoreCase(enc)) {
+            this.encoding = Modbus.SERIAL_ENCODING_RTU;
+        } else {
+            throw new IllegalArgumentException("Invalid value passed in setEncoding: " + enc
+                    + ". Valid values are [" + Modbus.SERIAL_ENCODING_ASCII + ", " + Modbus.SERIAL_ENCODING_RTU + "]");
         }
-        else {
-            encoding = Modbus.DEFAULT_SERIAL_ENCODING;
-        }
+
     }
 
     /**
@@ -535,26 +582,30 @@ public class SerialParameters {
      * Converts a <tt>String</tt> describing a flow control type to the
      * <tt>int</tt> which is defined in SerialPort.
      *
-     * @param flowcontrol the <tt>String</tt> describing the flow control type.
+     * @param flowControl the <tt>String</tt> describing the flow control type.
      * @return the <tt>int</tt> describing the flow control type.
+     * @throws IllegalArgumentException on invalid flowControl
      */
-    private int stringToFlow(String flowcontrol) {
-        if (ModbusUtil.isBlank(flowcontrol) || flowcontrol.equalsIgnoreCase("none")) {
+    private int stringToFlow(String flowControl) {
+        if ("none".equalsIgnoreCase(flowControl)) {
             return AbstractSerialConnection.FLOW_CONTROL_DISABLED;
         }
-        else if (flowcontrol.equalsIgnoreCase("xon/xoff out")) {
+        else if ("xon/xoff out".equalsIgnoreCase(flowControl)) {
             return AbstractSerialConnection.FLOW_CONTROL_XONXOFF_OUT_ENABLED;
         }
-        else if (flowcontrol.equalsIgnoreCase("xon/xoff in")) {
+        else if ("xon/xoff in".equalsIgnoreCase(flowControl)) {
             return AbstractSerialConnection.FLOW_CONTROL_XONXOFF_IN_ENABLED;
         }
-        else if (flowcontrol.equalsIgnoreCase("rts/cts")) {
+        else if ("rts/cts".equalsIgnoreCase(flowControl)) {
             return AbstractSerialConnection.FLOW_CONTROL_CTS_ENABLED | AbstractSerialConnection.FLOW_CONTROL_RTS_ENABLED;
         }
-        else if (flowcontrol.equalsIgnoreCase("dsr/dtr")) {
+        else if ("dsr/dtr".equalsIgnoreCase(flowControl)) {
             return AbstractSerialConnection.FLOW_CONTROL_DSR_ENABLED | AbstractSerialConnection.FLOW_CONTROL_DTR_ENABLED;
         }
-        return AbstractSerialConnection.FLOW_CONTROL_DISABLED;
+        else {
+            throw new IllegalArgumentException("Invalid value passed as flowControl: " + flowControl
+                    + ". Valid values are ['none', 'xon/xoff out', 'xon/xoff in', 'rts/cts', 'dsr/dtr']");
+        }
     }
 
     /**
@@ -766,6 +817,7 @@ public class SerialParameters {
      * on other platforms.
      *
      * @param microseconds The delay in microseconds
+     * @throws IllegalArgumentException on strictly negative input
      */
     public void setRs485DelayBeforeTxMicroseconds(int microseconds) {
         if (microseconds < 0) {
