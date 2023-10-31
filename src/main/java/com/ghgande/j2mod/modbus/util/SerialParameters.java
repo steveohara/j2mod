@@ -91,7 +91,7 @@ public class SerialParameters {
      * @param flowControlIn  Type of flow control for receiving.
      * @param flowControlOut Type of flow control for sending.
      * @param databits       The number of data bits.
-     * @param stopbits       The number of stop bits.
+     * @param stopbits       The number of stop bits. com.fazecast.jSerialComm.SerialPort stop-bit constants should be used in this method (ONE_STOP_BIT, ONE_POINT_FIVE_STOP_BITS, TWO_STOP_BITS)
      * @param parity         The type of parity.
      * @param echo           Flag for setting the RS485 echo mode.
      */
@@ -131,7 +131,7 @@ public class SerialParameters {
      * @param flowControlIn                  Type of flow control for receiving.
      * @param flowControlOut                 Type of flow control for sending.
      * @param databits                       The number of data bits.
-     * @param stopbits                       The number of stop bits.
+     * @param stopbits                       The number of stop bits. com.fazecast.jSerialComm.SerialPort stop-bit constants should be used in this method (ONE_STOP_BIT, ONE_POINT_FIVE_STOP_BITS, TWO_STOP_BITS)
      * @param parity                         The type of parity.
      * @param echo                           Flag for setting the RS485 echo mode.
      * @param rs485Mode                      Whether to enable RS-485 mode
@@ -402,9 +402,9 @@ public class SerialParameters {
     }
 
     /**
-     * Sets the number of stop bits.
+     * Sets the number of stop bits. com.fazecast.jSerialComm.SerialPort stop-bit constants should be used in this method (ONE_STOP_BIT, ONE_POINT_FIVE_STOP_BITS, TWO_STOP_BITS)
      *
-     * @param stopbits the new number of stop bits setting.
+     * @param stopbits the new number of stop bits setting. 
      */
     public void setStopbits(int stopbits) {
         if (stopbits <0 || stopbits > 3) {
@@ -414,7 +414,7 @@ public class SerialParameters {
     }
 
     /**
-     * Returns the number of stop bits as <tt>int</tt>.
+     * Returns the number of stop bits as <tt>int</tt>. com.fazecast.jSerialComm.SerialPort stop-bit constants are used in this method (ONE_STOP_BIT, ONE_POINT_FIVE_STOP_BITS, TWO_STOP_BITS)
      *
      * @return the number of stop bits as <tt>int</tt>.
      */
