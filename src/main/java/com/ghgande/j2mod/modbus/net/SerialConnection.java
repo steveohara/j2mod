@@ -16,6 +16,8 @@
 package com.ghgande.j2mod.modbus.net;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
 import com.ghgande.j2mod.modbus.io.ModbusASCIITransport;
@@ -135,6 +137,20 @@ public class SerialConnection extends AbstractSerialConnection {
             throw new IOException(String.format("Port [%s] cannot be opened after [%d] attempts - valid ports are: [%s]", parameters.getPortName(), attempts, portList));
         }
         inputStream = serialPort.getInputStream();
+
+        serialPort.addDataListener(new SerialPortDataListener() {
+            @Override
+            public int getListeningEvents() {
+                return SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
+            }
+
+            @Override
+            public void serialEvent(SerialPortEvent event) {
+                if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
+                    serialPort.closePort();
+                }
+            }
+        });
     }
 
     /**
