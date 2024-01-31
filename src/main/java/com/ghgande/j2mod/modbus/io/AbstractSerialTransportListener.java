@@ -81,4 +81,11 @@ public abstract class AbstractSerialTransportListener {
      */
     public void afterResponseRead(AbstractSerialConnection port, ModbusResponse res) {
     }
+    
+    /**
+     * Called whenever a device is disconnected
+     * @param port Port being used
+     */
+    public void disconnected(AbstractSerialConnection port) {
+    }
 }

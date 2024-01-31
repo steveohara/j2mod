@@ -319,6 +319,17 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     }
 
     /**
+     * Calls any listeners with the given event and current port
+     */
+    public void notifyListenersDisconnected() {
+        synchronized (listeners) {
+            for (AbstractSerialTransportListener listener : listeners) {
+                listener.disconnected(commPort);
+            }
+        }
+    }
+    
+    /**
      * <code>setCommPort</code> sets the comm port member and prepares the input
      * and output streams to be used for reading from and writing to.
      *

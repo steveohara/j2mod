@@ -238,6 +238,12 @@ public class TestModbusSerialASCIIMasterRead extends AbstractTestModbusSerialASC
             assertEquals("After response message has been read from port", 3, step);
             step++;
         }
+        
+        @Override
+        public void disconnected(AbstractSerialConnection port) {
+            assertEquals("Device is disconnected", 3, step);
+            step++;
+        }
     }
 
 }
