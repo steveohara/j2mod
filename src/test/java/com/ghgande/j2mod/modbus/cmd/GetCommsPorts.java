@@ -7,16 +7,20 @@
 package com.ghgande.j2mod.modbus.cmd;
 
 import com.ghgande.j2mod.modbus.net.SerialConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class GetCommsPorts {
 
+    private static final Logger logger = LoggerFactory.getLogger(GetCommsPorts.class);
+
     public static void main(String[] args) {
 
         for (String commPort : new SerialConnection().getCommPorts()) {
-            System.out.println(commPort);
+            logger.info(commPort);
         }
     }
 }

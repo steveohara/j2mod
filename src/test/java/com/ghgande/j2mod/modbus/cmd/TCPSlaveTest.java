@@ -104,8 +104,7 @@ public class TCPSlaveTest {
             ModbusSlave slave = ModbusSlaveFactory.createTCPSlave(port, 5);
             slave.addProcessImage(unit, spi);
             slave.open();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
 import java.util.Objects;
 
@@ -47,6 +48,7 @@ public class TCPMasterConnection {
     private boolean connected;
 
     private InetAddress address;
+    private NetworkInterface networkInterface = null;
     private int port = Modbus.DEFAULT_PORT;
 
     private ModbusTCPTransport transport;
@@ -131,6 +133,13 @@ public class TCPMasterConnection {
             socket.setSoLinger(true, 1);
             socket.setKeepAlive(true);
             setTimeout(timeout);
+
+            // If a Network Interface has been specified, then attempt to force the socket
+            // to be bound to that card
+
+            if (networkInterface != null) {
+                socket.bind(new InetSocketAddress(networkInterface.getInetAddresses().nextElement(), 0));
+            }
 
             // Connect - only wait for the timeout number of milliseconds
 
@@ -291,6 +300,27 @@ public class TCPMasterConnection {
      */
     public void setAddress(InetAddress adr) {
         address = adr;
+    }
+
+    /**
+     * Gets the local <tt>NetworkInterface</tt> that this socket is bound
+     * to. If null (the default), the socket is bound to the adapter chosen by the system
+     * based on routing to the destination address when the connection is made
+     *
+     * @return the network card as <tt>NetworkInterface</tt>.
+     */
+    public NetworkInterface getNetworkInterface() {
+        return networkInterface;
+    }
+
+    /**
+     * Sets the local <tt>NetworkInterface</tt> to bind to for this
+     * <tt>TCPMasterConnection</tt>.
+     *
+     * @param networkInterface of the network card as <tt>NetworkInterface</tt>.
+     */
+    public void setNetworkInterface(NetworkInterface networkInterface) {
+        this.networkInterface = networkInterface;
     }
 
     /**

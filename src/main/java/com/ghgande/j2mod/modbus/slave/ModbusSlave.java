@@ -208,7 +208,7 @@ public class ModbusSlave {
      */
     public void open() throws ModbusException {
 
-        // Start the listener if it isn' already running
+        // Start the listener if it isn't already running
         if (!isRunning) {
             try {
                 listenerThread = new Thread(listener);

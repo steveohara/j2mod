@@ -245,3 +245,9 @@ _(**NOT BACKWARDS COMPATIBLE**)_
 * Added equals & hashcode method to ModbusTCPMaster & TCPMasterConnection (#127)
 * modbus slave factory getSlave fix
 * Bumped the version
+
+## Version 3.2.1
+* Add capability to bind the Socket to specific local interface. (#135)
+* Serial port is left hanging in OS if it gets physically disconnected (#144)
+* Modbus Serial new event to serial disconnected (#148)
+* Updated jserialcomm to 2.10.4

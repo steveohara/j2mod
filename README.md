@@ -28,7 +28,8 @@ https://oss.sonatype.org/content/repositories/snapshots/com/ghgande/j2mod/
 The serial comms is handled by JSerialComm that includs native implementations for most platforms.
 * [slf4j](https://www.slf4j.org/)
 Logging facade to fit in with your application logging framework
-
+* JRE 1.8 (JRE 1.6 for v2.70 and lower)
+  
 # Including j2mod
 
     <dependency>
@@ -38,10 +39,7 @@ Logging facade to fit in with your application logging framework
     </dependency>
     
 # Announcements
-
-I have maintained this library to be Java 1.6 compatible for the past 2 years but now 
-that my time for supporting j2mod is ever more pressured, I have decided that v2.7.0 will be the last
-version that is available for this JVM.
-
-From 3.0.0, the library will have a minimum requirement of Java 1.8.
     
+Version 3.2.1 uses the jSerialComm v2.10.4 which includes the potential breaking changes as outlined [here](https://github.com/Fazecast/jSerialComm/releases/tag/v2.10.3)
+
+If you are using the low level methods `readBytes` and `writeBytes` of `SerialConection` directly (very unlikely), you will need to switch your arguments to `int`. 

@@ -16,6 +16,8 @@
 package com.ghgande.j2mod.modbus.net;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.io.AbstractModbusTransport;
 import com.ghgande.j2mod.modbus.io.ModbusASCIITransport;
@@ -88,6 +90,8 @@ public class SerialConnection extends AbstractSerialConnection {
 
     @Override
     public synchronized void open() throws IOException {
+    	boolean reopen = serialPort != null;
+    	
         if (serialPort == null) {
             serialPort = SerialPort.getCommPort(parameters.getPortName());
             if (serialPort.getDescriptivePortName().contains("Bad Port")) {
@@ -96,25 +100,26 @@ public class SerialConnection extends AbstractSerialConnection {
             }
         }
         serialPort.closePort();
-        applyConnectionParameters();
-
-        if (Modbus.SERIAL_ENCODING_ASCII.equals(parameters.getEncoding())) {
-            transport = new ModbusASCIITransport();
+	    applyConnectionParameters();
+	
+	    if (!reopen) {
+	        if (Modbus.SERIAL_ENCODING_ASCII.equals(parameters.getEncoding())) {
+	            transport = new ModbusASCIITransport();
+	        }
+	        else if (Modbus.SERIAL_ENCODING_RTU.equals(parameters.getEncoding())) {
+	            transport = new ModbusRTUTransport();
+	        }
+	        else {
+	            transport = new ModbusRTUTransport();
+	            logger.warn("Unknown transport encoding [{}] - reverting to RTU", parameters.getEncoding());
+	        }
+	        transport.setEcho(parameters.isEcho());
+	        transport.setTimeout(timeout);
+	
+	        // Open the input and output streams for the connection. If they won't
+	        // open, close the port before throwing an exception.
+	        transport.setCommPort(this);
         }
-        else if (Modbus.SERIAL_ENCODING_RTU.equals(parameters.getEncoding())) {
-            transport = new ModbusRTUTransport();
-        }
-        else {
-            transport = new ModbusRTUTransport();
-            logger.warn("Unknown transport encoding [{}] - reverting to RTU", parameters.getEncoding());
-        }
-        transport.setEcho(parameters.isEcho());
-        transport.setTimeout(timeout);
-
-        // Open the input and output streams for the connection. If they won't
-        // open, close the port before throwing an exception.
-        transport.setCommPort(this);
-
         // Open the port so that we can get it's input stream
         int attempts = 0;
         while (!serialPort.openPort(parameters.getOpenDelay()) && attempts < CONNECT_RETRIES) {
@@ -135,6 +140,23 @@ public class SerialConnection extends AbstractSerialConnection {
             throw new IOException(String.format("Port [%s] cannot be opened after [%d] attempts - valid ports are: [%s]", parameters.getPortName(), attempts, portList));
         }
         inputStream = serialPort.getInputStream();
+        
+        if (!reopen) {
+	        serialPort.addDataListener(new SerialPortDataListener() {
+	            @Override
+	            public int getListeningEvents() {
+	                return SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
+	            }
+	
+	            @Override
+	            public void serialEvent(SerialPortEvent event) {
+	                if (event.getEventType() == SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) {
+	                    serialPort.closePort();
+	                	transport.notifyListenersDisconnected();
+	                }
+	            }
+	        });
+        }
     }
 
     /**
@@ -190,12 +212,12 @@ public class SerialConnection extends AbstractSerialConnection {
     }
 
     @Override
-    public int readBytes(byte[] buffer, long bytesToRead) {
+    public int readBytes(byte[] buffer, int bytesToRead) {
         return serialPort == null ? 0 : serialPort.readBytes(buffer, bytesToRead);
     }
 
     @Override
-    public int writeBytes(byte[] buffer, long bytesToWrite) {
+    public int writeBytes(byte[] buffer, int bytesToWrite) {
         return serialPort == null ? 0 : serialPort.writeBytes(buffer, bytesToWrite);
     }
 
