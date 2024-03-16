@@ -21,6 +21,7 @@ import com.ghgande.j2mod.modbus.io.ModbusTCPTransaction;
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection;
 
 import java.net.InetAddress;
+import java.net.Proxy;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
@@ -45,7 +46,19 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      *             specifying the slave to communicate with.
      */
     public ModbusTCPMaster(String addr) {
-        this(addr, Modbus.DEFAULT_PORT, Modbus.DEFAULT_TIMEOUT, false, false);
+        this(addr, Modbus.DEFAULT_PORT, Modbus.DEFAULT_TIMEOUT, false, false, null);
+    }
+
+    /**
+     * Constructs a new master facade instance for communication
+     * with a given slave.
+     *
+     * @param addr an internet address as resolvable IP name or IP number,
+     *             specifying the slave to communicate with.
+     * @param proxy a proxy to use on the underlying tcp socket
+     */
+    public ModbusTCPMaster(String addr, Proxy proxy) {
+        this(addr, Modbus.DEFAULT_PORT, Modbus.DEFAULT_TIMEOUT, false, false, proxy);
     }
 
     /**
@@ -57,7 +70,7 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
     public ModbusTCPMaster(String addr, boolean useRtuOverTcp) {
-        this(addr, Modbus.DEFAULT_PORT, Modbus.DEFAULT_TIMEOUT, false, useRtuOverTcp);
+        this(addr, Modbus.DEFAULT_PORT, Modbus.DEFAULT_TIMEOUT, false, useRtuOverTcp, null);
     }
 
     /**
@@ -69,7 +82,20 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      * @param port the port the slave is listening to.
      */
     public ModbusTCPMaster(String addr, int port) {
-        this(addr, port, Modbus.DEFAULT_TIMEOUT, false, false);
+        this(addr, port, Modbus.DEFAULT_TIMEOUT, false, false, null);
+    }
+
+    /**
+     * Constructs a new master facade instance for communication
+     * with a given slave.
+     *
+     * @param addr an internet address as resolvable IP name or IP number,
+     *             specifying the slave to communicate with.
+     * @param port the port the slave is listening to.
+     * @param proxy a proxy to use on the underlying tcp socket
+     */
+    public ModbusTCPMaster(String addr, int port, Proxy proxy) {
+        this(addr, port, Modbus.DEFAULT_TIMEOUT, false, false, proxy);
     }
 
     /**
@@ -82,7 +108,7 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
     public ModbusTCPMaster(String addr, int port, boolean useRtuOverTcp) {
-        this(addr, port, Modbus.DEFAULT_TIMEOUT, false, useRtuOverTcp);
+        this(addr, port, Modbus.DEFAULT_TIMEOUT, false, useRtuOverTcp, null);
     }
 
     /**
@@ -97,7 +123,7 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      *                  transaction, false otherwise.
      */
     public ModbusTCPMaster(String addr, int port, int timeout, boolean reconnect) {
-        this(addr, port, timeout, reconnect, false);
+        this(addr, port, timeout, reconnect, false, null);
     }
 
     /**
@@ -113,6 +139,24 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
      * @param useRtuOverTcp True if the RTU protocol should be used over TCP
      */
     public ModbusTCPMaster(String addr, int port, int timeout, boolean reconnect, boolean useRtuOverTcp) {
+        this(addr, port, timeout, reconnect, useRtuOverTcp, null);
+    }
+
+    /**
+     * Constructs a new master facade instance for communication
+     * with a given slave.
+     *
+     * @param addr      an internet address as resolvable IP name or IP number,
+     *                  specifying the slave to communicate with.
+     * @param port      the port the slave is listening to.
+     * @param timeout   Socket timeout in milliseconds
+     * @param reconnect true if a new connection should be established for each
+     *                  transaction, false otherwise.
+     * @param useRtuOverTcp True if the RTU protocol should be used over TCP
+     * @param proxy     proxy to use on the underlying tcp socket
+     *
+     */
+    public ModbusTCPMaster(String addr, int port, int timeout, boolean reconnect, boolean useRtuOverTcp, Proxy proxy) {
         super();
         this.useRtuOverTcp = useRtuOverTcp;
         try {
@@ -120,6 +164,7 @@ public class ModbusTCPMaster extends AbstractModbusMaster {
             connection = new TCPMasterConnection(slaveAddress);
             connection.setPort(port);
             connection.setTimeout(timeout);
+            connection.setProxy(proxy);
             this.timeout = timeout;
             setReconnecting(reconnect);
         }
