@@ -166,6 +166,9 @@ public class SerialConnection extends AbstractSerialConnection {
 
         // Set connection parameters, if set fails return parameters object to original state
         if (serialPort != null) {
+            if (parameters.isRs485ControlDisabled()) {
+                serialPort.disableRs485ModeControl();
+            }
             serialPort.setComPortParameters(parameters.getBaudRate(), parameters.getDatabits(), parameters.getStopbits(), parameters.getParity());
             serialPort.setFlowControl(parameters.getFlowControlIn() | parameters.getFlowControlOut());
             serialPort.setRs485ModeParameters(parameters.getRs485Mode(), parameters.getRs485TxEnableActiveHigh(), parameters.getRs485EnableTermination(), parameters.getRs485RxDuringTx(), parameters.getRs485DelayBeforeTxMicroseconds(), parameters.getRs485DelayAfterTxMicroseconds());

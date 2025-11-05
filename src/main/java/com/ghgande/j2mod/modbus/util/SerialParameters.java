@@ -33,6 +33,7 @@ import java.util.Properties;
  */
 public class SerialParameters {
 
+    private static final boolean DEFAULT_RS485_DISABLE_CONTROL = false;
     private static final boolean DEFAULT_RS485_MODE = false;
     private static final boolean DEFAULT_RS485_TX_ENABLE_ACTIVE_HIGH = true;
     private static final boolean DEFAULT_RS485_ENABLE_TERMINATION = false;
@@ -57,6 +58,7 @@ public class SerialParameters {
     private boolean rs485RxDuringTx;
     private int rs485DelayBeforeTxMicroseconds;
     private int rs485DelayAfterTxMicroseconds;
+    private boolean rs485DisableControl;
 
     /**
      * Constructs a new <tt>SerialParameters</tt> instance with
@@ -80,6 +82,7 @@ public class SerialParameters {
         rs485TxEnableActiveHigh = DEFAULT_RS485_TX_ENABLE_ACTIVE_HIGH;
         rs485DelayBeforeTxMicroseconds = DEFAULT_RS485_DELAY_BEFORE_TX_MICROSECONDS;
         rs485DelayAfterTxMicroseconds = DEFAULT_RS485_DELAY_AFTER_TX_MICROSECONDS;
+        rs485DisableControl = DEFAULT_RS485_DISABLE_CONTROL;
     }
 
     /**
@@ -896,6 +899,29 @@ public class SerialParameters {
      */
     public void setRs485DelayAfterTxMicroseconds(String microseconds) {
         setRs485DelayAfterTxMicroseconds(Integer.parseInt(microseconds));
+    }
+
+    /**
+     * Disables RS-485 control signals management.
+     * <p>
+     * <i>Please note that this is only effective on Linux.</i>
+     * <p>
+     * This function forces RS-485 mode to stay untouched,
+     * regardless of the current setting of RS-485 mode.
+     * <p>
+     * This function is necessary for Linux drivers that don't handle TIOCGRS485 properly.
+     */
+    public void disableRs485Control() {
+        this.rs485DisableControl = true;
+    }
+
+    /**
+     * Returns whether RS-485 control signals management is disabled.
+     *
+     * @return true if RS-485 control signals management is disabled.
+     */
+    public boolean isRs485ControlDisabled() {
+        return this.rs485DisableControl;
     }
 
     @Override
