@@ -172,18 +172,12 @@ public class ModbusUDPTransaction extends ModbusTransaction {
      * Toggles the transaction identifier, to ensure
      * that each transaction has a distinctive
      * identifier.<br>
-     * When the maximum value of 65535 has been reached,
-     * the identifiers will start from zero again.
+     * When the maximum value of {@link Modbus#MAX_TRANSACTION_ID} has been
+     * reached, the identifiers will start from zero again.
      */
     private void incrementTransactionID() {
         if (isCheckingValidity()) {
-            if (transactionID >= Modbus.MAX_TRANSACTION_ID) {
-                transactionID = Modbus.DEFAULT_TRANSACTION_ID;
-            }
-            else {
-                transactionID++;
-            }
+            request.setTransactionID(nextTransactionID());
         }
-        request.setTransactionID(getTransactionID());
     }
 }
