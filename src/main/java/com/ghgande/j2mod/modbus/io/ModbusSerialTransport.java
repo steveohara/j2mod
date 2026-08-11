@@ -64,9 +64,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     /**
      * Historical calibration factors, for Transmission wait timing.
      */
-    private static final double MILLIS_SLEEP_FUDGE_FACTOR = 1.7;
-    private static final double NANOS_SLEEP_FUDGE_FACTOR_SHORT = 1.3;
-    private static final double NANOS_SLEEP_FUDGE_FACTOR_LONG = 1.5;
+    private static final double LONG_DELAY_FUDGE_FACTOR = 1.7;
+    private static final double SHORT_DELAY_FUDGE_FACTOR = 1.3;
 
     private AbstractSerialConnection commPort;
     boolean echo = false;     // require RS-485 echo processing
@@ -121,32 +120,27 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     }
 
     private void waitForTransmission(long startTime, double transmissionTimeNanos) {
-        final long sleepMillis = (long) Math.floor(transmissionTimeNanos / NS_IN_A_MS);
-        final double sleepNanos = transmissionTimeNanos % NS_IN_A_MS;
-
-        if (sleepMillis > 0) {
+        if (transmissionTimeNanos >= NS_IN_A_MS) {
             try {
-                final double fudgedNanoSleep = sleepNanos * NANOS_SLEEP_FUDGE_FACTOR_LONG;
+                final long adjustedDelay = (long) (transmissionTimeNanos * LONG_DELAY_FUDGE_FACTOR);
+                final long sleepMillis = adjustedDelay / NS_IN_A_MS;
+                final int sleepNanos = (int) (adjustedDelay % NS_IN_A_MS);
 
-                final int totalSleepNanos = (int) fudgedNanoSleep % NS_IN_A_MS;
-                final int nanosOverflow = (int) fudgedNanoSleep / NS_IN_A_MS;
-
-                final long totalSleepMillis = (long) ((sleepMillis * MILLIS_SLEEP_FUDGE_FACTOR) + nanosOverflow);
-
-                Thread.sleep(totalSleepMillis, totalSleepNanos);
+                Thread.sleep(sleepMillis, sleepNanos);
             }
             catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.debug("nothing to do. Sleep interrupted.", e);
             }
         }
-        else if  (sleepNanos > 0) {
+        else if  (transmissionTimeNanos > 0) {
             // For delays less than a millisecond, we need to chew CPU cycles unfortunately
             // There are some fiddle factors here to allow for some oddities in the hardware
             final int priority = Thread.currentThread().getPriority();
             try {
                 Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-                final long end = startTime + (long) (sleepNanos * NANOS_SLEEP_FUDGE_FACTOR_SHORT);
+                final long adjustedDelay = (long) (transmissionTimeNanos * SHORT_DELAY_FUDGE_FACTOR);
+                final long end = startTime + adjustedDelay;
                 while (System.nanoTime() < end) {
                     // noop
                 }
