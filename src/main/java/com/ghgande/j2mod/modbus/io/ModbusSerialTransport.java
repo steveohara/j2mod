@@ -89,7 +89,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         // If this isn't a Slave ID missmatch message
         if (msg.getAuxiliaryType().equals(ModbusResponse.AuxiliaryMessageTypes.UNIT_ID_MISSMATCH)) {
             logger.debug("Ignoring response not meant for us");
-        } else {
+        }
+        else {
             // We need to pause before sending the response
             waitBetweenFrames();
 
@@ -133,11 +134,13 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
                 final long totalSleepMillis = (long) ((sleepMillis * MILLIS_SLEEP_FUDGE_FACTOR) + nanosOverflow);
 
                 Thread.sleep(totalSleepMillis, totalSleepNanos);
-            }  catch (InterruptedException e) {
+            }
+            catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.debug("nothing to do. Sleep interrupted.", e);
             }
-        } else if  (sleepNanos > 0) {
+        }
+        else if  (sleepNanos > 0) {
             // For delays less than a millisecond, we need to chew CPU cycles unfortunately
             // There are some fiddle factors here to allow for some oddities in the hardware
             final int priority = Thread.currentThread().getPriority();
@@ -147,7 +150,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
                 while (System.nanoTime() < end) {
                     // noop
                 }
-            } finally {
+            }
+            finally {
                 Thread.currentThread().setPriority(priority);
             }
         }
@@ -169,7 +173,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             // Wait here for the message to have been sent
             final double transmissionTimeNanos = 1_000_000_000.0 * msg.getOutputLength() / getCharactersPerSecond();
             waitForTransmission(startTime, transmissionTimeNanos);
-        } finally {
+        }
+        finally {
             notifyListenersAfterWrite(msg);
         }
     }
@@ -201,7 +206,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             setTimeout(timeout);
             try {
                 commPort.open();
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 throw new ModbusIOException(String.format("Cannot open port %s - %s", commPort.getDescriptivePortName(), e.getMessage()));
             }
         }
@@ -433,10 +439,12 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             int cnt = commPort.readBytes(buffer, 1);
             if (cnt != 1) {
                 throw new IOException(CANNOT_READ_FROM_SERIAL_PORT);
-            } else {
+            }
+            else {
                 return buffer[0] & 0xff;
             }
-        } else {
+        }
+        else {
             throw new IOException(COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN);
         }
     }
@@ -454,7 +462,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             if (cnt != bytesToRead) {
                 throw new IOException("Cannot read from serial port - truncated");
             }
-        } else {
+        }
+        else {
             throw new IOException(COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN);
         }
     }
@@ -470,7 +479,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     final int writeBytes(byte[] buffer, int bytesToWrite) throws IOException {
         if (commPort != null && commPort.isOpen()) {
             return commPort.writeBytes(buffer, bytesToWrite);
-        } else {
+        }
+        else {
             throw new IOException(COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN);
         }
     }
@@ -488,11 +498,14 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             int cnt = commPort.readBytes(buffer, 1);
             if (cnt != 1) {
                 throw new IOException(CANNOT_READ_FROM_SERIAL_PORT);
-            } else if (buffer[0] == ':') {
+            }
+            else if (buffer[0] == ':') {
                 return FRAME_START;
-            } else if (buffer[0] == '\r' || buffer[0] == '\n') {
+            }
+            else if (buffer[0] == '\r' || buffer[0] == '\n') {
                 return FRAME_END;
-            } else {
+            }
+            else {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Read From buffer: {} ({})", buffer[0], String.format("%02X", buffer[0]));
                 }
@@ -500,7 +513,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
                 cnt = commPort.readBytes(buffer, 1);
                 if (cnt != 1) {
                     throw new IOException(CANNOT_READ_FROM_SERIAL_PORT);
-                } else {
+                }
+                else {
                     int combinedValue = (Character.digit(firstValue, 16) << 4) + Character.digit(buffer[0], 16);
                     if (logger.isDebugEnabled()) {
                         logger.debug("Returning combined value of: {}", String.format("%02X", combinedValue));
@@ -508,7 +522,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
                     return combinedValue;
                 }
             }
-        } else {
+        }
+        else {
             throw new IOException(COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN);
         }
     }
@@ -529,10 +544,12 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             if (value == FRAME_START) {
                 buffer = new byte[]{58};
                 logger.debug("Wrote FRAME_START");
-            } else if (value == FRAME_END) {
+            }
+            else if (value == FRAME_END) {
                 buffer = new byte[]{13, 10};
                 logger.debug("Wrote FRAME_END");
-            } else {
+            }
+            else {
                 buffer = ModbusUtil.toHex(value);
                 if (logger.isDebugEnabled()) {
                     logger.debug("Wrote byte {}={}", value, ModbusUtil.toHex(value));
@@ -540,10 +557,12 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             }
             if (buffer != null) {
                 return commPort.writeBytes(buffer, buffer.length);
-            } else {
+            }
+            else {
                 throw new IOException("Message to send is empty");
             }
-        } else {
+        }
+        else {
             throw new IOException(COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN);
         }
     }
@@ -566,7 +585,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
                 cnt++;
             }
             return cnt;
-        } else {
+        }
+        else {
             throw new IOException(COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN);
         }
     }
@@ -616,7 +636,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         // If a fixed delay has been set
         if (transDelayMS > 0) {
             ModbusUtil.sleep(transDelayMS);
-        } else {
+        }
+        else {
             // Make use we have a gap of 3.5 characters between adjacent requests
             // We have to do the calculations here because it is possible that the caller may have changed
             // the connection characteristics if they provided the connection instance
@@ -644,7 +665,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     int getInterFrameDelay() {
         if (commPort.getBaudRate() > 19200) {
             return 1750;
-        } else {
+        }
+        else {
             long delay = Math.max(getCharIntervalMicro(Modbus.INTER_MESSAGE_GAP), Modbus.MINIMUM_TRANSMIT_DELAY * 1000L);
             return delay > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) delay;
         }
@@ -658,7 +680,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     long getMaxCharDelay() {
         if (commPort.getBaudRate() > 19200) {
             return 1750;
-        } else {
+        }
+        else {
             return getCharIntervalMicro(Modbus.INTER_CHARACTER_GAP);
         }
     }
