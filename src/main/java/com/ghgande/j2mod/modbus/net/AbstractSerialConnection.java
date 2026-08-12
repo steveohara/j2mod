@@ -50,10 +50,10 @@ public abstract class AbstractSerialConnection {
      * Timeout
      */
     public static final int TIMEOUT_NONBLOCKING = SerialPort.TIMEOUT_NONBLOCKING;
-   	public static final int TIMEOUT_READ_SEMI_BLOCKING = SerialPort.TIMEOUT_READ_SEMI_BLOCKING;
-   	public static final int TIMEOUT_READ_BLOCKING = SerialPort.TIMEOUT_READ_BLOCKING;
-   	public static final int TIMEOUT_WRITE_BLOCKING = SerialPort.TIMEOUT_WRITE_BLOCKING;
-   	public static final int TIMEOUT_SCANNER = SerialPort.TIMEOUT_SCANNER;
+    public static final int TIMEOUT_READ_SEMI_BLOCKING = SerialPort.TIMEOUT_READ_SEMI_BLOCKING;
+    public static final int TIMEOUT_READ_BLOCKING = SerialPort.TIMEOUT_READ_BLOCKING;
+    public static final int TIMEOUT_WRITE_BLOCKING = SerialPort.TIMEOUT_WRITE_BLOCKING;
+    public static final int TIMEOUT_SCANNER = SerialPort.TIMEOUT_SCANNER;
 
     /**
      * Opens the port and throws an error if it cannot for some reason
@@ -115,11 +115,33 @@ public abstract class AbstractSerialConnection {
     public abstract int getNumDataBits();
 
     /**
-     * Returns current stop bits
+     * Returns current stop bits configuration constant.
+     * <p>
+     * Use {@link #getStopBits()} to get the actual stop bits in bit times.
      *
-     * @return Number of stop bits
+     * @return Stop-bit configuration constant.
      */
     public abstract int getNumStopBits();
+
+    /**
+     * Returns current stop bits as actual bit times.
+     * <p>
+     * Use {@link #getNumStopBits()} to get the stop bits configuration constant.
+     *
+     * @return Stop-bit length in bit times.
+     */
+    public float getStopBits() {
+        switch (getNumStopBits()) {
+            case ONE_STOP_BIT:
+                return 1.0f;
+            case ONE_POINT_FIVE_STOP_BITS:
+                return 1.5f;
+            case TWO_STOP_BITS:
+                return 2.0f;
+            default:
+                return 1.0f;
+        }
+    }
 
     /**
      * Returns current parity
@@ -178,5 +200,21 @@ public abstract class AbstractSerialConnection {
      * @return Set of comm port names
      */
     public abstract Set<String> getCommPorts();
+
+    /**
+     * Returns the total number of serial bit-times required to transmit
+     * a single character with the current port configuration.
+     *
+     * @return Total bit-times per character.
+     */
+    public double getBitsPerCharacter() {
+        final double startBit = 1.0;
+        final int numDataBits = getNumDataBits();
+        final int dataBits = numDataBits == 0 ? 8 : numDataBits;
+        final double stopBits = getStopBits();
+        final double parityBits = getParity() == SerialPort.NO_PARITY ? 0 : 1;
+
+        return startBit + dataBits + stopBits + parityBits;
+    }
 
 }

@@ -58,6 +58,12 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * The number of nanoseconds there is in a millisecond
      */
     private static final int NS_IN_A_MS = 1_000_000;
+
+    /**
+     * The number of nanoseconds there is in a second
+     */
+    private static final int NS_IN_A_SEC = 1_000_000_000;
+
     private static final String CANNOT_READ_FROM_SERIAL_PORT = "Cannot read from serial port";
     private static final String COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN = "Comm port is not valid or not open";
 
@@ -101,22 +107,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     @Override
     public void writeRequest(ModbusRequest msg) throws ModbusIOException {
         writeMessage(msg);
-    }
-
-    /**
-     * Calculates the estimated serial character throughput based on the current port configuration.
-     *
-     * @return Characters per second. Never less than 10, which serves as a
-     * defensive fallback for invalid or unexpected port settings.
-     */
-    private double getCharactersPerSecond() {
-        final double baudRate = commPort.getBaudRate();
-        final double startBit = 1.0;
-        final double dataBits = commPort.getNumDataBits() == 0 ? 8 : commPort.getNumDataBits();
-        final double stopBits = commPort.getNumStopBits() == 0 ? 1 : commPort.getNumStopBits();
-        final double parityBits = commPort.getParity() == SerialPort.NO_PARITY ? 0 : 1;
-
-        return Math.max(10.0, baudRate / (startBit + dataBits + stopBits + parityBits));
     }
 
     private void waitForTransmission(long startTime, double transmissionTimeNanos) {
@@ -165,7 +155,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             final long startTime = System.nanoTime();
 
             // Wait here for the message to have been sent
-            final double transmissionTimeNanos = 1_000_000_000.0 * msg.getOutputLength() / getCharactersPerSecond();
+            final double charactersPerSecond = commPort.getBaudRate() / commPort.getBitsPerCharacter();
+            final double transmissionTimeNanos = NS_IN_A_SEC * msg.getOutputLength() / charactersPerSecond;
             waitForTransmission(startTime, transmissionTimeNanos);
         }
         finally {
@@ -454,7 +445,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         if (commPort != null && commPort.isOpen()) {
             int cnt = commPort.readBytes(buffer, bytesToRead);
             if (cnt != bytesToRead) {
-                throw new IOException("Cannot read from serial port - truncated");
+                throw new IOException(String.format("Cannot read from serial port - truncated (expected %d bytes, got %d bytes)", bytesToRead, cnt));
             }
         }
         else {
@@ -691,7 +682,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         // Make use we have a gap of 3.5 characters between adjacent requests
         // We have to do the calculations here because it is possible that the caller may have changed
         // the connection characteristics if they provided the connection instance
-        return (long) chars * NS_IN_A_MS * (1 + commPort.getNumDataBits() + commPort.getNumStopBits() + (commPort.getParity() == AbstractSerialConnection.NO_PARITY ? 0 : 1)) / commPort.getBaudRate();
+        return (long) (chars * NS_IN_A_MS * commPort.getBitsPerCharacter() / commPort.getBaudRate());
     }
 
     /**
