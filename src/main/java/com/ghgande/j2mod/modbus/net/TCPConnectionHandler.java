@@ -35,7 +35,6 @@ public class TCPConnectionHandler implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(TCPConnectionHandler.class);
     private static final long watchDogResolution = 5000L; // Check connection status every 5 seconds
-    private static final long nanosPerSecond = 1000L * 1000L * 1000L;
 
     private final TCPSlaveConnection connection;
     private final AbstractModbusTransport transport;
@@ -67,9 +66,9 @@ public class TCPConnectionHandler implements Runnable {
                 @Override
                 public void run() {
                     long nanosIdle = System.nanoTime() - TCPConnectionHandler.this.connection.getLastActivityTimestamp();
-                    if (nanosIdle > (maxIdleSeconds * nanosPerSecond)) {
+                    if (nanosIdle > TimeUnit.SECONDS.toNanos(maxIdleSeconds)) {
                         // Watchdog timer elapsed
-                        logger.warn("Watchdog expired: {}, limit: {}", nanosIdle / nanosPerSecond, maxIdleSeconds);
+                        logger.warn("Watchdog expired: {}s, limit: {}s", TimeUnit.NANOSECONDS.toSeconds(nanosIdle), maxIdleSeconds);
 
                         // Socket.close() will cause read operation to fail
                         TCPConnectionHandler.this.connection.close();
