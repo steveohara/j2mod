@@ -1,0 +1,31 @@
+name: GitHub Release
+
+# Creates a GitHub Release with auto-generated notes whenever a version tag
+# (e.g. v3.4.0) is pushed. This runs alongside the existing local
+# `mvn deploy` process that publishes to Maven Central - it does not build
+# or deploy anything itself, it just records the release on GitHub.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          gh release create "$tag" \
+            --title "Release version ${version}" \
+            --generate-notes
