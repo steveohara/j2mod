@@ -15,7 +15,6 @@
  */
 package com.ghgande.j2mod.modbus.io;
 
-import com.fazecast.jSerialComm.SerialPort;
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
@@ -57,9 +56,22 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     /**
      * The number of nanoseconds there is in a millisecond
      */
-    private static final int NS_IN_A_MS = 1000000;
+    private static final int NS_IN_A_MS = 1_000_000;
+
+    /**
+     * The number of nanoseconds there is in a second
+     */
+    private static final int NS_IN_A_SEC = 1_000_000_000;
+
     private static final String CANNOT_READ_FROM_SERIAL_PORT = "Cannot read from serial port";
     private static final String COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN = "Comm port is not valid or not open";
+
+    /**
+     * Historical calibration factors, for Transmission wait timing.
+     */
+    private static final double LONG_DELAY_FUDGE_FACTOR = 1.7;
+    private static final double SHORT_DELAY_FUDGE_FACTOR = 1.3;
+
     private AbstractSerialConnection commPort;
     boolean echo = false;     // require RS-485 echo processing
     private final Set<AbstractSerialTransportListener> listeners = Collections.synchronizedSet(new HashSet<AbstractSerialTransportListener>());
@@ -97,6 +109,47 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     }
 
     /**
+     * Waits for transmissionTimeNanos time period to elapse beginning from the startTime.
+     * This wait measurement is approximate, based on the OS clock and will depend on whether
+     * the OS uses a real-time clock (RTC). For sub-millisecond periods this method uses a
+     * tight loop to check against the OS clock which in of itself can be an expensive CPU call.
+     *
+     * @param startTime Time to start the period from
+     * @param transmissionTimeNanos Number of milliseconds to wait
+     */
+    private void waitForTransmission(long startTime, double transmissionTimeNanos) {
+        if (transmissionTimeNanos >= NS_IN_A_MS) {
+            try {
+                final long adjustedDelay = (long) (transmissionTimeNanos * LONG_DELAY_FUDGE_FACTOR);
+                final long sleepMillis = adjustedDelay / NS_IN_A_MS;
+                final int sleepNanos = (int) (adjustedDelay % NS_IN_A_MS);
+
+                Thread.sleep(sleepMillis, sleepNanos);
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.debug("nothing to do. Sleep interrupted.", e);
+            }
+        }
+        else if  (transmissionTimeNanos > 0) {
+            // For delays less than a millisecond, we need to chew CPU cycles unfortunately
+            // There are some fiddle factors here to allow for some oddities in the hardware
+            final int priority = Thread.currentThread().getPriority();
+            try {
+                Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+                final long adjustedDelay = (long) (transmissionTimeNanos * SHORT_DELAY_FUDGE_FACTOR);
+                final long end = startTime + adjustedDelay;
+                while (System.nanoTime() < end) {
+                    // noop
+                }
+            }
+            finally {
+                Thread.currentThread().setPriority(priority);
+            }
+        }
+    }
+
+    /**
      * Writes the request/response message to the port
      *
      * @param msg Message to write
@@ -107,35 +160,12 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         notifyListenersBeforeWrite(msg);
         try {
             writeMessageOut(msg);
-            long startTime = System.nanoTime();
+            final long startTime = System.nanoTime();
 
             // Wait here for the message to have been sent
-
-            double bytesPerSec = ((double)commPort.getBaudRate()) / (((commPort.getNumDataBits() == 0) ? 8 : commPort.getNumDataBits()) + ((commPort.getNumStopBits() == 0) ? 1 : commPort.getNumStopBits()) + ((commPort.getParity() == SerialPort.NO_PARITY) ? 0 : 1));
-            double delay = 1000000000.0 * msg.getOutputLength() / bytesPerSec;
-            double delayMilliSeconds = Math.floor(delay / 1000000);
-            double delayNanoSeconds = delay % 1000000;
-            try {
-
-                // For delays less than a millisecond, we need to chew CPU cycles unfortunately
-                // There are some fiddle factors here to allow for some oddities in the hardware
-
-                if (delayMilliSeconds == 0.0) {
-                    int priority = Thread.currentThread().getPriority();
-                    Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-                    long end = startTime + ((int) (delayNanoSeconds * 1.3));
-                    while (System.nanoTime() < end) {
-                        // noop
-                    }
-                    Thread.currentThread().setPriority(priority);
-                }
-                else {
-                    Thread.sleep((int) (delayMilliSeconds * 1.7), (int) (delayNanoSeconds * 1.5));
-                }
-            }
-            catch (Exception e) {
-                logger.debug("nothing to do");
-            }
+            final double charactersPerSecond = commPort.getBaudRate() / commPort.getBitsPerCharacter();
+            final double transmissionTimeNanos = NS_IN_A_SEC * msg.getOutputLength() / charactersPerSecond;
+            waitForTransmission(startTime, transmissionTimeNanos);
         }
         finally {
             notifyListenersAfterWrite(msg);
@@ -200,7 +230,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @param listener Listener that received this request
      * @return a <code>ModbusRequest</code> value
-     *
      * @throws ModbusIOException if an error occurs
      */
     protected abstract ModbusRequest readRequestIn(AbstractModbusListener listener) throws ModbusIOException;
@@ -210,7 +239,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * responding to a master writeRequest request.
      *
      * @return a <code>ModbusResponse</code> value
-     *
      * @throws ModbusIOException if an error occurs
      */
     protected abstract ModbusResponse readResponseIn() throws ModbusIOException;
@@ -328,7 +356,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             }
         }
     }
-    
+
     /**
      * <code>setCommPort</code> sets the comm port member and prepares the input
      * and output streams to be used for reading from and writing to.
@@ -396,7 +424,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * Reads a byte from the comms port
      *
      * @return Value of the byte
-     *
      * @throws IOException If it cannot read or times out
      */
     protected int readByte() throws IOException {
@@ -426,7 +453,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         if (commPort != null && commPort.isOpen()) {
             int cnt = commPort.readBytes(buffer, bytesToRead);
             if (cnt != bytesToRead) {
-                throw new IOException("Cannot read from serial port - truncated");
+                throw new IOException(String.format("Cannot read from serial port - truncated (expected %d bytes, got %d bytes)", bytesToRead, cnt));
             }
         }
         else {
@@ -440,7 +467,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * @param buffer       Buffer to write
      * @param bytesToWrite Number of bytes to write
      * @return Number of bytes written
-     *
      * @throws java.io.IOException if writing to invalid port
      */
     final int writeBytes(byte[] buffer, int bytesToWrite) throws IOException {
@@ -457,7 +483,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * It handles the special start and end frame markers
      *
      * @return Byte value of the next ASCII couplet
-     *
      * @throws IOException If a problem with the port
      */
     int readAsciiByte() throws IOException {
@@ -503,7 +528,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      *
      * @param value Value to write
      * @return Number of bytes written
-     *
      * @throws IOException If a problem with the port
      */
     final int writeAsciiByte(int value) throws IOException {
@@ -542,7 +566,6 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * @param buffer       Buffer of bytes to write
      * @param bytesToWrite Number of characters to write
      * @return Number of bytes written
-     *
      * @throws IOException If a problem with the port
      */
     int writeAsciiBytes(byte[] buffer, long bytesToWrite) throws IOException {
@@ -667,7 +690,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         // Make use we have a gap of 3.5 characters between adjacent requests
         // We have to do the calculations here because it is possible that the caller may have changed
         // the connection characteristics if they provided the connection instance
-        return (long) chars * NS_IN_A_MS * (1 + commPort.getNumDataBits() + commPort.getNumStopBits() + (commPort.getParity() == AbstractSerialConnection.NO_PARITY ? 0 : 1)) / commPort.getBaudRate();
+        return (long) (chars * NS_IN_A_MS * commPort.getBitsPerCharacter() / commPort.getBaudRate());
     }
 
     /**
