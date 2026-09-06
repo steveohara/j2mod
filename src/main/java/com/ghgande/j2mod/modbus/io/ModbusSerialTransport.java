@@ -15,7 +15,6 @@
  */
 package com.ghgande.j2mod.modbus.io;
 
-import com.fazecast.jSerialComm.SerialPort;
 import com.ghgande.j2mod.modbus.Modbus;
 import com.ghgande.j2mod.modbus.ModbusIOException;
 import com.ghgande.j2mod.modbus.msg.ModbusMessage;
@@ -109,6 +108,15 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         writeMessage(msg);
     }
 
+    /**
+     * Waits for transmissionTimeNanos time period to elapse beginning from the startTime.
+     * This wait measurement is approximate, based on the OS clock and will depend on whether
+     * the OS uses a real-time clock (RTC). For sub-millisecond periods this method uses a
+     * tight loop to check against the OS clock which in of itself can be an expensive CPU call.
+     *
+     * @param startTime Time to start the period from
+     * @param transmissionTimeNanos Number of milliseconds to wait
+     */
     private void waitForTransmission(long startTime, double transmissionTimeNanos) {
         if (transmissionTimeNanos >= NS_IN_A_MS) {
             try {
