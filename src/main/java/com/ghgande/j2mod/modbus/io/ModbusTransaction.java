@@ -22,6 +22,7 @@ import com.ghgande.j2mod.modbus.msg.ModbusRequest;
 import com.ghgande.j2mod.modbus.msg.ModbusResponse;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Interface defining a ModbusTransaction.
@@ -42,7 +43,7 @@ public abstract class ModbusTransaction {
     boolean validityCheck = Modbus.DEFAULT_VALIDITYCHECK;
     int retries = Modbus.DEFAULT_RETRIES;
     private final Random random = new Random(System.nanoTime());
-    static int transactionID = Modbus.DEFAULT_TRANSACTION_ID;
+    static final AtomicInteger transactionID = new AtomicInteger(Modbus.DEFAULT_TRANSACTION_ID);
 
     /**
      * Returns the <tt>ModbusRequest</tt> instance
@@ -67,7 +68,7 @@ public abstract class ModbusTransaction {
     public void setRequest(ModbusRequest req) {
         request = req;
         if (req != null) {
-            request.setTransactionID(getTransactionID());
+            request.setTransactionID(nextTransactionID());
         }
     }
 
@@ -127,22 +128,30 @@ public abstract class ModbusTransaction {
     }
 
     /**
-     * getTransactionID -- get the next transaction ID to use.
-     * @return next transaction ID to use
+     * Retrieves the current transaction ID.
+     *
+     * @return The current transaction ID, guaranteed to be within the valid range.
      */
-    public synchronized int getTransactionID() {
-        /*
-         * Ensure that the transaction ID is in the valid range between
-         * 0 and MAX_TRANSACTION_ID (65534).  If not, the value will be forced
-         * to 0.
-         */
-        if (transactionID < Modbus.DEFAULT_TRANSACTION_ID && isCheckingValidity()) {
-            transactionID = Modbus.DEFAULT_TRANSACTION_ID;
-        }
-        if (transactionID >= Modbus.MAX_TRANSACTION_ID) {
-            transactionID = Modbus.DEFAULT_TRANSACTION_ID;
-        }
-        return transactionID;
+    public int getTransactionID() {
+        return transactionID.get();
+    }
+
+    /**
+     * Atomically increments the global transaction ID counter and returns the
+     * new value. The value wraps around to {@link Modbus#DEFAULT_TRANSACTION_ID}
+     * when it reaches {@link Modbus#MAX_TRANSACTION_ID}.
+     *
+     * <p>This method is safe to call from multiple threads concurrently.
+     *
+     * @return the next unique transaction ID
+     */
+    static int nextTransactionID() {
+        return transactionID.updateAndGet(current -> {
+            if (current < Modbus.DEFAULT_TRANSACTION_ID || current >= Modbus.MAX_TRANSACTION_ID) {
+                return Modbus.DEFAULT_TRANSACTION_ID;
+            }
+            return current + 1;
+        });
     }
 
     /**
