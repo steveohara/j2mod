@@ -8,7 +8,7 @@
     <artifactId>j2mod</artifactId>
     <name>j2mod</name>
     <url>https://github.com/steveohara/j2mod</url>
-    <version>3.3.0</version>
+    <version>3.4.0</version>
     <description>A Modbus TCP/UDP/Serial Master and Slave implementation</description>
 
     <packaging>bundle</packaging>
