@@ -98,6 +98,9 @@ public class TCPConnectionHandler implements Runnable {
         }
         finally {
             connection.close();
+            if (watchDog != null) {
+                watchDog.shutdown();
+            }
         }
     }
 }
