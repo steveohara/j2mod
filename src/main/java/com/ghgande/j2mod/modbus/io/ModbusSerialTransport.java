@@ -54,14 +54,19 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     static final int FRAME_END = 2000;
 
     /**
-     * The number of nanoseconds there is in a millisecond
+     * The number of nanoseconds in a millisecond
      */
     private static final int NS_IN_A_MS = 1_000_000;
 
     /**
-     * The number of nanoseconds there is in a second
+     * The number of nanoseconds in a second
      */
     private static final int NS_IN_A_SEC = 1_000_000_000;
+
+    /**
+     * The number of microseconds in a second.
+     */
+    private static final double MICROS_IN_A_SEC = 1_000_000.0;
 
     private static final String CANNOT_READ_FROM_SERIAL_PORT = "Cannot read from serial port";
     private static final String COMM_PORT_IS_NOT_VALID_OR_NOT_OPEN = "Comm port is not valid or not open";
@@ -631,10 +636,10 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             ModbusUtil.sleep(transDelayMS);
         }
         else {
-            // Make use we have a gap of 3.5 characters between adjacent requests
+            // Make sure we have a gap of 3.5 characters between adjacent requests
             // We have to do the calculations here because it is possible that the caller may have changed
             // the connection characteristics if they provided the connection instance
-            int delay = getInterFrameDelay() / 1000;
+            int delay = (int) Math.ceil(getInterFrameDelay() / 1000.0);
 
             // How long since the last message we received
             long gapSinceLastMessage = (System.nanoTime() - lastTransactionTimestamp) / NS_IN_A_MS;
@@ -651,9 +656,14 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
     }
 
     /**
-     * In microseconds
+     * Calculates the inter-frame delay according to the
+     * MODBUS over Serial Line Specification V1.02.
+     * <ul>
+     *  <li> baud rates &le; 19200: 3.5 Character time </li>
+     *  <li> baud rates &gt; 19200: 1750 microseconds </li>
+     * </ul>
      *
-     * @return Delay between frames
+     * @return the inter-frame delay in microseconds
      */
     int getInterFrameDelay() {
         if (commPort.getBaudRate() > 19200) {
@@ -661,18 +671,23 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
         }
         else {
             long delay = Math.max(getCharIntervalMicro(Modbus.INTER_MESSAGE_GAP), Modbus.MINIMUM_TRANSMIT_DELAY * 1000L);
-            return delay > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) delay;
+            return (int) Math.min(Integer.MAX_VALUE, delay);
         }
     }
 
     /**
-     * The maximum delay between characters in microseconds
+     * Calculates the inter-character time-out according to the
+     * MODBUS over Serial Line Specification V1.02.
+     * <ul>
+     *  <li> baud rates &le; 19200: 1.5 Character time </li>
+     *  <li> baud rates &gt; 19200: 750 microseconds </li>
+     * </ul>
      *
-     * @return microseconds
+     * @return the inter-character time-out in microseconds
      */
-    long getMaxCharDelay() {
+    long getMaxCharTimeout() {
         if (commPort.getBaudRate() > 19200) {
-            return 1750;
+            return 750;
         }
         else {
             return getCharIntervalMicro(Modbus.INTER_CHARACTER_GAP);
@@ -687,10 +702,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * @return microseconds
      */
     long getCharIntervalMicro(double chars) {
-        // Make use we have a gap of 3.5 characters between adjacent requests
-        // We have to do the calculations here because it is possible that the caller may have changed
-        // the connection characteristics if they provided the connection instance
-        return (long) (chars * NS_IN_A_MS * commPort.getBitsPerCharacter() / commPort.getBaudRate());
+        final double microsPerChar = (commPort.getBitsPerCharacter() / (double) commPort.getBaudRate()) * MICROS_IN_A_SEC;
+        return (long) Math.ceil(microsPerChar * chars);
     }
 
     /**
@@ -698,7 +711,7 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * This method will repeatedly poll the available bytes, so it should not have any side effects.
      *
      * @param waitTimeMicroSec The time to wait for the condition to be true in microseconds
-     * @return true if the condition ended the spin, false if the tim
+     * @return true if the condition ended the spin, false if the timeout was reached
      */
     boolean spinUntilBytesAvailable(long waitTimeMicroSec) {
         long start = System.nanoTime();

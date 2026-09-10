@@ -319,7 +319,7 @@ public interface Modbus {
      * The number of characters delay that must be maintained between adjacent requests on
      * the same serial port (within the same transaction)
      */
-    double INTER_MESSAGE_GAP = 4;
+    double INTER_MESSAGE_GAP = 3.5;
 
     /**
      * The number of characters delay that is the allowed maximum between characters on

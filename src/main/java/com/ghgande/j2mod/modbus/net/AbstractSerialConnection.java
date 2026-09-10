@@ -101,9 +101,11 @@ public abstract class AbstractSerialConnection {
     public abstract void close();
 
     /**
-     * Returns current baud rate
+     * Returns current baud rate.
+     * <p>
+     * For UART interfaces (RS-232 / RS-485), this is equal to the line bit rate in bits/s.
      *
-     * @return Baud rate
+     * @return Baud rate (bits/s)
      */
     public abstract int getBaudRate();
 
@@ -212,7 +214,7 @@ public abstract class AbstractSerialConnection {
         final int numDataBits = getNumDataBits();
         final int dataBits = numDataBits == 0 ? 8 : numDataBits;
         final double stopBits = getStopBits();
-        final double parityBits = getParity() == SerialPort.NO_PARITY ? 0 : 1;
+        final double parityBits = getParity() == NO_PARITY ? 0 : 1;
 
         return startBit + dataBits + stopBits + parityBits;
     }
