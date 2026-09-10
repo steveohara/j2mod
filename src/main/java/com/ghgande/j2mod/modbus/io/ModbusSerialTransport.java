@@ -702,11 +702,8 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
      * @return microseconds
      */
     long getCharIntervalMicro(double chars) {
-        // Make sure we have a gap of 3.5 characters between adjacent requests
-        // We have to do the calculations here because it is possible that the caller may have changed
-        // the connection characteristics if they provided the connection instance
         final double microsPerChar = (commPort.getBitsPerCharacter() / (double) commPort.getBaudRate()) * MICROS_IN_A_SEC;
-        return (long) (microsPerChar * chars);
+        return (long) Math.ceil(microsPerChar * chars);
     }
 
     /**
