@@ -636,10 +636,10 @@ public abstract class ModbusSerialTransport extends AbstractModbusTransport {
             ModbusUtil.sleep(transDelayMS);
         }
         else {
-            // Make use we have a gap of 3.5 characters between adjacent requests
+            // Make sure we have a gap of 3.5 characters between adjacent requests
             // We have to do the calculations here because it is possible that the caller may have changed
             // the connection characteristics if they provided the connection instance
-            int delay = getInterFrameDelay() / 1000;
+            int delay = (int) Math.ceil(getInterFrameDelay() / 1000.0);
 
             // How long since the last message we received
             long gapSinceLastMessage = (System.nanoTime() - lastTransactionTimestamp) / NS_IN_A_MS;
