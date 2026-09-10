@@ -5,6 +5,7 @@ import com.ghgande.j2mod.modbus.net.AbstractSerialConnection;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class SerialParametersTest {
 
@@ -171,5 +172,14 @@ public class SerialParametersTest {
     public void testSetFlowControlOut() {
         SerialParameters serialParameters = new SerialParameters();
         serialParameters.setFlowControlOut(-1);
+    }
+
+    @Test
+    public void testInvalidBaudRatesThrowException() {
+        SerialParameters serialParameters = new SerialParameters();
+        assertThrows(IllegalArgumentException.class, () -> serialParameters.setBaudRate(0));
+        assertThrows(IllegalArgumentException.class, () -> serialParameters.setBaudRate(-1));
+        assertThrows(IllegalArgumentException.class, () -> serialParameters.setBaudRate("0"));
+        assertThrows(IllegalArgumentException.class, () -> serialParameters.setBaudRate("-1"));
     }
 }

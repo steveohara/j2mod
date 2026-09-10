@@ -347,9 +347,9 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                             if (!bytesAvailable) {
                                 // Sleep the 1.5t to see if there will be more data
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("Waiting for {} microsec", getMaxCharDelay());
+                                    logger.debug("Waiting for {} microsec", getMaxCharTimeout());
                                 }
-                                bytesAvailable = spinUntilBytesAvailable(getMaxCharDelay());
+                                bytesAvailable = spinUntilBytesAvailable(getMaxCharTimeout());
                             }
 
                             if (bytesAvailable) {
