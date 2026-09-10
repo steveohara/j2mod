@@ -945,9 +945,9 @@ public class SerialParameters {
                 ", echo=" + echo +
                 ", openDelay=" + openDelay +
                 ", rs485Mode=" + rs485Mode +
-                ", rs485TxEnableActiveHight=" + rs485TxEnableActiveHigh +
+                ", rs485TxEnableActiveHigh=" + rs485TxEnableActiveHigh +
                 ", rs485EnableTermination=" + rs485EnableTermination +
-                ", rs485RxDuringTx" + rs485RxDuringTx +
+                ", rs485RxDuringTx=" + rs485RxDuringTx +
                 ", rs485DelayBeforeTxMicroseconds=" + rs485DelayBeforeTxMicroseconds +
                 ", rs485DelayAfterTxMicroseconds=" + rs485DelayAfterTxMicroseconds +
                 '}';

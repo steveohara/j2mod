@@ -19,7 +19,7 @@ public class SerialConnectionTest {
 		);
 		SerialConnection serialCon = new SerialConnection(parameters);
 
-		// 1 Startbit + 8 Datenbits + 0 Parität + 1 Stoppbit = 10
+		// 1 start-bit + 8 data-bits + 0 parity + 1 stop-bit = 10
 		assertEquals(10.0, serialCon.getBitsPerCharacter(), 0.001);
 	}
 
@@ -35,7 +35,7 @@ public class SerialConnectionTest {
 		);
 		SerialConnection serialCon = new SerialConnection(parameters);
 
-		// 1 Startbit + 5 Datenbits + 0 Parität + 1.5 Stoppbit = 7.5
+		// 1 start-bit + 5 data-bits + 0 parity + 1.5 stop-bits = 7.5
 		assertEquals(7.5, serialCon.getBitsPerCharacter(), 0.001);
 	}
 
@@ -51,7 +51,7 @@ public class SerialConnectionTest {
 		);
 		SerialConnection serialCon = new SerialConnection(parameters);
 
-		// 1 Startbit + 8 Datenbits + 1 Parität + 2 Stoppbits = 12
+		// 1 start-bit + 8 data-bits + 1 parity + 2 stop-bits = 12
 		assertEquals(12.0, serialCon.getBitsPerCharacter(), 0.001);
 	}
 
