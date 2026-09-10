@@ -341,15 +341,16 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                     else {
                         // This message is not for us, read and wait for the 3.5t delay
 
+                        final long charTimeout = getMaxCharTimeout();
                         // Wait for max 1.5t for data to be available
                         while (true) {
                             boolean bytesAvailable = availableBytes() > 0;
                             if (!bytesAvailable) {
                                 // Sleep the 1.5t to see if there will be more data
                                 if (logger.isDebugEnabled()) {
-                                    logger.debug("Waiting for {} microsec", getMaxCharTimeout());
+                                    logger.debug("Waiting for {} microsec", charTimeout);
                                 }
-                                bytesAvailable = spinUntilBytesAvailable(getMaxCharTimeout());
+                                bytesAvailable = spinUntilBytesAvailable(charTimeout);
                             }
 
                             if (bytesAvailable) {
@@ -364,12 +365,13 @@ public class ModbusRTUTransport extends ModbusSerialTransport {
                             }
                         }
 
-                        // Wait for 2t to complete the 3.5t wait
+                        // Wait for the remaining time to complete the inter-frame interval
+                        final long remainingWait = getInterFrameDelay() - charTimeout;
                         // Is there is data available the interval was not respected, we should discard the message
                         if (logger.isDebugEnabled()) {
-                            logger.debug("Waiting for {} microsec", getCharIntervalMicro(2));
+                            logger.debug("Waiting for {} microsec", remainingWait);
                         }
-                        if (spinUntilBytesAvailable(getCharIntervalMicro(2))) {
+                        if (spinUntilBytesAvailable(remainingWait)) {
                             // Discard the message
                             if (logger.isDebugEnabled()) {
                                 logger.debug("Discarding message (More than 1.5t between characters!) - {}", ModbusUtil.toHex(byteInputOutputStream.getBuffer(), 0, byteInputOutputStream.size()));
